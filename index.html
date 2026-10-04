@@ -3102,17 +3102,35 @@ function finalizeCreateStroke() {
         1. CIRCLE
     */
 
-    if (
-        isCircle(points)
-    ) {
+ if (
+    isCircle(points)
+) {
 
-        const box =
-            strokeBounds(points);
-        
-removePendingAtom();
+    const box =
+        strokeBounds(points);
 
-        if (box) {
+    if (box) {
 
+        createPendingAtom(
+
+            (
+                box.minX +
+                box.maxX
+            ) / 2,
+
+            (
+                box.minY +
+                box.maxY
+            ) / 2
+
+        );
+
+    }
+
+    return;
+
+}
+}
             createPendingAtom(
 
                 (
