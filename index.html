@@ -2135,364 +2135,218 @@ function recognizeH(
    - NOT contain a long horizontal
      segment characteristic of L
 ============================================================ */
+function recognizeC(points) {
 
-function recognizeC(
-    points
-) {
-
-    if (
-        points.length < 10
-    ) {
-
+    if (points.length < 8) {
         return false;
-
     }
 
+    const box = strokeBounds(points);
 
-    const box =
-        strokeBounds(points);
-
-
-    if (!box)
+    if (!box) {
         return false;
-
-
-    const width =
-        box.width;
-
-    const height =
-        box.height;
-
-
-    if (
-        width < 12 ||
-        height < 18
-    ) {
-
-        return false;
-
     }
 
+    const width = box.width;
+    const height = box.height;
 
     /*
-        C normally has meaningful
-        vertical height.
+        La dimensione assoluta non deve essere
+        troppo importante.
+
+        Accettiamo C piccole e grandi.
     */
-
-    const aspect =
-        width /
-        height;
-
-
-    if (
-        aspect < .35 ||
-        aspect > 1.45
-    ) {
-
+    if (width < 8 || height < 10) {
         return false;
-
     }
 
-
     /*
-        First and last points should
-        be relatively close in X,
-        usually toward the opening.
+        Rapporto larghezza/altezza più permissivo.
+
+        La C può essere:
+        - stretta
+        - larga
+        - tondeggiante
+        - leggermente schiacciata
     */
+    const aspect = width / height;
 
-    const first =
-        points[0];
-
-    const last =
-        points[
-            points.length-1
-        ];
-
-
-    const endpointXDifference =
-        Math.abs(
-            first.x-last.x
-        );
-
-
-    if (
-        endpointXDifference >
-        width*.58
-    ) {
-
+    if (aspect < 0.25 || aspect > 1.75) {
         return false;
-
     }
 
+    const first = points[0];
+    const last = points[points.length - 1];
 
     /*
-        Endpoints should be separated
-        vertically. A C has an opening.
+        Gli estremi della C devono essere
+        verticalmente separati.
     */
-
     const endpointYDifference =
-        Math.abs(
-            first.y-last.y
-        );
+        Math.abs(first.y - last.y);
 
-
-    if (
-        endpointYDifference <
-        height*.28
-    ) {
-
+    if (endpointYDifference < height * 0.20) {
         return false;
-
     }
 
-
     /*
-        Find center of bounding box.
+        Non pretendiamo più che gli estremi
+        siano quasi perfettamente allineati
+        orizzontalmente.
     */
+    const endpointXDifference =
+        Math.abs(first.x - last.x);
+
+    if (endpointXDifference > width * 0.80) {
+        return false;
+    }
 
     const centerX =
-        (
-            box.minX +
-            box.maxX
-        ) / 2;
+        (box.minX + box.maxX) / 2;
 
     const centerY =
-        (
-            box.minY +
-            box.maxY
-        ) / 2;
-
+        (box.minY + box.maxY) / 2;
 
     /*
-        Estimate whether most of the
-        curve lives on the left side
-        while endpoints approach the
-        right opening.
+        Una C deve esplorare sia la parte
+        superiore che quella inferiore.
     */
-
-    let leftCount = 0;
-    let rightCount = 0;
-
-
-    points.forEach(
-        p => {
-
-            if (
-                p.x <
-                centerX
-            ) {
-
-                leftCount++;
-
-            }
-            else {
-
-                rightCount++;
-
-            }
-
-        }
-    );
-
-
-    const leftRatio =
-        leftCount /
-        points.length;
-
-
-    /*
-        A C should have more trajectory
-        on its curved side than an L.
-    */
-
-    if (
-        leftRatio < .42
-    ) {
-
-        return false;
-
-    }
-
-
-    /*
-        Calculate path length.
-    */
-
-    let pathLength = 0;
-
-
-    for (
-        let i=1;
-        i<points.length;
-        i++
-    ) {
-
-        pathLength +=
-            Math.hypot(
-                points[i].x -
-                points[i-1].x,
-
-                points[i].y -
-                points[i-1].y
-            );
-
-    }
-
-
-    /*
-        Compare path length with
-        straight-line displacement.
-
-        A C must have substantially
-        more path than a simple line.
-    */
-
-    const directDistance =
-        Math.hypot(
-            last.x-first.x,
-            last.y-first.y
-        );
-
-
-    if (
-        directDistance === 0
-    ) {
-
-        return false;
-
-    }
-
-
-    const curvatureRatio =
-        pathLength /
-        directDistance;
-
-
-    if (
-        curvatureRatio < 2.0
-    ) {
-
-        return false;
-
-    }
-
-
-    /*
-        Check whether the path explores
-        both upper and lower halves.
-    */
-
     let upper = false;
     let lower = false;
 
+    points.forEach(p => {
 
-    points.forEach(
-        p => {
-
-            if (
-                p.y <
-                centerY-height*.20
-            ) {
-
-                upper = true;
-
-            }
-
-            if (
-                p.y >
-                centerY+height*.20
-            ) {
-
-                lower = true;
-
-            }
-
+        if (p.y < centerY - height * 0.12) {
+            upper = true;
         }
-    );
 
+        if (p.y > centerY + height * 0.12) {
+            lower = true;
+        }
 
-    if (
-        !upper ||
-        !lower
-    ) {
+    });
 
+    if (!upper || !lower) {
         return false;
+    }
+
+    /*
+        Controlliamo che la traiettoria
+        occupi effettivamente la zona curva
+        della C.
+    */
+    let leftCount = 0;
+    let rightCount = 0;
+
+    points.forEach(p => {
+
+        if (p.x < centerX) {
+            leftCount++;
+        } else {
+            rightCount++;
+        }
+
+    });
+
+    const leftRatio =
+        leftCount / points.length;
+
+    /*
+        Meno severo del precedente,
+        ma impedisce che una semplice linea
+        verticale venga scambiata per C.
+    */
+    if (leftRatio < 0.32) {
+        return false;
+    }
+
+    /*
+        Lunghezza totale del tratto.
+    */
+    let pathLength = 0;
+
+    for (let i = 1; i < points.length; i++) {
+
+        pathLength += Math.hypot(
+            points[i].x - points[i - 1].x,
+            points[i].y - points[i - 1].y
+        );
 
     }
 
+    const directDistance =
+        Math.hypot(
+            last.x - first.x,
+            last.y - first.y
+        );
+
+    if (directDistance === 0) {
+        return false;
+    }
 
     /*
-        Detect the characteristic
-        horizontal "foot" of an L.
-
-        If a large percentage of the
-        stroke is concentrated into
-        one long horizontal direction,
-        reject it.
+        Una C deve essere abbastanza curva.
+        Soglia abbassata rispetto alla 0.5.2.
     */
+    const curvatureRatio =
+        pathLength / directDistance;
 
-    let horizontalSegments = 0;
+    if (curvatureRatio < 1.55) {
+        return false;
+    }
 
-    let totalSegments = 0;
+    /*
+        Evitiamo di riconoscere una L.
 
+        Una C può naturalmente avere
+        qualche segmento quasi orizzontale,
+        quindi la soglia viene resa meno severa.
+    */
+    let horizontalLength = 0;
+    let totalLength = 0;
 
-    for (
-        let i=1;
-        i<points.length;
-        i++
-    ) {
+    for (let i = 1; i < points.length; i++) {
 
         const dx =
             Math.abs(
                 points[i].x -
-                points[i-1].x
+                points[i - 1].x
             );
 
         const dy =
             Math.abs(
                 points[i].y -
-                points[i-1].y
+                points[i - 1].y
             );
 
+        const segmentLength =
+            Math.hypot(dx, dy);
 
-        if (
-            dx+dy < 1
-        ) {
+        totalLength += segmentLength;
 
-            continue;
-
-        }
-
-
-        totalSegments++;
-
-
-        if (
-            dx > dy*2.4
-        ) {
-
-            horizontalSegments++;
-
+        if (dx > dy * 2.8) {
+            horizontalLength += segmentLength;
         }
 
     }
 
+    if (totalLength > 0) {
 
-    if (
-        totalSegments > 0 &&
-        horizontalSegments /
-        totalSegments > .48
-    ) {
+        const horizontalRatio =
+            horizontalLength / totalLength;
 
-        return false;
+        /*
+            Manteniamo una protezione
+            contro la L, ma più permissiva.
+        */
+        if (horizontalRatio > 0.58) {
+            return false;
+        }
 
     }
-
 
     return true;
-
 }
-
 
 /* ============================================================
    LETTER RECOGNITION
