@@ -513,10 +513,13 @@ button.danger {
    Pencil = CREATE
    Finger = MOVE SINGLE ATOM
 
+   Long press:
+   SELECT MOLECULE
+
    Recognition:
    - strict circle detection
-   - H recognizer preserved
-   - new geometric C recognizer
+   - geometric H recognition
+   - geometric C recognition
 ============================================================ */
 
 
@@ -661,6 +664,13 @@ eraseBtn.onclick = () =>
 
 
 /* ============================================================
+   PENDING ATOM
+============================================================ */
+
+let pendingAtom = null;
+
+
+/* ============================================================
    UNDO / CLEAR
 ============================================================ */
 
@@ -676,6 +686,19 @@ undoBtn.onclick = () => {
 
     bonds =
         previous.bonds;
+
+
+    /*
+        Ricostruiamo il riferimento
+        al pending atom dopo Undo.
+    */
+
+    pendingAtom =
+        atoms.find(
+            atom =>
+                atom.pending === true
+        ) || null;
+
 
     render();
 
@@ -694,6 +717,8 @@ clearBtn.onclick = () => {
     atoms = [];
 
     bonds = [];
+
+    pendingAtom = null;
 
     render();
 
@@ -1449,6 +1474,16 @@ function removeAtom(atom) {
     saveHistory();
 
 
+    if (
+        pendingAtom &&
+        pendingAtom.id === atom.id
+    ) {
+
+        pendingAtom = null;
+
+    }
+
+
     bonds =
         bonds.filter(
             bond =>
@@ -1775,16 +1810,6 @@ function normalizeStroke(
 
 /* ============================================================
    STRICT CIRCLE DETECTOR
-
-   A line cannot be an atom.
-
-   Requirements:
-   1. enough points
-   2. sufficiently large
-   3. roughly circular bounding box
-   4. endpoint closure
-   5. radial consistency
-   6. circumference/diameter consistency
 ============================================================ */
 
 function isCircle(points) {
@@ -1834,11 +1859,6 @@ function isCircle(points) {
         );
 
 
-    /*
-        A real circle should be
-        reasonably close to 1:1.
-    */
-
     if (
         ratio < .72
     ) {
@@ -1847,11 +1867,6 @@ function isCircle(points) {
 
     }
 
-
-    /*
-        First and last point must
-        actually meet.
-    */
 
     const first =
         points[0];
@@ -1906,10 +1921,6 @@ function isCircle(points) {
         ) / 4;
 
 
-    /*
-        Measure radial consistency.
-    */
-
     let radialError = 0;
 
 
@@ -1937,11 +1948,6 @@ function isCircle(points) {
         points.length;
 
 
-    /*
-        If the stroke is too irregular,
-        it is not a circle.
-    */
-
     if (
         radialError >
         expectedRadius*.24
@@ -1951,13 +1957,6 @@ function isCircle(points) {
 
     }
 
-
-    /*
-        Approximate circumference.
-
-        A circle should have a
-        path length around π × diameter.
-    */
 
     let pathLength = 0;
 
@@ -2006,8 +2005,6 @@ function isCircle(points) {
 
 /* ============================================================
    H TEMPLATE
-
-   KEPT FROM 0.5.1
 ============================================================ */
 
 const H_TEMPLATE =
@@ -2086,6 +2083,7 @@ function templateDistance(
 /* ============================================================
    H RECOGNITION
 ============================================================ */
+
 function recognizeH(points) {
 
     if (points.length < 8) {
@@ -2101,20 +2099,10 @@ function recognizeH(points) {
     const width = box.width;
     const height = box.height;
 
-    /*
-        ========================================================
-        1. DIMENSIONI MINIME
-        ========================================================
-    */
-
     if (width < 10 || height < 14) {
         return false;
     }
 
-    /*
-        Una H non deve essere troppo larga
-        rispetto alla propria altezza.
-    */
     const aspect = width / height;
 
     if (aspect < 0.20 || aspect > 1.40) {
@@ -2127,11 +2115,6 @@ function recognizeH(points) {
     const centerY =
         (box.minY + box.maxY) / 2;
 
-    /*
-        ========================================================
-        2. DIVISIONE IN ZONA SINISTRA / DESTRA
-        ========================================================
-    */
 
     let leftCount = 0;
     let rightCount = 0;
@@ -2146,31 +2129,25 @@ function recognizeH(points) {
 
     });
 
+
     const leftRatio =
         leftCount / points.length;
 
     const rightRatio =
         rightCount / points.length;
 
-    /*
-        Una H deve avere due montanti.
-    */
 
     if (leftRatio < 0.18 || rightRatio < 0.18) {
         return false;
     }
 
-    /*
-        ========================================================
-        3. COPERTURA VERTICALE DEI DUE MONTANTI
-        ========================================================
-    */
 
     let leftMinY = Infinity;
     let leftMaxY = -Infinity;
 
     let rightMinY = Infinity;
     let rightMaxY = -Infinity;
+
 
     points.forEach(p => {
 
@@ -2194,11 +2171,13 @@ function recognizeH(points) {
 
     });
 
+
     const leftHeight =
         leftMaxY - leftMinY;
 
     const rightHeight =
         rightMaxY - rightMinY;
+
 
     if (
         leftHeight < height * 0.55 ||
@@ -2207,35 +2186,6 @@ function recognizeH(points) {
         return false;
     }
 
-    /*
-        ========================================================
-        4. ANALISI DEI TRATTI
-        ========================================================
-
-        Qui sta la differenza rispetto alla versione
-        precedente.
-
-        Analizziamo la direzione dei segmenti realmente
-        disegnati dall'utente.
-
-        H:
-            ↑
-            │
-            ├────
-            │
-            ↓
-
-        M:
-            ↑
-            ╲
-             ╲
-              ╱
-             ╱
-            ↓
-
-        La M quindi non dovrebbe avere abbastanza
-        tratto orizzontale centrale.
-    */
 
     let totalLength = 0;
 
@@ -2243,6 +2193,7 @@ function recognizeH(points) {
     let verticalRightLength = 0;
 
     let centralHorizontalLength = 0;
+
 
     for (let i = 1; i < points.length; i++) {
 
@@ -2273,11 +2224,6 @@ function recognizeH(points) {
         const midY =
             (p1.y + p2.y) / 2;
 
-        /*
-            ====================================================
-            TRATTO VERTICALE SINISTRO
-            ====================================================
-        */
 
         if (
             absDy > absDx * 1.8 &&
@@ -2288,11 +2234,6 @@ function recognizeH(points) {
 
         }
 
-        /*
-            ====================================================
-            TRATTO VERTICALE DESTRO
-            ====================================================
-        */
 
         if (
             absDy > absDx * 1.8 &&
@@ -2303,15 +2244,6 @@ function recognizeH(points) {
 
         }
 
-        /*
-            ====================================================
-            TRATTO ORIZZONTALE CENTRALE
-            ====================================================
-
-            Deve essere:
-            - abbastanza orizzontale
-            - vicino alla metà dell'altezza
-        */
 
         if (
             absDx > absDy * 2.2 &&
@@ -2324,15 +2256,11 @@ function recognizeH(points) {
 
     }
 
-    /*
-        ========================================================
-        5. I MONTANTI DEVONO ESSERE DAVVERO VERTICALI
-        ========================================================
-    */
 
     if (totalLength <= 0) {
         return false;
     }
+
 
     if (
         verticalLeftLength < height * 0.25 ||
@@ -2341,13 +2269,6 @@ function recognizeH(points) {
         return false;
     }
 
-    /*
-        ========================================================
-        6. IL COLLEGAMENTO CENTRALE È OBBLIGATORIO
-        ========================================================
-
-        Questo è il filtro principale contro la M.
-    */
 
     if (
         centralHorizontalLength <
@@ -2356,15 +2277,10 @@ function recognizeH(points) {
         return false;
     }
 
-    /*
-        ========================================================
-        7. IL COLLEGAMENTO DEVE DAVVERO ANDARE
-           DA SINISTRA VERSO DESTRA
-        ========================================================
-    */
 
     let horizontalLeft = false;
     let horizontalRight = false;
+
 
     for (let i = 1; i < points.length; i++) {
 
@@ -2391,14 +2307,18 @@ function recognizeH(points) {
                     p1.x < centerX ||
                     p2.x < centerX
                 ) {
+
                     horizontalLeft = true;
+
                 }
 
                 if (
                     p1.x > centerX ||
                     p2.x > centerX
                 ) {
+
                     horizontalRight = true;
+
                 }
 
             }
@@ -2407,6 +2327,7 @@ function recognizeH(points) {
 
     }
 
+
     if (
         !horizontalLeft ||
         !horizontalRight
@@ -2414,17 +2335,9 @@ function recognizeH(points) {
         return false;
     }
 
-    /*
-        ========================================================
-        8. PROTEZIONE EXTRA CONTRO LA M
-        ========================================================
-
-        Una M contiene generalmente molti tratti diagonali.
-        Se una percentuale troppo grande del tratto totale
-        è diagonale, non la consideriamo H.
-    */
 
     let diagonalLength = 0;
+
 
     for (let i = 1; i < points.length; i++) {
 
@@ -2444,10 +2357,6 @@ function recognizeH(points) {
             continue;
         }
 
-        /*
-            Diagonale significativa:
-            dx e dy sono entrambi importanti.
-        */
 
         if (
             dx > length * 0.35 &&
@@ -2460,44 +2369,25 @@ function recognizeH(points) {
 
     }
 
+
     const diagonalRatio =
         diagonalLength / totalLength;
 
-    /*
-        La H può avere piccole imperfezioni diagonali,
-        ma non può essere dominata da diagonali come una M.
-    */
 
     if (diagonalRatio > 0.45) {
         return false;
     }
 
-    /*
-        ========================================================
-        H RICONOSCIUTA
-        ========================================================
-    */
 
     return true;
+
 }
 
+
 /* ============================================================
-   NEW C RECOGNIZER
-
-   Instead of a single template,
-   evaluate the geometric properties
-   of a C.
-
-   A C should:
-   - have significant vertical span
-   - be substantially open
-   - occupy both upper and lower regions
-   - have a curved trajectory
-   - have endpoints on the same
-     general right side
-   - NOT contain a long horizontal
-     segment characteristic of L
+   C RECOGNITION
 ============================================================ */
+
 function recognizeC(points) {
 
     if (points.length < 8) {
@@ -2513,25 +2403,10 @@ function recognizeC(points) {
     const width = box.width;
     const height = box.height;
 
-    /*
-        La dimensione assoluta non deve essere
-        troppo importante.
-
-        Accettiamo C piccole e grandi.
-    */
     if (width < 8 || height < 10) {
         return false;
     }
 
-    /*
-        Rapporto larghezza/altezza più permissivo.
-
-        La C può essere:
-        - stretta
-        - larga
-        - tondeggiante
-        - leggermente schiacciata
-    */
     const aspect = width / height;
 
     if (aspect < 0.25 || aspect > 1.75) {
@@ -2541,10 +2416,6 @@ function recognizeC(points) {
     const first = points[0];
     const last = points[points.length - 1];
 
-    /*
-        Gli estremi della C devono essere
-        verticalmente separati.
-    */
     const endpointYDifference =
         Math.abs(first.y - last.y);
 
@@ -2552,11 +2423,6 @@ function recognizeC(points) {
         return false;
     }
 
-    /*
-        Non pretendiamo più che gli estremi
-        siano quasi perfettamente allineati
-        orizzontalmente.
-    */
     const endpointXDifference =
         Math.abs(first.x - last.x);
 
@@ -2570,12 +2436,10 @@ function recognizeC(points) {
     const centerY =
         (box.minY + box.maxY) / 2;
 
-    /*
-        Una C deve esplorare sia la parte
-        superiore che quella inferiore.
-    */
+
     let upper = false;
     let lower = false;
+
 
     points.forEach(p => {
 
@@ -2589,17 +2453,15 @@ function recognizeC(points) {
 
     });
 
+
     if (!upper || !lower) {
         return false;
     }
 
-    /*
-        Controlliamo che la traiettoria
-        occupi effettivamente la zona curva
-        della C.
-    */
+
     let leftCount = 0;
     let rightCount = 0;
+
 
     points.forEach(p => {
 
@@ -2611,22 +2473,18 @@ function recognizeC(points) {
 
     });
 
+
     const leftRatio =
         leftCount / points.length;
 
-    /*
-        Meno severo del precedente,
-        ma impedisce che una semplice linea
-        verticale venga scambiata per C.
-    */
+
     if (leftRatio < 0.32) {
         return false;
     }
 
-    /*
-        Lunghezza totale del tratto.
-    */
+
     let pathLength = 0;
+
 
     for (let i = 1; i < points.length; i++) {
 
@@ -2637,36 +2495,31 @@ function recognizeC(points) {
 
     }
 
+
     const directDistance =
         Math.hypot(
             last.x - first.x,
             last.y - first.y
         );
 
+
     if (directDistance === 0) {
         return false;
     }
 
-    /*
-        Una C deve essere abbastanza curva.
-        Soglia abbassata rispetto alla 0.5.2.
-    */
+
     const curvatureRatio =
         pathLength / directDistance;
+
 
     if (curvatureRatio < 1.55) {
         return false;
     }
 
-    /*
-        Evitiamo di riconoscere una L.
 
-        Una C può naturalmente avere
-        qualche segmento quasi orizzontale,
-        quindi la soglia viene resa meno severa.
-    */
     let horizontalLength = 0;
     let totalLength = 0;
+
 
     for (let i = 1; i < points.length; i++) {
 
@@ -2687,44 +2540,36 @@ function recognizeC(points) {
 
         totalLength += segmentLength;
 
+
         if (dx > dy * 2.8) {
             horizontalLength += segmentLength;
         }
 
     }
 
+
     if (totalLength > 0) {
 
         const horizontalRatio =
             horizontalLength / totalLength;
 
-        /*
-            Manteniamo una protezione
-            contro la L, ma più permissiva.
-        */
         if (horizontalRatio > 0.58) {
             return false;
         }
 
     }
 
+
     return true;
+
 }
+
 
 /* ============================================================
    LETTER RECOGNITION
-
-   IMPORTANT:
-
-   If neither C nor H is clearly
-   recognized, return null.
-
-   Never guess.
 ============================================================ */
 
-function recognizeElement(
-    points
-) {
+function recognizeElement(points) {
 
     if (
         points.length < 8
@@ -2763,41 +2608,23 @@ function recognizeElement(
     }
 
 
-    /*
-        Ambiguous = no result.
-
-        This is intentional.
-    */
-
     return null;
 
 }
 
 
 /* ============================================================
-   PENDING ATOM
+   REMOVE PENDING ATOM
 ============================================================ */
 
 /*
-    BONDraw mantiene al massimo UN SOLO
-    atomo pending alla volta.
+    Rimuove esclusivamente il pending atom.
 
-    Il pending atom è solamente uno stato
-    temporaneo di riconoscimento:
-
-        ○  →  ?
-
-    Se l'utente disegna un nuovo cerchio
-    prima di aver definito quello precedente,
-    il vecchio ? viene eliminato.
+    NON chiama render() da solo:
+    la funzione viene usata come parte
+    di un'operazione più grande, così
+    evitiamo render multipli inutili.
 */
-
-let pendingAtom = null;
-
-
-/* ============================================================
-   REMOVE PENDING ATOM
-============================================================ */
 
 function removePendingAtom() {
 
@@ -2805,14 +2632,10 @@ function removePendingAtom() {
         return;
     }
 
+
     const pendingId =
         pendingAtom.id;
 
-
-    /*
-        Rimuoviamo eventuali bond collegati
-        per sicurezza.
-    */
 
     bonds =
         bonds.filter(
@@ -2821,10 +2644,6 @@ function removePendingAtom() {
                 bond.b !== pendingId
         );
 
-
-    /*
-        Rimuoviamo l'atomo pending.
-    */
 
     atoms =
         atoms.filter(
@@ -2848,31 +2667,19 @@ function createPendingAtom(
 ) {
 
     /*
-        Se esiste già un ? non ancora
-        riconosciuto, lo sostituiamo.
+        Prima controlliamo se il nuovo
+        punto è troppo vicino a un atomo
+        già esistente.
 
-        IMPORTANTE:
-        questo avviene prima di creare
-        il nuovo snapshot della storia,
-        così l'intera azione resta
-        un singolo step di Undo.
-    */
-
-    if (pendingAtom) {
-
-        removePendingAtom();
-
-    }
-
-
-    /*
-        Evitiamo di creare un atomo
-        sopra un atomo già esistente.
+        Un pending precedente non viene
+        eliminato se la nuova posizione
+        non è valida.
     */
 
     const nearby =
         atoms.find(
             atom =>
+                !atom.pending &&
                 Math.hypot(
                     atom.x - x,
                     atom.y - y
@@ -2888,11 +2695,23 @@ function createPendingAtom(
 
 
     /*
-        Salviamo lo stato PRIMA
-        della creazione del nuovo atomo.
+        UN SOLO PENDING:
+
+        Salviamo la situazione precedente
+        prima di sostituire il vecchio ?.
+
+        Così Undo può riportare esattamente
+        allo stato precedente.
     */
 
     saveHistory();
+
+
+    if (pendingAtom) {
+
+        removePendingAtom();
+
+    }
 
 
     const atom = {
@@ -2941,14 +2760,6 @@ function finalizePendingAtom(
     }
 
 
-    /*
-        Se il recognizer non è sicuro,
-        lasciamo il ? al suo posto.
-
-        L'utente può semplicemente
-        riprovare a scrivere C o H.
-    */
-
     if (!element) {
 
         atom.element =
@@ -2967,11 +2778,6 @@ function finalizePendingAtom(
     }
 
 
-    /*
-        Riconoscimento riuscito:
-        il pending diventa un vero atomo.
-    */
-
     atom.element =
         element;
 
@@ -2979,17 +2785,14 @@ function finalizePendingAtom(
         false;
 
 
-    /*
-        Da questo momento non è più
-        un pending atom.
-    */
-
     pendingAtom = null;
 
 
     render();
 
 }
+
+
 /* ============================================================
    LIVE STROKE
 ============================================================ */
@@ -3052,7 +2855,7 @@ function drawLiveStroke() {
 
 }
 
-    
+
 /* ============================================================
    FINALIZE PEN STROKE
 ============================================================ */
@@ -3078,38 +2881,21 @@ function finalizeCreateStroke() {
 
 
     /*
+        ========================================================
         1. CIRCLE
+        ========================================================
     */
 
- if (
-    isCircle(points)
-) {
+    if (
+        isCircle(points)
+    ) {
 
-    const box =
-        strokeBounds(points);
+        const box =
+            strokeBounds(points);
 
-    if (box) {
 
-        createPendingAtom(
+        if (box) {
 
-            (
-                box.minX +
-                box.maxX
-            ) / 2,
-
-            (
-                box.minY +
-                box.maxY
-            ) / 2
-
-        );
-
-    }
-
-    return;
-
-}
-}
             createPendingAtom(
 
                 (
@@ -3133,7 +2919,9 @@ function finalizeCreateStroke() {
 
 
     /*
+        ========================================================
         2. LETTER INSIDE PENDING ATOM
+        ========================================================
     */
 
     if (
@@ -3158,7 +2946,9 @@ function finalizeCreateStroke() {
 
 
     /*
+        ========================================================
         3. BOND
+        ========================================================
     */
 
     const start =
@@ -3201,8 +2991,8 @@ function finalizeCreateStroke() {
 
 
     /*
-        Fallback for slightly
-        imperfect bond endpoints.
+        Fallback per estremi
+        leggermente imperfetti.
     */
 
     const nearStart =
@@ -3236,15 +3026,7 @@ function finalizeCreateStroke() {
 
 
 /* ============================================================
-   POINTER STATE
-============================================================ */
-/* ============================================================
    POINTER STATE — BONDraw 0.6
-
-   Pencil = CREATE
-   Finger short drag = MOVE SINGLE ATOM
-   Finger long press = SELECT MOLECULE
-   Finger drag after long press = MOVE WHOLE MOLECULE
 ============================================================ */
 
 let activePointer = null;
@@ -3274,24 +3056,12 @@ let historySavedForDrag = false;
 
 const LONG_PRESS_DURATION = 550;
 
-/*
-    Dopo questa distanza, se il dito si è già mosso,
-    consideriamo l'azione un normale trascinamento.
-*/
 const LONG_PRESS_MOVE_THRESHOLD = 10;
 
 
 /* ============================================================
    MOLECULE SELECTION
 ============================================================ */
-
-/*
-    Trova tutti gli atomi collegati all'atomo iniziale
-    attraversando i legami.
-
-    È un normale attraversamento del grafo molecolare:
-    atom -> bond -> atom -> bond -> atom...
-*/
 
 function getConnectedMolecule(startAtom) {
 
@@ -3397,10 +3167,6 @@ function prepareMoleculeDrag() {
 
 function updateMoleculeAndItsBonds() {
 
-    /*
-        Aggiorniamo prima tutti gli atomi.
-    */
-
     selectedMolecule.forEach(
         atomId => {
 
@@ -3416,14 +3182,6 @@ function updateMoleculeAndItsBonds() {
         }
     );
 
-
-    /*
-        Poi aggiorniamo tutti i bond che
-        appartengono alla molecola.
-
-        Usiamo un Set per evitare
-        aggiornamenti duplicati.
-    */
 
     const affectedBonds =
         new Set();
@@ -3576,12 +3334,6 @@ function startLongPress() {
                 longPressTimer = null;
 
 
-                /*
-                    Se nel frattempo il dito
-                    si è già mosso, non selezioniamo
-                    la molecola.
-                */
-
                 if (
                     movementStarted ||
                     !selectedAtom
@@ -3598,11 +3350,6 @@ function startLongPress() {
 
                 prepareMoleculeDrag();
 
-
-                /*
-                    Da questo momento il dito
-                    controlla l'intera molecola.
-                */
 
                 status.textContent =
                     "Molecule selected · Drag to move";
@@ -3650,10 +3397,6 @@ canvas.addEventListener(
 
         };
 
-
-        /*
-            RESET STATO DRAG
-        */
 
         selectedAtom = null;
 
@@ -3781,11 +3524,6 @@ canvas.addEventListener(
             };
 
 
-            /*
-                Prepariamo anche la molecola.
-                Non la muoviamo ancora.
-            */
-
             prepareMoleculeDrag();
 
 
@@ -3793,11 +3531,6 @@ canvas.addEventListener(
                 event.pointerId
             );
 
-
-            /*
-                Avviamo il timer solo per
-                il dito.
-            */
 
             startLongPress();
 
@@ -3893,16 +3626,6 @@ canvas.addEventListener(
                 );
 
 
-            /*
-                Se il dito si muove prima
-                del long press, cancelliamo
-                la selezione prolungata.
-
-                Questo mantiene il vecchio
-                comportamento di movimento
-                del singolo atomo.
-            */
-
             if (
                 !longPressTriggered &&
                 movementDistance >
@@ -3915,19 +3638,12 @@ canvas.addEventListener(
 
 
             /*
-                =================================================
                 MOVIMENTO SINGOLO ATOMO
-                =================================================
             */
 
             if (
                 !longPressTriggered
             ) {
-
-                /*
-                    Salviamo UN SOLO snapshot,
-                    prima della prima modifica.
-                */
 
                 if (
                     !historySavedForDrag &&
@@ -3967,19 +3683,12 @@ canvas.addEventListener(
 
 
             /*
-                =================================================
                 MOVIMENTO INTERA MOLECOLA
-                =================================================
             */
 
             if (
                 longPressTriggered
             ) {
-
-                /*
-                    Snapshot dello stato
-                    precedente al primo movimento.
-                */
 
                 if (
                     !historySavedForDrag &&
@@ -4093,10 +3802,6 @@ function finishPointer(
     event.preventDefault();
 
 
-    /*
-        Cancella sempre il timer.
-    */
-
     cancelLongPress();
 
 
@@ -4110,32 +3815,6 @@ function finishPointer(
         activePointer.type ===
         "move"
     ) {
-
-        /*
-            Se non c'è stato movimento,
-            non creiamo nessuna voce
-            nell'Undo.
-
-            Un semplice long press
-            seleziona soltanto.
-        */
-
-
-        if (
-            longPressTriggered
-        ) {
-
-            /*
-                La molecola resta semplicemente
-                selezionata fino alla fine
-                del gesto.
-
-                Per ora non aggiungiamo
-                ancora un'animazione visiva.
-            */
-
-        }
-
 
         selectedAtom = null;
 
