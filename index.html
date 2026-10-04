@@ -1,1844 +1,717 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-<meta
-    name="viewport"
-    content="width=device-width,
-             initial-scale=1.0,
-             maximum-scale=1.0,
-             user-scalable=no"
->
-
-<title>BONDraw 0.3</title>
+<title>BONDraw</title>
 
 <style>
-
-:root {
-    --bg: #f5f3ef;
-    --panel: rgba(255,255,255,0.90);
-    --text: #202124;
-    --muted: #8b8b8b;
-    --line: #d8d5cf;
-}
-
-* {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-}
-
-html,
-body {
-    margin: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-
-    background: var(--bg);
-
-    font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "SF Pro Display",
-        "SF Pro Text",
-        sans-serif;
-
-    color: var(--text);
-}
-
-body {
-    display: flex;
-    flex-direction: column;
-}
-
-
-/* =========================================================
-   HEADER
-   ========================================================= */
-
-header {
-
-    height: 68px;
-
-    padding: 0 22px;
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    background: rgba(255,255,255,0.82);
-
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-
-    border-bottom:
-        1px solid rgba(0,0,0,0.06);
-
-    z-index: 10;
-}
-
-
-.brand {
-
-    display: flex;
-    align-items: center;
-    gap: 10px;
-
-}
-
-
-.logo {
-
-    width: 34px;
-    height: 34px;
-
-    border-radius: 11px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    background: #202124;
-
-    color: white;
-
-    font-weight: 800;
-    font-size: 15px;
-
-}
-
-
-.brand-text {
-
-    font-size: 18px;
-
-    font-weight: 750;
-
-    letter-spacing: -0.5px;
-
-}
-
-
-.version {
-
-    font-size: 12px;
-
-    color: var(--muted);
-
-    margin-left: 5px;
-
-}
-
-
-/* =========================================================
-   WORKSPACE
-   ========================================================= */
-
-#workspace {
-
-    position: relative;
-
-    flex: 1;
-
-    overflow: hidden;
-
-}
-
-
-#canvas {
-
-    position: absolute;
-
-    inset: 0;
-
-    width: 100%;
-    height: 100%;
-
-    touch-action: none;
-
-    user-select: none;
-
-    -webkit-user-select: none;
-
-}
-
-
-/* =========================================================
-   EMPTY STATE
-   ========================================================= */
-
-#emptyState {
-
-    position: absolute;
-
-    inset: 0;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    pointer-events: none;
-
-    transition:
-        opacity 180ms ease,
-        transform 180ms ease;
-
-}
-
-
-#emptyState.hidden {
-
-    opacity: 0;
-
-    transform:
-        translateY(5px);
-
-}
-
-
-.empty-card {
-
-    text-align: center;
-
-    padding: 28px;
-
-}
-
-
-.empty-icon {
-
-    font-size: 40px;
-
-    margin-bottom: 12px;
-
-    opacity: 0.65;
-
-}
-
-
-.empty-title {
-
-    font-size: 20px;
-
-    font-weight: 700;
-
-    margin-bottom: 6px;
-
-}
-
-
-.empty-subtitle {
-
-    font-size: 14px;
-
-    color: var(--muted);
-
-}
-
-
-/* =========================================================
-   TOOLBAR
-   ========================================================= */
-
-.toolbar {
-
-    position: absolute;
-
-    left: 50%;
-    bottom: 22px;
-
-    transform:
-        translateX(-50%);
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 7px;
-
-    padding: 7px;
-
-    background:
-        rgba(255,255,255,0.91);
-
-    backdrop-filter:
-        blur(20px);
-
-    -webkit-backdrop-filter:
-        blur(20px);
-
-    border:
-        1px solid rgba(0,0,0,0.07);
-
-    border-radius: 18px;
-
-    box-shadow:
-        0 10px 35px rgba(0,0,0,0.10),
-        0 2px 7px rgba(0,0,0,0.05);
-
-    z-index: 20;
-
-}
-
-
-button {
-
-    border: none;
-
-    background: transparent;
-
-    font: inherit;
-
-    color: var(--text);
-
-    cursor: pointer;
-
-    -webkit-touch-callout: none;
-
-    transition:
-        transform 120ms ease,
-        background 120ms ease;
-
-}
-
-
-button:active {
-
-    transform:
-        scale(0.94);
-
-}
-
-
-.tool {
-
-    height: 42px;
-
-    padding: 0 14px;
-
-    border-radius: 13px;
-
-    font-size: 14px;
-
-    font-weight: 650;
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 7px;
-
-}
-
-
-.tool.active {
-
-    background: #202124;
-
-    color: white;
-
-}
-
-
-.separator {
-
-    width: 1px;
-
-    height: 25px;
-
-    background: #ddd;
-
-    margin: 0 3px;
-
-}
-
-
-.action {
-
-    width: 42px;
-
-    height: 42px;
-
-    border-radius: 13px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    font-size: 18px;
-
-}
-
-
-.action:hover,
-.tool:not(.active):hover {
-
-    background:
-        rgba(0,0,0,0.055);
-
-}
-
-
-/* =========================================================
-   BONDS
-   ========================================================= */
-
-.bond {
-
-    stroke: #202124;
-
-    stroke-width: 4;
-
-    stroke-linecap: round;
-
-    fill: none;
-
-    transition:
-        opacity 160ms ease,
-        stroke-width 120ms ease;
-
-}
-
-
-/* =========================================================
-   ATOMS
-   ========================================================= */
-
-.atom {
-
-    fill: white;
-
-    stroke: #202124;
-
-    stroke-width: 3;
-
-}
-
-
-.atom-text {
-
-    fill: #202124;
-
-    font-size: 24px;
-
-    font-weight: 750;
-
-    text-anchor: middle;
-
-    dominant-baseline: central;
-
-    pointer-events: none;
-
-    user-select: none;
-
-}
-
-
-/*
-    Hydrogen is intentionally a little smaller
-    than carbon.
-*/
-
-.atom-hydrogen {
-
-    fill: white;
-
-    stroke: #202124;
-
-    stroke-width: 3;
-
-}
-
-
-.atom-text-hydrogen {
-
-    font-size: 21px;
-
-}
-
-
-/* =========================================================
-   ATOM APPEAR
-   ========================================================= */
-
-.atom-group.new {
-
-    animation:
-        atomAppear
-        190ms
-        cubic-bezier(.2,.8,.2,1);
-
-    transform-box: fill-box;
-
-    transform-origin: center;
-
-}
-
-
-@keyframes atomAppear {
-
-    0% {
-
-        opacity: 0;
-
-        transform:
-            scale(0.72);
-
+    * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
     }
 
-    65% {
-
-        opacity: 1;
-
-        transform:
-            scale(1.06);
-
+    html, body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+                     "SF Pro Text", Inter, Arial, sans-serif;
+        background: #f4f5f8;
+        color: #16181d;
     }
 
-    100% {
-
-        opacity: 1;
-
-        transform:
-            scale(1);
-
+    body {
+        display: flex;
+        flex-direction: column;
     }
-
-}
-
-
-/* =========================================================
-   ATOM TRANSFORMATION
-   ========================================================= */
-
-.atom-group.transforming {
-
-    animation:
-        atomTransform
-        230ms
-        cubic-bezier(.2,.8,.2,1);
-
-    transform-box: fill-box;
-
-    transform-origin: center;
-
-}
-
-
-@keyframes atomTransform {
-
-    0% {
-
-        opacity: 0.7;
-
-        transform:
-            scale(1.05);
-
-    }
-
-    45% {
-
-        opacity: 1;
-
-        transform:
-            scale(0.78);
-
-    }
-
-    70% {
-
-        transform:
-            scale(1.08);
-
-    }
-
-    100% {
-
-        transform:
-            scale(1);
-
-    }
-
-}
-
-
-/* =========================================================
-   TEMPORARY ATOM
-   ========================================================= */
-
-.pending-atom {
-
-    fill:
-        rgba(255,255,255,0.65);
-
-    stroke:
-        #202124;
-
-    stroke-width: 3;
-
-    stroke-dasharray:
-        6 5;
-
-    animation:
-        pendingPulse
-        1.2s
-        ease-in-out
-        infinite alternate;
-
-}
-
-
-@keyframes pendingPulse {
-
-    from {
-
-        opacity: 0.55;
-
-    }
-
-    to {
-
-        opacity: 0.95;
-
-    }
-
-}
-
-
-/* =========================================================
-   ROUGH STROKE
-   ========================================================= */
-
-.rough-stroke {
-
-    fill: none;
-
-    stroke: #202124;
-
-    stroke-width: 3;
-
-    stroke-linecap: round;
-
-    stroke-linejoin: round;
-
-    opacity: 0.82;
-
-    pointer-events: none;
-
-}
-
-
-.rough-stroke.transforming {
-
-    animation:
-        strokeTransform
-        180ms
-        ease
-        forwards;
-
-}
-
-
-@keyframes strokeTransform {
-
-    0% {
-
-        opacity: 0.82;
-
-    }
-
-    100% {
-
-        opacity: 0;
-
-    }
-
-}
-
-
-/* =========================================================
-   TOAST
-   ========================================================= */
-
-#toast {
-
-    position: absolute;
-
-    left: 50%;
-
-    top: 20px;
-
-    transform:
-        translate(-50%, -8px)
-        scale(0.96);
-
-    padding:
-        10px 15px;
-
-    border-radius: 13px;
-
-    background:
-        rgba(32,33,36,0.94);
-
-    color: white;
-
-    font-size: 13px;
-
-    font-weight: 600;
-
-    opacity: 0;
-
-    pointer-events: none;
-
-    transition:
-        opacity 150ms ease,
-        transform 150ms ease;
-
-    z-index: 30;
-
-}
-
-
-#toast.show {
-
-    opacity: 1;
-
-    transform:
-        translate(-50%, 0)
-        scale(1);
-
-}
-
-
-/* =========================================================
-   MOBILE
-   ========================================================= */
-
-@media (max-width: 600px) {
 
     header {
-
-        height: 60px;
-
-        padding: 0 15px;
-
+        height: 72px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 22px;
+        background: rgba(255,255,255,0.88);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(0,0,0,0.06);
+        z-index: 10;
     }
 
-    .brand-text {
+    .logo {
+        font-size: 25px;
+        font-weight: 800;
+        letter-spacing: -1px;
+    }
 
-        font-size: 17px;
+    .version {
+        margin-left: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #8b8e96;
+    }
 
+    .actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    button {
+        border: 0;
+        outline: none;
+        font: inherit;
+        cursor: pointer;
+    }
+
+    .top-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 13px;
+        background: #f0f1f4;
+        color: #44474f;
+        font-size: 18px;
+        transition: transform .15s ease, background .15s ease;
+    }
+
+    .top-btn:active {
+        transform: scale(.92);
+        background: #e5e6ea;
+    }
+
+    #workspace {
+        position: relative;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        touch-action: none;
+        user-select: none;
+    }
+
+    .empty-state {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        pointer-events: none;
+        transition: opacity .25s ease, transform .25s ease;
+    }
+
+    .empty-state.hidden {
+        opacity: 0;
+        transform: translate(-50%, -48%);
+    }
+
+    .empty-icon {
+        width: 72px;
+        height: 72px;
+        margin: 0 auto 16px;
+        border-radius: 24px;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        box-shadow: 0 10px 35px rgba(0,0,0,.07);
+    }
+
+    .empty-title {
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+
+    .empty-subtitle {
+        color: #9699a2;
+        font-size: 14px;
     }
 
     .toolbar {
-
-        bottom: 14px;
-
-        gap: 4px;
-
-        padding: 6px;
-
+        position: absolute;
+        left: 50%;
+        bottom: 22px;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px;
+        background: rgba(255,255,255,.94);
+        backdrop-filter: blur(22px);
+        -webkit-backdrop-filter: blur(22px);
+        border: 1px solid rgba(0,0,0,.06);
+        border-radius: 20px;
+        box-shadow: 0 12px 40px rgba(0,0,0,.12);
+        z-index: 20;
     }
 
     .tool {
-
-        padding:
-            0 11px;
-
-        height: 40px;
-
+        min-width: 78px;
+        height: 44px;
+        padding: 0 15px;
+        border-radius: 14px;
+        background: transparent;
+        color: #666a73;
+        font-size: 13px;
+        font-weight: 700;
+        transition: all .18s ease;
     }
 
-    .action {
-
-        width: 40px;
-
-        height: 40px;
-
+    .tool.active {
+        background: #17191e;
+        color: white;
+        box-shadow: 0 5px 15px rgba(0,0,0,.16);
     }
 
-}
+    .tool.small {
+        min-width: 44px;
+        width: 44px;
+        padding: 0;
+        font-size: 18px;
+    }
 
+    .divider {
+        width: 1px;
+        height: 26px;
+        background: #e4e5e8;
+        margin: 0 3px;
+    }
+
+    .atom {
+        fill: white;
+        stroke: #191b20;
+        stroke-width: 2.5;
+    }
+
+    .atom.pending {
+        fill: rgba(255,255,255,.65);
+        stroke: #999da6;
+        stroke-width: 2;
+        stroke-dasharray: 5 5;
+        animation: pendingPulse 1.2s ease-in-out infinite;
+    }
+
+    .atom-label {
+        fill: #17191e;
+        font-size: 19px;
+        font-weight: 800;
+        text-anchor: middle;
+        dominant-baseline: central;
+        pointer-events: none;
+        user-select: none;
+    }
+
+    .bond {
+        stroke: #17191e;
+        stroke-width: 3;
+        stroke-linecap: round;
+        pointer-events: none;
+    }
+
+    .rough-stroke {
+        fill: none;
+        stroke: #7e828c;
+        stroke-width: 2.2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        opacity: .9;
+        pointer-events: none;
+    }
+
+    .bond-preview {
+        stroke: #a2a5ad;
+        stroke-width: 2;
+        stroke-dasharray: 6 6;
+        stroke-linecap: round;
+        opacity: .7;
+        pointer-events: none;
+    }
+
+    @keyframes pendingPulse {
+        0%, 100% {
+            opacity: .55;
+            transform: scale(1);
+        }
+        50% {
+            opacity: 1;
+            transform: scale(1.04);
+        }
+    }
+
+    .appear {
+        animation: appear .25s cubic-bezier(.2,.8,.2,1);
+    }
+
+    .morph {
+        animation: morph .32s cubic-bezier(.2,.9,.2,1);
+    }
+
+    @keyframes appear {
+        from {
+            opacity: 0;
+            transform: scale(.72);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @keyframes morph {
+        0% {
+            opacity: .45;
+            transform: scale(.72);
+        }
+        65% {
+            opacity: 1;
+            transform: scale(1.12);
+        }
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @media (max-width: 600px) {
+        header {
+            height: 64px;
+            padding: 0 16px;
+        }
+
+        .logo {
+            font-size: 22px;
+        }
+
+        .toolbar {
+            bottom: 14px;
+            max-width: calc(100% - 20px);
+        }
+
+        .tool {
+            min-width: 62px;
+            padding: 0 10px;
+        }
+    }
 </style>
 </head>
 
-
 <body>
 
-
 <header>
-
-    <div class="brand">
-
-        <div class="logo">
-            B
-        </div>
-
-        <div>
-
-            <span class="brand-text">
-                BONDraw
-            </span>
-
-            <span class="version">
-                0.3
-            </span>
-
-        </div>
-
+    <div>
+        <span class="logo">BONDraw</span>
+        <span class="version">0.3</span>
     </div>
 
+    <div class="actions">
+        <button class="top-btn" id="undoBtn" title="Undo">↶</button>
+        <button class="top-btn" id="clearBtn" title="Clear">⌫</button>
+    </div>
 </header>
-
-
 
 <div id="workspace">
 
-
-    <svg id="canvas">
-
-
-        <g id="bondsLayer"></g>
-
-        <g id="atomsLayer"></g>
-
-        <g id="roughLayer"></g>
-
-        <g id="pendingLayer"></g>
-
-
-    </svg>
-
-
-
-    <div id="emptyState">
-
-        <div class="empty-card">
-
-            <div class="empty-icon">
-                ✦
-            </div>
-
-            <div class="empty-title">
-                Start drawing
-            </div>
-
-            <div class="empty-subtitle">
-                Draw a circle to create an atom
-            </div>
-
+    <div class="empty-state" id="emptyState">
+        <div class="empty-icon">⚛️</div>
+        <div class="empty-title">Draw a molecule</div>
+        <div class="empty-subtitle">
+            Draw a circle to create an atom
         </div>
-
     </div>
 
-
-
-    <div id="toast"></div>
-
-
+    <svg id="canvas">
+        <g id="bondLayer"></g>
+        <g id="atomLayer"></g>
+        <g id="strokeLayer"></g>
+    </svg>
 
     <div class="toolbar">
 
-
-        <button
-            class="tool active"
-            id="createBtn"
-            onclick="setMode('create')">
-
-            ✏️
-
-            <span>
-                Create
-            </span>
-
+        <button class="tool active" data-mode="create">
+            Create
         </button>
 
-
-        <button
-            class="tool"
-            id="moveBtn"
-            onclick="setMode('move')">
-
-            ✋
-
-            <span>
-                Move
-            </span>
-
+        <button class="tool" data-mode="move">
+            Move
         </button>
 
-
-        <button
-            class="tool"
-            id="eraseBtn"
-            onclick="setMode('erase')">
-
-            🗑
-
-            <span>
-                Erase
-            </span>
-
+        <button class="tool" data-mode="erase">
+            Erase
         </button>
 
+        <div class="divider"></div>
 
-        <div class="separator"></div>
-
-
-        <button
-            class="action"
-            onclick="undo()">
-
+        <button class="tool small" id="undoBottom">
             ↶
-
         </button>
 
-
-        <button
-            class="action"
-            onclick="clearCanvas()">
-
+        <button class="tool small" id="clearBottom">
             ⌫
-
         </button>
-
 
     </div>
 
-
 </div>
-
-
 
 <script>
 
+const svg = document.getElementById("canvas");
+const atomLayer = document.getElementById("atomLayer");
+const bondLayer = document.getElementById("bondLayer");
+const strokeLayer = document.getElementById("strokeLayer");
+const emptyState = document.getElementById("emptyState");
 
-/* =========================================================
-   BONDraw 0.3
-   ========================================================= */
-
-
-/* =========================================================
-   STATE
-   ========================================================= */
-
-const svg =
-    document.getElementById("canvas");
-
-const atomsLayer =
-    document.getElementById("atomsLayer");
-
-const bondsLayer =
-    document.getElementById("bondsLayer");
-
-const roughLayer =
-    document.getElementById("roughLayer");
-
-const pendingLayer =
-    document.getElementById("pendingLayer");
-
-const emptyState =
-    document.getElementById("emptyState");
-
-const toast =
-    document.getElementById("toast");
-
+const undoBtn = document.getElementById("undoBtn");
+const clearBtn = document.getElementById("clearBtn");
+const undoBottom = document.getElementById("undoBottom");
+const clearBottom = document.getElementById("clearBottom");
 
 let mode = "create";
 
-
 let atoms = [];
-
 let bonds = [];
 
 let history = [];
 
+let drawing = false;
+let currentStroke = [];
+let activePointerId = null;
 
-/*
-    Temporary atom waiting for its element.
-*/
+let selectedAtom = null;
+let movingAtom = null;
 
 let pendingAtom = null;
 
+let nextAtomId = 1;
+let nextBondId = 1;
 
-/*
-    Current Pencil stroke.
-*/
-
-let drawing = false;
-
-let currentStroke = [];
-
-let activePointerId = null;
-
-
-/*
-    Move state.
-*/
-
-let movingAtom = null;
-
-let moveOffsetX = 0;
-
-let moveOffsetY = 0;
-
-
-/* =========================================================
-   CONSTANTS
-   ========================================================= */
-
-
-/*
-    Carbon = standard size.
-*/
-
-const CARBON_RADIUS = 27;
-
-
-/*
-    Hydrogen = slightly smaller.
-*/
-
-const HYDROGEN_RADIUS = 23;
-
-
-/*
-    Chemical valence limits.
-*/
-
-const VALENCE = {
-
-    C: 4,
-
-    H: 1
-
+const ATOM_RADIUS = {
+    C: 27,
+    H: 23
 };
 
-
-/*
-    How long BONDraw waits for the user
-    to identify a newly created atom.
-*/
+const VALENCE = {
+    C: 4,
+    H: 1
+};
 
 const IDENTIFICATION_WINDOW = 1400;
 
-
-/* =========================================================
-   UTILITY
-   ========================================================= */
-
-function uid() {
-
-    return crypto.randomUUID();
-
-}
-
-
-function distance(a,b) {
-
-    return Math.hypot(
-        a.x - b.x,
-        a.y - b.y
-    );
-
-}
-
-
-function showToast(message) {
-
-    toast.textContent =
-        message;
-
-    toast.classList.add(
-        "show"
-    );
-
-    clearTimeout(
-        window.toastTimer
-    );
-
-    window.toastTimer =
-        setTimeout(() => {
-
-            toast.classList.remove(
-                "show"
-            );
-
-        }, 1400);
-
-}
-
-
-/* =========================================================
-   MODE
-   ========================================================= */
-
-function setMode(newMode) {
-
-    mode =
-        newMode;
-
-    document
-        .getElementById("createBtn")
-        .classList.toggle(
-            "active",
-            mode === "create"
-        );
-
-    document
-        .getElementById("moveBtn")
-        .classList.toggle(
-            "active",
-            mode === "move"
-        );
-
-    document
-        .getElementById("eraseBtn")
-        .classList.toggle(
-            "active",
-            mode === "erase"
-        );
-
-}
-
-
-/* =========================================================
-   HISTORY
-   ========================================================= */
-
-function saveHistory() {
+function saveState() {
 
     history.push({
-
-        atoms:
-            JSON.parse(
-                JSON.stringify(atoms)
-            ),
-
-        bonds:
-            JSON.parse(
-                JSON.stringify(bonds)
-            )
-
+        atoms: JSON.parse(JSON.stringify(atoms)),
+        bonds: JSON.parse(JSON.stringify(bonds))
     });
 
-
-    if (history.length > 30) {
-
+    if (history.length > 50) {
         history.shift();
-
     }
-
 }
 
+function restoreState(state) {
+
+    atoms = JSON.parse(JSON.stringify(state.atoms));
+    bonds = JSON.parse(JSON.stringify(state.bonds));
+
+    pendingAtom = null;
+
+    render();
+}
 
 function undo() {
 
-    if (!history.length) {
+    if (!history.length) return;
 
+    const previous = history.pop();
+
+    restoreState(previous);
+}
+
+function clearAll() {
+
+    if (!atoms.length && !bonds.length && !pendingAtom) {
         return;
-
     }
 
+    saveState();
 
-    const previous =
-        history.pop();
-
-
-    atoms =
-        previous.atoms;
-
-    bonds =
-        previous.bonds;
-
-
+    atoms = [];
+    bonds = [];
     pendingAtom = null;
 
-
     render();
-
 }
 
+function setMode(newMode) {
 
-/* =========================================================
-   POINTER COORDINATES
-   ========================================================= */
+    mode = newMode;
 
-function getPoint(event) {
-
-    const rect =
-        svg.getBoundingClientRect();
-
-
-    return {
-
-        x:
-            event.clientX -
-            rect.left,
-
-        y:
-            event.clientY -
-            rect.top
-
-    };
-
-}
-
-
-/* =========================================================
-   ATOM HELPERS
-   ========================================================= */
-
-function atomRadius(atom) {
-
-    if (
-        atom.element === "H"
-    ) {
-
-        return HYDROGEN_RADIUS;
-
-    }
-
-    return CARBON_RADIUS;
-
-}
-
-
-function atomValence(atom) {
-
-    return bonds
-
-        .filter(
-            bond =>
-                bond.a === atom.id ||
-                bond.b === atom.id
-        )
-
-        .reduce(
-            (total,bond) =>
-                total + bond.order,
-            0
+    document.querySelectorAll(".tool[data-mode]").forEach(button => {
+        button.classList.toggle(
+            "active",
+            button.dataset.mode === mode
         );
-
-}
-
-
-function atomCanAccept(atom, order) {
-
-    const max =
-        VALENCE[atom.element] ||
-        4;
-
-    return (
-        atomValence(atom) +
-        order
-        <= max
-    );
-
-}
-
-
-function getAtomAt(x,y) {
-
-    for (
-        let i = atoms.length - 1;
-        i >= 0;
-        i--
-    ) {
-
-        const atom =
-            atoms[i];
-
-        const radius =
-            atomRadius(atom);
-
-
-        if (
-            Math.hypot(
-                atom.x - x,
-                atom.y - y
-            )
-            <= radius + 9
-        ) {
-
-            return atom;
-
-        }
-
-    }
-
-
-    return null;
-
-}
-
-
-/* =========================================================
-   PENDING ATOM
-   ========================================================= */
-
-function createPendingAtom(
-    x,
-    y,
-    radius
-) {
-
-    pendingAtom = {
-
-        x,
-        y,
-        radius
-
-    };
-
-
-    renderPending();
-
-
-    /*
-        We deliberately DO NOT immediately
-        decide that the atom is carbon.
-
-        BONDraw waits for the user's symbol.
-    */
-
-}
-
-
-function renderPending() {
-
-    pendingLayer.innerHTML = "";
-
-    if (!pendingAtom) {
-
-        return;
-
-    }
-
-
-    const circle =
-        document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "circle"
-        );
-
-
-    circle.setAttribute(
-        "cx",
-        pendingAtom.x
-    );
-
-    circle.setAttribute(
-        "cy",
-        pendingAtom.y
-    );
-
-    circle.setAttribute(
-        "r",
-        pendingAtom.radius
-    );
-
-    circle.setAttribute(
-        "class",
-        "pending-atom"
-    );
-
-
-    pendingLayer.appendChild(
-        circle
-    );
-
-}
-
-
-function commitPendingAtom(
-    element
-) {
-
-    if (!pendingAtom) {
-
-        return;
-
-    }
-
-
-    /*
-        Only elements that currently exist
-        in the engine.
-    */
-
-    if (!VALENCE[element]) {
-
-        return;
-
-    }
-
-
-    saveHistory();
-
-
-    atoms.push({
-
-        id:
-            uid(),
-
-        x:
-            pendingAtom.x,
-
-        y:
-            pendingAtom.y,
-
-        element:
-            element
-
     });
 
+    selectedAtom = null;
+    movingAtom = null;
+}
+
+document.querySelectorAll(".tool[data-mode]").forEach(button => {
+
+    button.addEventListener("click", () => {
+        setMode(button.dataset.mode);
+    });
+
+});
+
+undoBtn.addEventListener("click", undo);
+undoBottom.addEventListener("click", undo);
+
+clearBtn.addEventListener("click", clearAll);
+clearBottom.addEventListener("click", clearAll);
+
+function distance(a, b) {
+
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+
+    return Math.sqrt(dx * dx + dy * dy);
+}
+
+function pointFromEvent(event) {
+
+    const rect = svg.getBoundingClientRect();
+
+    return {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top
+    };
+}
+
+function findAtomAt(point) {
+
+    let closest = null;
+    let closestDistance = Infinity;
+
+    for (const atom of atoms) {
+
+        const d = distance(point, atom);
+
+        const radius = ATOM_RADIUS[atom.element] || 27;
+
+        if (d <= radius + 8 && d < closestDistance) {
+            closest = atom;
+            closestDistance = d;
+        }
+    }
+
+    return closest;
+}
+
+function atomValence(atomId) {
+
+    let total = 0;
+
+    for (const bond of bonds) {
+
+        if (bond.a === atomId || bond.b === atomId) {
+            total += bond.order;
+        }
+    }
+
+    return total;
+}
+
+function canAddBond(atomA, atomB, order) {
+
+    const maxA = VALENCE[atomA.element] || 4;
+    const maxB = VALENCE[atomB.element] || 4;
+
+    return (
+        atomValence(atomA.id) + order <= maxA &&
+        atomValence(atomB.id) + order <= maxB
+    );
+}
+
+function findBond(atomAId, atomBId) {
+
+    return bonds.find(b =>
+        (b.a === atomAId && b.b === atomBId) ||
+        (b.a === atomBId && b.b === atomAId)
+    );
+}
+
+function addOrCycleBond(atomA, atomB) {
+
+    if (!atomA || !atomB || atomA.id === atomB.id) {
+        return;
+    }
+
+    const existing = findBond(atomA.id, atomB.id);
+
+    saveState();
+
+    if (!existing) {
+
+        if (!canAddBond(atomA, atomB, 1)) {
+            history.pop();
+            return;
+        }
+
+        bonds.push({
+            id: nextBondId++,
+            a: atomA.id,
+            b: atomB.id,
+            order: 1
+        });
+
+    } else {
+
+        const nextOrder =
+            existing.order === 3
+                ? 1
+                : existing.order + 1;
+
+        const difference = nextOrder - existing.order;
+
+        const maxA = VALENCE[atomA.element] || 4;
+        const maxB = VALENCE[atomB.element] || 4;
+
+        if (
+            atomValence(atomA.id) + difference > maxA ||
+            atomValence(atomB.id) + difference > maxB
+        ) {
+            history.pop();
+            return;
+        }
+
+        existing.order = nextOrder;
+    }
+
+    render();
+}
+
+function createPendingAtom(x, y) {
+
+    pendingAtom = {
+        x,
+        y,
+        createdAt: Date.now()
+    };
+
+    render();
+}
+
+function finalizePendingAtom(element) {
+
+    if (!pendingAtom) return;
+
+    saveState();
+
+    const atom = {
+        id: nextAtomId++,
+        x: pendingAtom.x,
+        y: pendingAtom.y,
+        element
+    };
+
+    atoms.push(atom);
 
     pendingAtom = null;
 
-
-    pendingLayer.innerHTML = "";
-
-
     render();
-
-
 }
 
+function isPointInsidePending(point) {
 
-/* =========================================================
-   CIRCLE RECOGNITION
-   ========================================================= */
+    if (!pendingAtom) return false;
 
-function analyzeCircle(points) {
-
-    if (
-        points.length < 12
-    ) {
-
-        return null;
-
-    }
-
-
-    let minX = Infinity;
-
-    let maxX = -Infinity;
-
-    let minY = Infinity;
-
-    let maxY = -Infinity;
-
-
-    for (const p of points) {
-
-        minX =
-            Math.min(
-                minX,
-                p.x
-            );
-
-        maxX =
-            Math.max(
-                maxX,
-                p.x
-            );
-
-        minY =
-            Math.min(
-                minY,
-                p.y
-            );
-
-        maxY =
-            Math.max(
-                maxY,
-                p.y
-            );
-
-    }
-
-
-    const width =
-        maxX - minX;
-
-    const height =
-        maxY - minY;
-
-
-    if (
-        width < 25 ||
-        height < 25
-    ) {
-
-        return null;
-
-    }
-
-
-    const ratio =
-        Math.min(
-            width,
-            height
-        )
-        /
-        Math.max(
-            width,
-            height
-        );
-
-
-    if (
-        ratio < 0.65
-    ) {
-
-        return null;
-
-    }
-
-
-    const start =
-        points[0];
-
-    const end =
-        points[
-            points.length - 1
-        ];
-
-
-    const closure =
-        Math.hypot(
-            start.x - end.x,
-            start.y - end.y
-        );
-
-
-    const size =
-        Math.max(
-            width,
-            height
-        );
-
-
-    if (
-        closure >
-        size * 0.35
-    ) {
-
-        return null;
-
-    }
-
-
-    const center = {
-
-        x:
-            (minX + maxX) / 2,
-
-        y:
-            (minY + maxY) / 2
-
-    };
-
-
-    let radiusSum = 0;
-
-
-    for (const p of points) {
-
-        radiusSum +=
-            Math.hypot(
-                p.x - center.x,
-                p.y - center.y
-            );
-
-    }
-
-
-    const radius =
-        radiusSum /
-        points.length;
-
-
-    let error = 0;
-
-
-    for (const p of points) {
-
-        const r =
-            Math.hypot(
-                p.x - center.x,
-                p.y - center.y
-            );
-
-
-        error +=
-            Math.abs(
-                r - radius
-            );
-
-    }
-
-
-    error /=
-        points.length;
-
-
-    if (
-        error >
-        radius * 0.42
-    ) {
-
-        return null;
-
-    }
-
-
-    return {
-
-        x:
-            center.x,
-
-        y:
-            center.y,
-
-        radius:
-            radius
-
-    };
-
+    return distance(point, pendingAtom) <= 45;
 }
-
-
-/* =========================================================
-   DRAWING LETTER RECOGNITION
-   ========================================================= */
-
 
 /*
-    The user writes inside the pending circle.
+    Simple handwriting recognition for C / H.
 
-    For this prototype we recognize:
+    IMPORTANT:
+    The labels here are intentionally corrected:
 
-    C
-    H
-
-    using the geometry of the stroke.
-
-    This is intentionally lightweight.
+    H-like stroke -> "H"
+    C-like stroke -> "C"
 */
 
+function recognizeElement(points) {
 
-function recognizeElement(
-    points,
-    center,
-    radius
-) {
-
-    if (
-        points.length < 4
-    ) {
-
+    if (!points || points.length < 5) {
         return null;
-
     }
-
-
-    /*
-        Keep only points that are
-        reasonably close to the atom center.
-    */
-
-    const innerPoints =
-        points.filter(
-            p =>
-                Math.hypot(
-                    p.x - center.x,
-                    p.y - center.y
-                )
-                <
-                radius * 0.75
-        );
-
-
-    if (
-        innerPoints.length < 3
-    ) {
-
-        return null;
-
-    }
-
-
-    /*
-        Bounding box.
-    */
 
     let minX = Infinity;
     let maxX = -Infinity;
     let minY = Infinity;
     let maxY = -Infinity;
 
+    for (const p of points) {
 
-    for (
-        const p of innerPoints
-    ) {
+        minX = Math.min(minX, p.x);
+        maxX = Math.max(maxX, p.x);
 
-        minX =
-            Math.min(
-                minX,
-                p.x
-            );
-
-        maxX =
-            Math.max(
-                maxX,
-                p.x
-            );
-
-        minY =
-            Math.min(
-                minY,
-                p.y
-            );
-
-        maxY =
-            Math.max(
-                maxY,
-                p.y
-            );
-
+        minY = Math.min(minY, p.y);
+        maxY = Math.max(maxY, p.y);
     }
 
+    const width = maxX - minX;
+    const height = maxY - minY;
 
-    const width =
-        maxX - minX;
-
-    const height =
-        maxY - minY;
-
-
-    if (
-        width < 7 ||
-        height < 10
-    ) {
-
+    if (width < 5 || height < 5) {
         return null;
-
     }
 
-
-    /*
-        Determine where the stroke
-        spent its time.
-
-        This allows us to distinguish
-        an H-like structure from a C-like
-        structure.
-    */
+    let total = points.length;
 
     let leftCount = 0;
-
     let rightCount = 0;
-
     let centerCount = 0;
 
-    let topCount = 0;
+    const centerX = minX + width / 2;
 
-    let bottomCount = 0;
+    for (const p of points) {
 
-
-    const midX =
-        (minX + maxX) / 2;
-
-    const midY =
-        (minY + maxY) / 2;
-
-
-    for (
-        const p of innerPoints
-    ) {
-
-        if (
-            p.x <
-            midX - width * 0.18
-        ) {
-
+        if (p.x < centerX - width * 0.15) {
             leftCount++;
-
         }
 
-        if (
-            p.x >
-            midX + width * 0.18
-        ) {
-
+        if (p.x > centerX + width * 0.15) {
             rightCount++;
-
         }
 
         if (
-            Math.abs(
-                p.x - midX
-            )
-            <
+            Math.abs(p.x - centerX) <
             width * 0.18
         ) {
-
             centerCount++;
-
         }
-
-        if (
-            p.y <
-            midY
-        ) {
-
-            topCount++;
-
-        }
-
-        if (
-            p.y >
-            midY
-        ) {
-
-            bottomCount++;
-
-        }
-
     }
 
+    const leftRatio = leftCount / total;
+    const rightRatio = rightCount / total;
 
     /*
-        A one-stroke H often has:
-        left vertical section
-        right vertical section
-        central connection.
-
-        We therefore look for significant
-        activity on both sides.
-    */
-
-    const total =
-        innerPoints.length;
-
-
-    const leftRatio =
-        leftCount / total;
-
-    const rightRatio =
-        rightCount / total;
-
-
-    /*
-        H detection.
-
-        Both sides must be represented.
+        H recognition:
+        - meaningful vertical structure on both sides
+        - meaningful central connection
     */
 
     if (
@@ -1846,22 +719,14 @@ function recognizeElement(
         rightRatio > 0.12 &&
         centerCount > total * 0.10
     ) {
-
         return "H";
-
     }
 
-
     /*
-        C detection.
-
-        A C tends to occupy the left and
-        upper/lower portions but not form
-        two strong vertical sides.
-
-        We accept it when the stroke is
-        wider than it is tall or has strong
-        left-side activity.
+        C recognition:
+        - stroke occupies left side
+        - limited occupation of right side
+        - typical C-shaped width
     */
 
     if (
@@ -1871,1626 +736,634 @@ function recognizeElement(
             width >= height * 0.65
         )
     ) {
-
         return "C";
-
     }
 
-
     /*
-        Fallback based on gesture width.
-        This makes the prototype forgiving.
+        Additional H fallback
     */
 
     if (
         width < height * 0.72 &&
         centerCount > total * 0.16
     ) {
-
         return "H";
-
     }
 
+    /*
+        Additional C fallback
+    */
 
     if (
         leftRatio > 0.20
     ) {
-
         return "C";
-
     }
-
 
     return null;
-
 }
 
+function createRoughStroke(points) {
 
-/* =========================================================
-   LETTER TRANSFORMATION
-   ========================================================= */
+    if (!points.length) return;
 
-function transformPendingAtom(
-    element
-) {
-
-    if (!pendingAtom) {
-
-        return;
-
-    }
-
-
-    const x =
-        pendingAtom.x;
-
-    const y =
-        pendingAtom.y;
-
-
-    const oldRadius =
-        pendingAtom.radius;
-
-
-    /*
-        Hydrogen gets a slightly smaller
-        final atom size.
-    */
-
-    const newRadius =
-        element === "H"
-            ? HYDROGEN_RADIUS
-            : CARBON_RADIUS;
-
-
-    /*
-        Hide temporary circle.
-    */
-
-    pendingLayer.innerHTML = "";
-
-
-    /*
-        Save current position before
-        creating final atom.
-    */
-
-    saveHistory();
-
-
-    const atom = {
-
-        id:
-            uid(),
-
-        x,
-        y,
-
-        element
-
-    };
-
-
-    atoms.push(atom);
-
-
-    /*
-        Render immediately, then add
-        transformation animation.
-    */
-
-    render();
-
-
-    const groups =
-        atomsLayer.querySelectorAll(
-            ".atom-group"
-        );
-
-
-    const last =
-        groups[
-            groups.length - 1
-        ];
-
-
-    if (last) {
-
-        last.classList.add(
-            "transforming"
-        );
-
-    }
-
-
-    /*
-        Tiny visual scale difference
-        between temporary circle and
-        final atom.
-    */
-
-    if (
-        element === "H" &&
-        oldRadius > newRadius
-    ) {
-
-        /*
-            The CSS animation already gives
-            the compression feeling.
-        */
-
-    }
-
-
-    pendingAtom = null;
-
-}
-
-
-/* =========================================================
-   LETTER STROKE ANALYSIS
-   ========================================================= */
-
-function analyzeElementStroke(
-    points
-) {
-
-    if (!pendingAtom) {
-
-        return null;
-
-    }
-
-
-    return recognizeElement(
-        points,
-        {
-            x:
-                pendingAtom.x,
-
-            y:
-                pendingAtom.y
-        },
-        pendingAtom.radius
+    const path = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "path"
     );
 
+    let d = `M ${points[0].x} ${points[0].y}`;
+
+    for (let i = 1; i < points.length; i++) {
+
+        d += ` L ${points[i].x} ${points[i].y}`;
+    }
+
+    path.setAttribute("d", d);
+    path.setAttribute("class", "rough-stroke");
+
+    strokeLayer.appendChild(path);
+
+    setTimeout(() => {
+
+        path.style.transition =
+            "opacity .22s ease";
+
+        path.style.opacity = "0";
+
+        setTimeout(() => {
+            path.remove();
+        }, 240);
+
+    }, 20);
 }
 
+function isCircle(points) {
 
-/* =========================================================
-   BOND RECOGNITION
-   ========================================================= */
-
-function findBond(
-    atomA,
-    atomB
-) {
-
-    return bonds.find(
-        bond =>
-
-            (
-                bond.a === atomA.id &&
-                bond.b === atomB.id
-            )
-
-            ||
-
-            (
-                bond.a === atomB.id &&
-                bond.b === atomA.id
-            )
-    );
-
-}
-
-
-function analyzeBondStroke(
-    points
-) {
-
-    if (
-        points.length < 3
-    ) {
-
-        return null;
-
-    }
-
-
-    const start =
-        points[0];
-
-    const end =
-        points[
-            points.length - 1
-        ];
-
-
-    const startAtom =
-        getAtomAt(
-            start.x,
-            start.y
-        );
-
-    const endAtom =
-        getAtomAt(
-            end.x,
-            end.y
-        );
-
-
-    if (
-        !startAtom ||
-        !endAtom ||
-        startAtom.id === endAtom.id
-    ) {
-
-        return null;
-
-    }
-
-
-    const dx =
-        end.x - start.x;
-
-    const dy =
-        end.y - start.y;
-
-
-    const length =
-        Math.hypot(
-            dx,
-            dy
-        );
-
-
-    if (
-        length < 25
-    ) {
-
-        return null;
-
-    }
-
-
-    let totalError = 0;
-
-
-    for (
-        const p of points
-    ) {
-
-        const error =
-            Math.abs(
-
-                dy * p.x
-                -
-                dx * p.y
-                +
-                end.x * start.y
-                -
-                end.y * start.x
-
-            )
-            /
-            length;
-
-
-        totalError +=
-            error;
-
-    }
-
-
-    const averageError =
-        totalError /
-        points.length;
-
-
-    if (
-        averageError >
-        Math.max(
-            18,
-            length * 0.25
-        )
-    ) {
-
-        return null;
-
-    }
-
-
-    return {
-
-        startAtom,
-
-        endAtom
-
-    };
-
-}
-
-
-/* =========================================================
-   BOND ENGINE
-   ========================================================= */
-
-function canChangeBondOrder(
-    bond,
-    newOrder
-) {
-
-    const atomA =
-        atoms.find(
-            a =>
-                a.id === bond.a
-        );
-
-    const atomB =
-        atoms.find(
-            a =>
-                a.id === bond.b
-        );
-
-
-    if (
-        !atomA ||
-        !atomB
-    ) {
-
+    if (points.length < 12) {
         return false;
-
     }
 
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
 
-    const valenceA =
-        atomValence(atomA)
-        -
-        bond.order;
+    for (const p of points) {
 
+        minX = Math.min(minX, p.x);
+        maxX = Math.max(maxX, p.x);
 
-    const valenceB =
-        atomValence(atomB)
-        -
-        bond.order;
+        minY = Math.min(minY, p.y);
+        maxY = Math.max(maxY, p.y);
+    }
 
+    const width = maxX - minX;
+    const height = maxY - minY;
 
-    const maxA =
-        VALENCE[
-            atomA.element
-        ] || 4;
+    if (width < 22 || height < 22) {
+        return false;
+    }
 
+    const ratio = width / height;
 
-    const maxB =
-        VALENCE[
-            atomB.element
-        ] || 4;
+    if (ratio < 0.62 || ratio > 1.38) {
+        return false;
+    }
 
+    const start = points[0];
+    const end = points[points.length - 1];
 
-    return (
+    const closingDistance = distance(start, end);
 
-        valenceA + newOrder
-        <= maxA
+    if (closingDistance > Math.max(width, height) * 0.42) {
+        return false;
+    }
 
-        &&
-
-        valenceB + newOrder
-        <= maxB
-
-    );
-
+    return true;
 }
 
+function handleCreateStroke(points) {
 
-function connectAtoms(
-    atomA,
-    atomB
-) {
-
-    if (
-        atomA.id === atomB.id
-    ) {
-
-        return;
-
-    }
-
-
-    const existing =
-        findBond(
-            atomA,
-            atomB
-        );
-
+    if (!points.length) return;
 
     /*
-        Existing bond:
-        single → double → triple → single
-    */
-
-    if (existing) {
-
-        const nextOrder =
-            existing.order === 3
-                ? 1
-                : existing.order + 1;
-
-
-        if (
-            !canChangeBondOrder(
-                existing,
-                nextOrder
-            )
-        ) {
-
-            showToast(
-                "Valence limit reached"
-            );
-
-            return;
-
-        }
-
-
-        saveHistory();
-
-
-        existing.order =
-            nextOrder;
-
-
-        render();
-
-
-        return;
-
-    }
-
-
-    /*
-        New single bond.
-    */
-
-    if (
-        !atomCanAccept(
-            atomA,
-            1
-        )
-        ||
-        !atomCanAccept(
-            atomB,
-            1
-        )
-    ) {
-
-        showToast(
-            "Valence limit reached"
-        );
-
-        return;
-
-    }
-
-
-    saveHistory();
-
-
-    bonds.push({
-
-        id:
-            uid(),
-
-        a:
-            atomA.id,
-
-        b:
-            atomB.id,
-
-        order:
-            1
-
-    });
-
-
-    render();
-
-}
-
-
-/* =========================================================
-   BOND RENDERING
-   ========================================================= */
-
-function drawBond(bond) {
-
-    const atomA =
-        atoms.find(
-            a =>
-                a.id === bond.a
-        );
-
-    const atomB =
-        atoms.find(
-            a =>
-                a.id === bond.b
-        );
-
-
-    if (
-        !atomA ||
-        !atomB
-    ) {
-
-        return;
-
-    }
-
-
-    const dx =
-        atomB.x - atomA.x;
-
-    const dy =
-        atomB.y - atomA.y;
-
-
-    const length =
-        Math.hypot(
-            dx,
-            dy
-        );
-
-
-    if (
-        length === 0
-    ) {
-
-        return;
-
-    }
-
-
-    const ux =
-        dx / length;
-
-    const uy =
-        dy / length;
-
-
-    const px =
-        -uy;
-
-    const py =
-        ux;
-
-
-    const startRadius =
-        atomRadius(atomA);
-
-
-    const endRadius =
-        atomRadius(atomB);
-
-
-    const startX =
-        atomA.x +
-        ux * startRadius;
-
-
-    const startY =
-        atomA.y +
-        uy * startRadius;
-
-
-    const endX =
-        atomB.x -
-        ux * endRadius;
-
-
-    const endY =
-        atomB.y -
-        uy * endRadius;
-
-
-    const group =
-        document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "g"
-        );
-
-
-    if (
-        bond.order === 1
-    ) {
-
-        const line =
-            document.createElementNS(
-                "http://www.w3.org/2000/svg",
-                "line"
-            );
-
-
-        line.setAttribute(
-            "x1",
-            startX
-        );
-
-        line.setAttribute(
-            "y1",
-            startY
-        );
-
-        line.setAttribute(
-            "x2",
-            endX
-        );
-
-        line.setAttribute(
-            "y2",
-            endY
-        );
-
-
-        line.setAttribute(
-            "class",
-            "bond"
-        );
-
-
-        group.appendChild(
-            line
-        );
-
-    }
-
-
-    if (
-        bond.order === 2
-    ) {
-
-        const offset = 4;
-
-
-        const line1 =
-            document.createElementNS(
-                "http://www.w3.org/2000/svg",
-                "line"
-            );
-
-
-        const line2 =
-            document.createElementNS(
-                "http://www.w3.org/2000/svg",
-                "line"
-            );
-
-
-        line1.setAttribute(
-            "x1",
-            startX + px * offset
-        );
-
-        line1.setAttribute(
-            "y1",
-            startY + py * offset
-        );
-
-        line1.setAttribute(
-            "x2",
-            endX + px * offset
-        );
-
-        line1.setAttribute(
-            "y2",
-            endY + py * offset
-        );
-
-
-        line2.setAttribute(
-            "x1",
-            startX - px * offset
-        );
-
-        line2.setAttribute(
-            "y1",
-            startY - py * offset
-        );
-
-        line2.setAttribute(
-            "x2",
-            endX - px * offset
-        );
-
-        line2.setAttribute(
-            "y2",
-            endY - py * offset
-        );
-
-
-        line1.setAttribute(
-            "class",
-            "bond"
-        );
-
-        line2.setAttribute(
-            "class",
-            "bond"
-        );
-
-
-        group.appendChild(
-            line1
-        );
-
-        group.appendChild(
-            line2
-        );
-
-    }
-
-
-    if (
-        bond.order === 3
-    ) {
-
-        const offset = 6;
-
-
-        const center =
-            document.createElementNS(
-                "http://www.w3.org/2000/svg",
-                "line"
-            );
-
-
-        const line1 =
-            document.createElementNS(
-                "http://www.w3.org/2000/svg",
-                "line"
-            );
-
-
-        const line2 =
-            document.createElementNS(
-                "http://www.w3.org/2000/svg",
-                "line"
-            );
-
-
-        center.setAttribute(
-            "x1",
-            startX
-        );
-
-        center.setAttribute(
-            "y1",
-            startY
-        );
-
-        center.setAttribute(
-            "x2",
-            endX
-        );
-
-        center.setAttribute(
-            "y2",
-            endY
-        );
-
-
-        line1.setAttribute(
-            "x1",
-            startX + px * offset
-        );
-
-        line1.setAttribute(
-            "y1",
-            startY + py * offset
-        );
-
-        line1.setAttribute(
-            "x2",
-            endX + px * offset
-        );
-
-        line1.setAttribute(
-            "y2",
-            endY + py * offset
-        );
-
-
-        line2.setAttribute(
-            "x1",
-            startX - px * offset
-        );
-
-        line2.setAttribute(
-            "y1",
-            startY - py * offset
-        );
-
-        line2.setAttribute(
-            "x2",
-            endX - px * offset
-        );
-
-        line2.setAttribute(
-            "y2",
-            endY - py * offset
-        );
-
-
-        center.setAttribute(
-            "class",
-            "bond"
-        );
-
-        line1.setAttribute(
-            "class",
-            "bond"
-        );
-
-        line2.setAttribute(
-            "class",
-            "bond"
-        );
-
-
-        group.appendChild(
-            line1
-        );
-
-        group.appendChild(
-            center
-        );
-
-        group.appendChild(
-            line2
-        );
-
-    }
-
-
-    bondsLayer.appendChild(
-        group
-    );
-
-}
-
-
-/* =========================================================
-   ATOM RENDERING
-   ========================================================= */
-
-function renderAtom(atom) {
-
-    const group =
-        document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "g"
-        );
-
-
-    group.setAttribute(
-        "class",
-        "atom-group new"
-    );
-
-
-    const radius =
-        atomRadius(atom);
-
-
-    const circle =
-        document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "circle"
-        );
-
-
-    circle.setAttribute(
-        "cx",
-        atom.x
-    );
-
-    circle.setAttribute(
-        "cy",
-        atom.y
-    );
-
-    circle.setAttribute(
-        "r",
-        radius
-    );
-
-
-    circle.setAttribute(
-        "class",
-        atom.element === "H"
-            ? "atom-hydrogen"
-            : "atom"
-    );
-
-
-    const text =
-        document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "text"
-        );
-
-
-    text.setAttribute(
-        "x",
-        atom.x
-    );
-
-    text.setAttribute(
-        "y",
-        atom.y
-    );
-
-
-    text.setAttribute(
-        "class",
-        atom.element === "H"
-            ? "atom-text atom-text-hydrogen"
-            : "atom-text"
-    );
-
-
-    text.textContent =
-        atom.element;
-
-
-    group.appendChild(
-        circle
-    );
-
-    group.appendChild(
-        text
-    );
-
-
-    atomsLayer.appendChild(
-        group
-    );
-
-}
-
-
-/* =========================================================
-   RENDER
-   ========================================================= */
-
-function render() {
-
-    atomsLayer.innerHTML = "";
-
-    bondsLayer.innerHTML = "";
-
-
-    for (
-        const bond of bonds
-    ) {
-
-        drawBond(bond);
-
-    }
-
-
-    for (
-        const atom of atoms
-    ) {
-
-        renderAtom(atom);
-
-    }
-
-
-    emptyState.classList.toggle(
-        "hidden",
-        atoms.length > 0
-    );
-
-}
-
-
-/* =========================================================
-   ROUGH STROKE
-   ========================================================= */
-
-function createRoughPath(
-    points
-) {
-
-    if (
-        points.length < 2
-    ) {
-
-        return "";
-
-    }
-
-
-    return points
-        .map(
-            (point,index) =>
-                `${
-                    index === 0
-                        ? "M"
-                        : "L"
-                } ${point.x} ${point.y}`
-        )
-        .join(" ");
-
-}
-
-
-function showRoughStroke() {
-
-    roughLayer.innerHTML = "";
-
-
-    if (
-        currentStroke.length < 2
-    ) {
-
-        return;
-
-    }
-
-
-    const path =
-        document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "path"
-        );
-
-
-    path.setAttribute(
-        "d",
-        createRoughPath(
-            currentStroke
-        )
-    );
-
-
-    path.setAttribute(
-        "class",
-        "rough-stroke"
-    );
-
-
-    roughLayer.appendChild(
-        path
-    );
-
-}
-
-
-/* =========================================================
-   CREATE STROKE
-   ========================================================= */
-
-function finishCreateStroke() {
-
-    if (
-        currentStroke.length < 3
-    ) {
-
-        roughLayer.innerHTML = "";
-
-        return;
-
-    }
-
-
-    /*
-        If an atom is currently waiting
-        for its element, the next stroke
-        is interpreted as handwriting.
+        If a temporary atom exists,
+        this stroke is interpreted as
+        the element written inside it.
     */
 
     if (pendingAtom) {
 
-        const element =
-            analyzeElementStroke(
-                currentStroke
-            );
+        const element = recognizeElement(points);
 
+        if (element) {
 
-        if (
-            element === "C" ||
-            element === "H"
-        ) {
-
-            const rough =
-                roughLayer.querySelector(
-                    ".rough-stroke"
-                );
-
-
-            if (rough) {
-
-                rough.classList.add(
-                    "transforming"
-                );
-
-            }
-
+            createRoughStroke(points);
 
             setTimeout(() => {
-
-                transformPendingAtom(
-                    element
-                );
-
-                roughLayer.innerHTML = "";
-
+                finalizePendingAtom(element);
             }, 80);
 
+        } else {
 
-            return;
-
+            createRoughStroke(points);
         }
 
-
-        /*
-            If it wasn't recognized,
-            keep the pending atom alive.
-        */
-
-        roughLayer.innerHTML = "";
-
-        showToast(
-            "Write C or H inside the atom"
-        );
-
         return;
-
     }
-
 
     /*
-        First look for a bond.
+        First look for a bond gesture:
+        if the stroke starts near an atom
+        and ends near another atom.
     */
 
-    const bondStroke =
-        analyzeBondStroke(
-            currentStroke
-        );
+    const start = points[0];
+    const end = points[points.length - 1];
 
+    const startAtom = findAtomAt(start);
+    const endAtom = findAtomAt(end);
 
-    if (bondStroke) {
+    if (
+        startAtom &&
+        endAtom &&
+        startAtom.id !== endAtom.id
+    ) {
 
-        const rough =
-            roughLayer.querySelector(
-                ".rough-stroke"
-            );
-
-
-        if (rough) {
-
-            rough.classList.add(
-                "transforming"
-            );
-
-        }
-
+        createRoughStroke(points);
 
         setTimeout(() => {
-
-            connectAtoms(
-                bondStroke.startAtom,
-                bondStroke.endAtom
-            );
-
-
-            roughLayer.innerHTML = "";
-
-        }, 90);
-
+            addOrCycleBond(startAtom, endAtom);
+        }, 60);
 
         return;
-
     }
-
 
     /*
-        Otherwise look for a circle.
+        Otherwise check whether the user
+        drew a circle.
     */
 
-    const circle =
-        analyzeCircle(
-            currentStroke
-        );
+    if (isCircle(points)) {
 
+        let centerX = 0;
+        let centerY = 0;
 
-    if (circle) {
-
-        const rough =
-            roughLayer.querySelector(
-                ".rough-stroke"
-            );
-
-
-        if (rough) {
-
-            rough.classList.add(
-                "transforming"
-            );
-
+        for (const p of points) {
+            centerX += p.x;
+            centerY += p.y;
         }
 
+        centerX /= points.length;
+        centerY /= points.length;
+
+        createRoughStroke(points);
 
         setTimeout(() => {
-
-            createPendingAtom(
-                circle.x,
-                circle.y,
-                CARBON_RADIUS
-            );
-
-
-            roughLayer.innerHTML = "";
-
-        }, 90);
-
+            createPendingAtom(centerX, centerY);
+        }, 70);
 
         return;
-
     }
 
-
-    roughLayer.innerHTML = "";
-
+    createRoughStroke(points);
 }
 
+function moveAtom(atom, point) {
 
-/* =========================================================
-   POINTER DOWN
-   ========================================================= */
+    atom.x = point.x;
+    atom.y = point.y;
 
-svg.addEventListener(
-    "pointerdown",
-    event => {
+    render();
+}
 
-        event.preventDefault();
+function eraseAt(point) {
 
+    const atom = findAtomAt(point);
 
-        activePointerId =
-            event.pointerId;
+    if (!atom) return;
 
+    saveState();
 
-        const point =
-            getPoint(event);
+    bonds = bonds.filter(
+        bond =>
+            bond.a !== atom.id &&
+            bond.b !== atom.id
+    );
 
+    atoms = atoms.filter(
+        a => a.id !== atom.id
+    );
 
-        /*
-            CREATE
-        */
+    render();
+}
 
-        if (
-            mode === "create"
-        ) {
+function render() {
 
-            drawing = true;
+    atomLayer.innerHTML = "";
+    bondLayer.innerHTML = "";
 
-            currentStroke = [
-                point
-            ];
-
-
-            svg.setPointerCapture(
-                event.pointerId
-            );
-
-
-            showRoughStroke();
-
-
-            return;
-
-        }
-
-
-        /*
-            MOVE
-        */
-
-        if (
-            mode === "move"
-        ) {
-
-            const atom =
-                getAtomAt(
-                    point.x,
-                    point.y
-                );
-
-
-            if (!atom) {
-
-                return;
-
-            }
-
-
-            saveHistory();
-
-
-            movingAtom =
-                atom;
-
-
-            moveOffsetX =
-                atom.x -
-                point.x;
-
-
-            moveOffsetY =
-                atom.y -
-                point.y;
-
-
-            svg.setPointerCapture(
-                event.pointerId
-            );
-
-
-            return;
-
-        }
-
-
-        /*
-            ERASE
-        */
-
-        if (
-            mode === "erase"
-        ) {
-
-            const atom =
-                getAtomAt(
-                    point.x,
-                    point.y
-                );
-
-
-            if (!atom) {
-
-                return;
-
-            }
-
-
-            saveHistory();
-
-
-            atoms =
-                atoms.filter(
-                    a =>
-                        a.id !== atom.id
-                );
-
-
-            bonds =
-                bonds.filter(
-                    bond =>
-                        bond.a !== atom.id &&
-                        bond.b !== atom.id
-                );
-
-
-            render();
-
-        }
-
-    }
-);
-
-
-/* =========================================================
-   POINTER MOVE
-   ========================================================= */
-
-svg.addEventListener(
-    "pointermove",
-    event => {
-
-        event.preventDefault();
-
-
-        if (
-            activePointerId !==
-            event.pointerId
-        ) {
-
-            return;
-
-        }
-
-
-        const point =
-            getPoint(event);
-
-
-        /*
-            CREATE
-        */
-
-        if (
-            mode === "create" &&
-            drawing
-        ) {
-
-            const last =
-                currentStroke[
-                    currentStroke.length - 1
-                ];
-
-
-            if (
-                Math.hypot(
-                    point.x - last.x,
-                    point.y - last.y
-                ) > 2
-            ) {
-
-                currentStroke.push(
-                    point
-                );
-
-
-                showRoughStroke();
-
-            }
-
-
-            return;
-
-        }
-
-
-        /*
-            MOVE
-        */
-
-        if (
-            mode === "move" &&
-            movingAtom
-        ) {
-
-            movingAtom.x =
-                point.x +
-                moveOffsetX;
-
-
-            movingAtom.y =
-                point.y +
-                moveOffsetY;
-
-
-            render();
-
-        }
-
-    }
-);
-
-
-/* =========================================================
-   POINTER UP
-   ========================================================= */
-
-svg.addEventListener(
-    "pointerup",
-    event => {
-
-        event.preventDefault();
-
-
-        if (
-            activePointerId !==
-            event.pointerId
-        ) {
-
-            return;
-
-        }
-
-
-        if (
-            mode === "create" &&
-            drawing
-        ) {
-
-            drawing = false;
-
-
-            finishCreateStroke();
-
-        }
-
-
-        if (
-            mode === "move"
-        ) {
-
-            movingAtom = null;
-
-        }
-
-
-        activePointerId = null;
-
-    }
-);
-
-
-/* =========================================================
-   POINTER CANCEL
-   ========================================================= */
-
-svg.addEventListener(
-    "pointercancel",
-    () => {
-
-        drawing = false;
-
-        movingAtom = null;
-
-        activePointerId = null;
-
-        currentStroke = [];
-
-        roughLayer.innerHTML = "";
-
-    }
-);
-
-
-/* =========================================================
-   CLEAR
-   ========================================================= */
-
-function clearCanvas() {
+    /*
+        Empty state
+    */
 
     if (
         atoms.length === 0 &&
-        bonds.length === 0 &&
         !pendingAtom
     ) {
-
-        return;
-
+        emptyState.classList.remove("hidden");
+    } else {
+        emptyState.classList.add("hidden");
     }
 
+    /*
+        Bonds
+    */
 
-    saveHistory();
+    for (const bond of bonds) {
 
+        const a = atoms.find(atom => atom.id === bond.a);
+        const b = atoms.find(atom => atom.id === bond.b);
 
-    atoms = [];
+        if (!a || !b) continue;
 
-    bonds = [];
+        const radiusA = ATOM_RADIUS[a.element] || 27;
+        const radiusB = ATOM_RADIUS[b.element] || 27;
 
-    pendingAtom = null;
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
 
+        const length = Math.sqrt(dx * dx + dy * dy);
 
-    roughLayer.innerHTML = "";
+        if (!length) continue;
 
-    pendingLayer.innerHTML = "";
+        const ux = dx / length;
+        const uy = dy / length;
 
+        const startX = a.x + ux * radiusA;
+        const startY = a.y + uy * radiusA;
 
-    render();
+        const endX = b.x - ux * radiusB;
+        const endY = b.y - uy * radiusB;
 
+        const px = -uy;
+        const py = ux;
+
+        const spacing = 5;
+
+        for (let i = 0; i < bond.order; i++) {
+
+            let offset = 0;
+
+            if (bond.order === 2) {
+                offset = i === 0 ? -spacing / 2 : spacing / 2;
+            }
+
+            if (bond.order === 3) {
+                if (i === 0) offset = -spacing;
+                if (i === 1) offset = 0;
+                if (i === 2) offset = spacing;
+            }
+
+            const line = document.createElementNS(
+                "http://www.w3.org/2000/svg",
+                "line"
+            );
+
+            line.setAttribute(
+                "x1",
+                startX + px * offset
+            );
+
+            line.setAttribute(
+                "y1",
+                startY + py * offset
+            );
+
+            line.setAttribute(
+                "x2",
+                endX + px * offset
+            );
+
+            line.setAttribute(
+                "y2",
+                endY + py * offset
+            );
+
+            line.setAttribute(
+                "class",
+                "bond"
+            );
+
+            bondLayer.appendChild(line);
+        }
+    }
+
+    /*
+        Pending atom
+    */
+
+    if (pendingAtom) {
+
+        const circle = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "circle"
+        );
+
+        circle.setAttribute(
+            "cx",
+            pendingAtom.x
+        );
+
+        circle.setAttribute(
+            "cy",
+            pendingAtom.y
+        );
+
+        circle.setAttribute(
+            "r",
+            27
+        );
+
+        circle.setAttribute(
+            "class",
+            "atom pending"
+        );
+
+        atomLayer.appendChild(circle);
+    }
+
+    /*
+        Atoms
+    */
+
+    for (const atom of atoms) {
+
+        const radius =
+            ATOM_RADIUS[atom.element] || 27;
+
+        const group = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "g"
+        );
+
+        group.setAttribute(
+            "transform",
+            `translate(${atom.x} ${atom.y})`
+        );
+
+        group.setAttribute(
+            "class",
+            "appear"
+        );
+
+        const circle = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "circle"
+        );
+
+        circle.setAttribute(
+            "r",
+            radius
+        );
+
+        circle.setAttribute(
+            "class",
+            "atom"
+        );
+
+        group.appendChild(circle);
+
+        const text = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "text"
+        );
+
+        text.setAttribute(
+            "class",
+            "atom-label"
+        );
+
+        text.textContent = atom.element;
+
+        group.appendChild(text);
+
+        atomLayer.appendChild(group);
+    }
 }
 
+/*
+    POINTER EVENTS
+*/
 
-/* =========================================================
-   INITIAL RENDER
-   ========================================================= */
+svg.addEventListener("pointerdown", event => {
+
+    event.preventDefault();
+
+    activePointerId = event.pointerId;
+
+    const point = pointFromEvent(event);
+
+    /*
+        MOVE
+    */
+
+    if (mode === "move") {
+
+        const atom = findAtomAt(point);
+
+        if (atom) {
+
+            saveState();
+
+            movingAtom = atom;
+
+            svg.setPointerCapture(
+                event.pointerId
+            );
+        }
+
+        return;
+    }
+
+    /*
+        ERASE
+    */
+
+    if (mode === "erase") {
+
+        eraseAt(point);
+
+        return;
+    }
+
+    /*
+        CREATE
+    */
+
+    drawing = true;
+    currentStroke = [point];
+
+    svg.setPointerCapture(
+        event.pointerId
+    );
+});
+
+svg.addEventListener("pointermove", event => {
+
+    if (event.pointerId !== activePointerId) {
+        return;
+    }
+
+    event.preventDefault();
+
+    const point = pointFromEvent(event);
+
+    /*
+        MOVE
+    */
+
+    if (mode === "move" && movingAtom) {
+
+        moveAtom(movingAtom, point);
+
+        return;
+    }
+
+    /*
+        CREATE
+    */
+
+    if (!drawing) return;
+
+    currentStroke.push(point);
+
+    if (currentStroke.length >= 2) {
+
+        const last =
+            currentStroke[currentStroke.length - 1];
+
+        const previous =
+            currentStroke[currentStroke.length - 2];
+
+        const line =
+            document.getElementById("liveStroke");
+
+        if (line) {
+
+            let d =
+                `M ${currentStroke[0].x} ${currentStroke[0].y}`;
+
+            for (let i = 1; i < currentStroke.length; i++) {
+                d +=
+                    ` L ${currentStroke[i].x} ${currentStroke[i].y}`;
+            }
+
+            line.setAttribute("d", d);
+
+        } else {
+
+            const path =
+                document.createElementNS(
+                    "http://www.w3.org/2000/svg",
+                    "path"
+                );
+
+            path.id = "liveStroke";
+            path.setAttribute(
+                "class",
+                "rough-stroke"
+            );
+
+            let d =
+                `M ${currentStroke[0].x} ${currentStroke[0].y}`;
+
+            for (let i = 1; i < currentStroke.length; i++) {
+                d +=
+                    ` L ${currentStroke[i].x} ${currentStroke[i].y}`;
+            }
+
+            path.setAttribute("d", d);
+
+            strokeLayer.appendChild(path);
+        }
+    }
+});
+
+svg.addEventListener("pointerup", event => {
+
+    if (event.pointerId !== activePointerId) {
+        return;
+    }
+
+    event.preventDefault();
+
+    /*
+        MOVE
+    */
+
+    if (mode === "move") {
+
+        movingAtom = null;
+        activePointerId = null;
+
+        try {
+            svg.releasePointerCapture(event.pointerId);
+        } catch {}
+
+        return;
+    }
+
+    /*
+        CREATE
+    */
+
+    if (!drawing) {
+        activePointerId = null;
+        return;
+    }
+
+    drawing = false;
+
+    const liveStroke =
+        document.getElementById("liveStroke");
+
+    if (liveStroke) {
+        liveStroke.remove();
+    }
+
+    handleCreateStroke(
+        currentStroke
+    );
+
+    currentStroke = [];
+
+    activePointerId = null;
+
+    try {
+        svg.releasePointerCapture(event.pointerId);
+    } catch {}
+});
+
+svg.addEventListener("pointercancel", event => {
+
+    drawing = false;
+    currentStroke = [];
+    movingAtom = null;
+    activePointerId = null;
+
+    const liveStroke =
+        document.getElementById("liveStroke");
+
+    if (liveStroke) {
+        liveStroke.remove();
+    }
+});
+
+/*
+    INITIAL RENDER
+*/
 
 render();
 
