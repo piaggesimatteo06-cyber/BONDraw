@@ -2087,18 +2087,143 @@ function templateDistance(
    H RECOGNITION
 ============================================================ */
 
-function recognizeH(
-    points
-) {
+function recognizeH(points) {
 
-    const normalized =
-        normalizeStroke(
-            points
-        );
+    if (points.length < 8) {
+        return false;
+    }
 
+    const box = strokeBounds(points);
+
+    if (!box) {
+        return false;
+    }
+
+    const width = box.width;
+    const height = box.height;
+
+    /*
+        Una H deve avere una dimensione reale
+        sufficiente per essere distinta da un
+        piccolo tratto casuale.
+    */
+    if (width < 10 || height < 14) {
+        return false;
+    }
+
+    /*
+        La H deve avere una forma abbastanza
+        verticale, ma non obbligatoriamente
+        stretta.
+    */
+    const aspect = width / height;
+
+    if (aspect < 0.20 || aspect > 1.40) {
+        return false;
+    }
+
+    const centerX =
+        (box.minX + box.maxX) / 2;
+
+    const centerY =
+        (box.minY + box.maxY) / 2;
+
+
+    /*
+        ========================================================
+        1. CERCHIAMO I DUE MONTANTI
+        ========================================================
+
+        Dividiamo la figura in zona sinistra
+        e zona destra.
+
+        Una H vera deve occupare entrambe.
+    */
+
+    let leftCount = 0;
+    let rightCount = 0;
+
+    points.forEach(p => {
+
+        if (p.x < centerX) {
+            leftCount++;
+        } else {
+            rightCount++;
+        }
+
+    });
+
+    const leftRatio =
+        leftCount / points.length;
+
+    const rightRatio =
+        rightCount / points.length;
+
+
+    /*
+        Una linea verticale singola,
+        quindi, non può diventare H.
+    */
+
+    if (leftRatio < 0.18 || rightRatio < 0.18) {
+        return false;
+    }
+
+
+    /*
+        ========================================================
+        2. CONTROLLO DELLA COPERTURA VERTICALE
+        ========================================================
+
+        Entrambi i montanti devono attraversare
+        una parte significativa dell'altezza.
+    */
+
+    let leftMinY = Infinity;
+    let leftMaxY = -Infinity;
+
+    let rightMinY = Infinity;
+    let rightMaxY = -Infinity;
+
+
+    points.forEach(p => {
+
+        if (p.x < centerX) {
+
+            leftMinY =
+                Math.min(leftMinY, p.y);
+
+            leftMaxY =
+                Math.max(leftMaxY, p.y);
+
+        } else {
+
+            rightMinY =
+                Math.min(rightMinY, p.y);
+
+            rightMaxY =
+                Math.max(rightMaxY, p.y);
+
+        }
+
+    });
+
+
+    const leftHeight =
+        leftMaxY - leftMinY;
+
+    const rightHeight =
+        rightMaxY - rightMinY;
+
+
+    /*
+        I due lati devono essere abbastanza
+        verticalmente estesi.
+    */
 
     if (
-        normalized.length < 8
+        leftHeight < height * 0.55 ||
+        rightHeight < height * 0.55
     ) {
 
         return false;
@@ -2106,17 +2231,200 @@ function recognizeH(
     }
 
 
-    const distance =
-        templateDistance(
-            normalized,
-            H_TEMPLATE
-        );
+    /*
+        ========================================================
+        3. CERCHIAMO IL COLLEGAMENTO CENTRALE
+        ========================================================
+
+        La H deve avere punti vicini alla
+        fascia centrale dell'altezza.
+    */
+
+    let centerBandCount = 0;
+
+    const centerBand =
+        height * 0.18;
 
 
-    return distance < .52;
+    points.forEach(p => {
+
+        if (
+            Math.abs(
+                p.y - centerY
+            ) < centerBand
+        ) {
+
+            centerBandCount++;
+
+        }
+
+    });
+
+
+    const centerRatio =
+        centerBandCount /
+        points.length;
+
+
+    /*
+        Senza un tratto centrale sufficiente,
+        non è una H.
+    */
+
+    if (centerRatio < 0.12) {
+        return false;
+    }
+
+
+    /*
+        ========================================================
+        4. IL CENTRO DEVE COLLEGARE SINISTRA E DESTRA
+        ========================================================
+
+        Non basta avere qualche punto al centro:
+        devono esistere punti nella fascia centrale
+        sia a sinistra che a destra.
+    */
+
+    let centerLeft = false;
+    let centerRight = false;
+
+
+    points.forEach(p => {
+
+        if (
+            p.y >= centerY - centerBand &&
+            p.y <= centerY + centerBand
+        ) {
+
+            if (p.x < centerX) {
+                centerLeft = true;
+            }
+
+            if (p.x > centerX) {
+                centerRight = true;
+            }
+
+        }
+
+    });
+
+
+    if (
+        !centerLeft ||
+        !centerRight
+    ) {
+
+        return false;
+
+    }
+
+
+    /*
+        ========================================================
+        5. PROTEZIONE CONTRO LA L
+        ========================================================
+
+        Una L può avere:
+        - un montante verticale
+        - un segmento orizzontale
+
+        Ma non dovrebbe avere due montanti
+        verticali completi.
+
+        Il controllo precedente già elimina
+        gran parte delle L.
+
+        Qui aggiungiamo un controllo sulla
+        distribuzione verticale.
+    */
+
+    let upperLeft = false;
+    let lowerLeft = false;
+    let upperRight = false;
+    let lowerRight = false;
+
+
+    points.forEach(p => {
+
+        if (p.x < centerX) {
+
+            if (
+                p.y <
+                centerY - height * 0.20
+            ) {
+
+                upperLeft = true;
+
+            }
+
+            if (
+                p.y >
+                centerY + height * 0.20
+            ) {
+
+                lowerLeft = true;
+
+            }
+
+        } else {
+
+            if (
+                p.y <
+                centerY - height * 0.20
+            ) {
+
+                upperRight = true;
+
+            }
+
+            if (
+                p.y >
+                centerY + height * 0.20
+            ) {
+
+                lowerRight = true;
+
+            }
+
+        }
+
+    });
+
+
+    /*
+        Entrambi i montanti devono comparire
+        sia sopra che sotto il centro.
+    */
+
+    if (
+        !upperLeft ||
+        !lowerLeft ||
+        !upperRight ||
+        !lowerRight
+    ) {
+
+        return false;
+
+    }
+
+
+    /*
+        ========================================================
+        6. CONTROLLO DELLA LINEA SEMPLICE
+        ========================================================
+
+        Una H naturale può essere disegnata
+        in molti ordini diversi.
+
+        NON controlliamo più l'ordine dei punti.
+
+        Guardiamo solamente la geometria.
+    */
+
+    return true;
 
 }
-
 
 /* ============================================================
    NEW C RECOGNIZER
