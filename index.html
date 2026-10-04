@@ -1,0 +1,1594 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0,
+               maximum-scale=1.0, user-scalable=no">
+
+<title>BONDraw 0.1</title>
+
+<style>
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Display",
+    "Helvetica Neue",
+    sans-serif;
+  background: #f6f7f3;
+  color: #202124;
+  touch-action: none;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- HEADER ---------- */
+
+.header {
+  height: 72px;
+  padding: 0 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo {
+  width: 40px;
+  height: 40px;
+
+  border-radius: 14px;
+
+  background: #202124;
+  color: white;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-weight: 800;
+  font-size: 17px;
+
+  box-shadow:
+    0 7px 20px rgba(0,0,0,.12);
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.6px;
+}
+
+.version {
+  margin-left: 5px;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  color: #8b8d91;
+}
+
+.headerButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.headerButton {
+  width: 40px;
+  height: 40px;
+
+  border-radius: 13px;
+
+  border: 1px solid #e4e5e1;
+
+  background: rgba(255,255,255,.9);
+
+  font-size: 19px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-shadow:
+    0 5px 18px rgba(0,0,0,.05);
+}
+
+/* ---------- CANVAS ---------- */
+
+.workspace {
+  position: relative;
+
+  flex: 1;
+
+  margin: 0 12px 12px;
+
+  border-radius: 28px;
+
+  background: white;
+
+  border: 1px solid #e5e6e2;
+
+  overflow: hidden;
+
+  box-shadow:
+    0 15px 45px rgba(20,25,30,.08);
+}
+
+#canvas {
+  position: absolute;
+
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  touch-action: none;
+}
+
+/* ---------- EMPTY STATE ---------- */
+
+.emptyState {
+  position: absolute;
+
+  left: 50%;
+  top: 50%;
+
+  transform: translate(-50%, -50%);
+
+  text-align: center;
+
+  pointer-events: none;
+
+  transition:
+    opacity .25s ease,
+    transform .25s ease;
+}
+
+.emptyState.hidden {
+  opacity: 0;
+
+  transform:
+    translate(-50%, -46%);
+}
+
+.emptyIcon {
+  width: 70px;
+  height: 70px;
+
+  margin: auto;
+
+  border-radius: 23px;
+
+  background: #eef1ff;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 30px;
+}
+
+.emptyState h2 {
+  margin: 14px 0 5px;
+
+  font-size: 21px;
+
+  letter-spacing: -.5px;
+}
+
+.emptyState p {
+  margin: 0;
+
+  color: #85888d;
+
+  font-size: 14px;
+}
+
+/* ---------- TOOLBAR ---------- */
+
+.toolbar {
+  position: absolute;
+
+  left: 50%;
+  bottom: 20px;
+
+  transform: translateX(-50%);
+
+  display: flex;
+
+  gap: 6px;
+
+  padding: 7px;
+
+  border-radius: 21px;
+
+  background:
+    rgba(255,255,255,.92);
+
+  backdrop-filter:
+    blur(18px);
+
+  border: 1px solid #e4e5e1;
+
+  box-shadow:
+    0 12px 35px rgba(20,25,30,.13);
+}
+
+.tool {
+  border: none;
+
+  background: transparent;
+
+  color: #73767c;
+
+  padding: 10px 15px;
+
+  border-radius: 15px;
+
+  font-size: 14px;
+
+  font-weight: 750;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  transition:
+    transform .16s ease,
+    background .16s ease,
+    color .16s ease;
+}
+
+.tool.active {
+  background: #202124;
+
+  color: white;
+
+  box-shadow:
+    0 5px 15px rgba(0,0,0,.17);
+}
+
+.tool:active {
+  transform: scale(.94);
+}
+
+/* ---------- STATUS ---------- */
+
+.status {
+  position: absolute;
+
+  left: 18px;
+  bottom: 20px;
+
+  padding: 8px 12px;
+
+  border-radius: 13px;
+
+  background:
+    rgba(255,255,255,.9);
+
+  backdrop-filter:
+    blur(12px);
+
+  border: 1px solid #e5e6e2;
+
+  color: #777a80;
+
+  font-size: 12px;
+
+  font-weight: 650;
+
+  pointer-events: none;
+}
+
+/* ---------- SVG ---------- */
+
+.atom {
+  fill: white;
+
+  stroke: #202124;
+
+  stroke-width: 2.5;
+}
+
+.atomText {
+  fill: #202124;
+
+  font-size: 19px;
+
+  font-weight: 800;
+
+  text-anchor: middle;
+
+  dominant-baseline: middle;
+
+  pointer-events: none;
+}
+
+.bond {
+  stroke: #202124;
+
+  stroke-width: 4;
+
+  stroke-linecap: round;
+
+  fill: none;
+}
+
+.animatedAtom {
+  animation:
+    atomAppear .22s
+    cubic-bezier(.2,1.4,.4,1);
+}
+
+.animatedBond {
+  animation:
+    bondAppear .18s ease-out;
+}
+
+@keyframes atomAppear {
+
+  0% {
+    opacity: 0;
+    transform: scale(.65);
+  }
+
+  70% {
+    transform: scale(1.08);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes bondAppear {
+
+  from {
+    opacity: 0;
+    stroke-dasharray: 200;
+    stroke-dashoffset: 200;
+  }
+
+  to {
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ---------- MOBILE ---------- */
+
+@media(max-width:600px) {
+
+  .header {
+    height: 64px;
+    padding: 0 14px;
+  }
+
+  .workspace {
+    margin:
+      0 8px 8px;
+    border-radius: 24px;
+  }
+
+  .toolbar {
+    bottom: 15px;
+  }
+
+  .tool {
+    padding:
+      10px 12px;
+  }
+
+  .tool span {
+    display: none;
+  }
+
+  .status {
+    left: 12px;
+    bottom: 17px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+
+  <div class="brand">
+
+    <div class="logo">
+      B
+    </div>
+
+    <div class="title">
+      BONDraw
+      <span class="version">
+        0.1
+      </span>
+    </div>
+
+  </div>
+
+  <div class="headerButtons">
+
+    <button
+      class="headerButton"
+      id="undoButton">
+      ↶
+    </button>
+
+    <button
+      class="headerButton"
+      id="clearButton">
+      ⌫
+    </button>
+
+  </div>
+
+</header>
+
+
+<main class="workspace">
+
+  <svg
+    id="canvas"
+    xmlns="http://www.w3.org/2000/svg">
+  </svg>
+
+
+  <div
+    class="emptyState"
+    id="emptyState">
+
+    <div class="emptyIcon">
+      ✏️
+    </div>
+
+    <h2>
+      Draw your molecule
+    </h2>
+
+    <p>
+      Draw a circle to create carbon
+    </p>
+
+  </div>
+
+
+  <div
+    class="status"
+    id="status">
+    Create · Pencil
+  </div>
+
+
+  <nav class="toolbar">
+
+    <button
+      class="tool active"
+      data-mode="create">
+
+      ✏️
+      <span>Create</span>
+
+    </button>
+
+
+    <button
+      class="tool"
+      data-mode="move">
+
+      👆
+      <span>Move</span>
+
+    </button>
+
+
+    <button
+      class="tool"
+      data-mode="erase">
+
+      ⌫
+      <span>Erase</span>
+
+    </button>
+
+  </nav>
+
+</main>
+
+
+<script>
+
+/* =====================================================
+   BONDraw 0.1
+   Basic molecular canvas
+   ===================================================== */
+
+const svg =
+  document.getElementById("canvas");
+
+const emptyState =
+  document.getElementById("emptyState");
+
+const status =
+  document.getElementById("status");
+
+const undoButton =
+  document.getElementById("undoButton");
+
+const clearButton =
+  document.getElementById("clearButton");
+
+
+/* ---------- DATA ---------- */
+
+let atoms = [];
+
+let bonds = [];
+
+let history = [];
+
+let mode = "create";
+
+let currentStroke = null;
+
+let movingAtom = null;
+
+let moveStart = null;
+
+
+/* ---------- HELPERS ---------- */
+
+const SVG_NS =
+  "http://www.w3.org/2000/svg";
+
+
+function distance(a,b) {
+
+  return Math.hypot(
+    a.x-b.x,
+    a.y-b.y
+  );
+
+}
+
+
+function getPosition(event) {
+
+  const rect =
+    svg.getBoundingClientRect();
+
+  return {
+
+    x:
+      event.clientX -
+      rect.left,
+
+    y:
+      event.clientY -
+      rect.top
+
+  };
+
+}
+
+
+function findAtom(position) {
+
+  let closest = null;
+
+  let closestDistance = Infinity;
+
+  for(const atom of atoms) {
+
+    const d =
+      distance(atom,position);
+
+    if(
+      d < 35 &&
+      d < closestDistance
+    ) {
+
+      closest =
+        atom;
+
+      closestDistance =
+        d;
+
+    }
+
+  }
+
+  return closest;
+
+}
+
+
+function findBond(a,b) {
+
+  return bonds.find(
+    bond =>
+
+      (
+        bond.a === a.id &&
+        bond.b === b.id
+      )
+
+      ||
+
+      (
+        bond.a === b.id &&
+        bond.b === a.id
+      )
+  );
+
+}
+
+
+/* ---------- HISTORY ---------- */
+
+function saveState() {
+
+  history.push(
+    JSON.stringify({
+      atoms,
+      bonds
+    })
+  );
+
+  if(history.length > 30) {
+
+    history.shift();
+
+  }
+
+}
+
+
+function undo() {
+
+  if(!history.length)
+    return;
+
+  const previous =
+    JSON.parse(
+      history.pop()
+    );
+
+  atoms =
+    previous.atoms;
+
+  bonds =
+    previous.bonds;
+
+  render();
+
+}
+
+
+/* ---------- STATUS ---------- */
+
+function showStatus(message) {
+
+  status.textContent =
+    message;
+
+  clearTimeout(
+    window.statusTimer
+  );
+
+  window.statusTimer =
+    setTimeout(() => {
+
+      if(mode === "create") {
+
+        status.textContent =
+          "Create · Pencil";
+
+      }
+
+      if(mode === "move") {
+
+        status.textContent =
+          "Move · Finger";
+
+      }
+
+      if(mode === "erase") {
+
+        status.textContent =
+          "Erase";
+
+      }
+
+    },900);
+
+}
+
+
+/* ---------- ATOMS ---------- */
+
+function createCarbon(position) {
+
+  saveState();
+
+  atoms.push({
+
+    id:
+      crypto.randomUUID(),
+
+    x:
+      position.x,
+
+    y:
+      position.y,
+
+    element:
+      "C"
+
+  });
+
+  emptyState
+    .classList
+    .add("hidden");
+
+  showStatus(
+    "Carbon created"
+  );
+
+  render();
+
+}
+
+
+/* ---------- BONDS ---------- */
+
+function connectAtoms(a,b) {
+
+  saveState();
+
+  const existing =
+    findBond(a,b);
+
+  if(!existing) {
+
+    bonds.push({
+
+      id:
+        crypto.randomUUID(),
+
+      a:
+        a.id,
+
+      b:
+        b.id,
+
+      order:
+        1
+
+    });
+
+    showStatus(
+      "Single bond"
+    );
+
+  }
+
+  else {
+
+    if(existing.order < 3) {
+
+      existing.order++;
+
+      showStatus(
+        existing.order === 2
+          ? "Double bond"
+          : "Triple bond"
+      );
+
+    }
+
+    else {
+
+      existing.order = 1;
+
+      showStatus(
+        "Single bond"
+      );
+
+    }
+
+  }
+
+  render();
+
+}
+
+
+/* ---------- STROKE ANALYSIS ---------- */
+
+function analyzeStroke(points) {
+
+  if(points.length < 5)
+    return;
+
+
+  const start =
+    points[0];
+
+  const end =
+    points[
+      points.length-1
+    ];
+
+
+  /*
+    First priority:
+    Did the user draw between
+    two existing atoms?
+  */
+
+  const startAtom =
+    findAtom(start);
+
+  const endAtom =
+    findAtom(end);
+
+
+  if(
+    startAtom &&
+    endAtom &&
+    startAtom.id !== endAtom.id
+  ) {
+
+    connectAtoms(
+      startAtom,
+      endAtom
+    );
+
+    return;
+
+  }
+
+
+  /*
+    Otherwise analyse whether
+    the gesture resembles a circle.
+  */
+
+  let minX = Infinity;
+  let maxX = -Infinity;
+
+  let minY = Infinity;
+  let maxY = -Infinity;
+
+
+  for(const p of points) {
+
+    minX =
+      Math.min(
+        minX,
+        p.x
+      );
+
+    maxX =
+      Math.max(
+        maxX,
+        p.x
+      );
+
+    minY =
+      Math.min(
+        minY,
+        p.y
+      );
+
+    maxY =
+      Math.max(
+        maxY,
+        p.y
+      );
+
+  }
+
+
+  const width =
+    maxX-minX;
+
+  const height =
+    maxY-minY;
+
+
+  const center = {
+
+    x:
+      (minX+maxX)/2,
+
+    y:
+      (minY+maxY)/2
+
+  };
+
+
+  /*
+    Rough circle test.
+  */
+
+  const size =
+    Math.max(
+      width,
+      height
+    );
+
+
+  if(
+    size > 35 &&
+    width > 25 &&
+    height > 25
+  ) {
+
+    const ratio =
+      Math.min(
+        width,
+        height
+      )
+      /
+      Math.max(
+        width,
+        height
+      );
+
+
+    if(ratio > .55) {
+
+      if(!findAtom(center)) {
+
+        createCarbon(
+          center
+        );
+
+      }
+
+    }
+
+  }
+
+}
+
+
+/* ---------- RENDER ---------- */
+
+function render() {
+
+  svg.innerHTML = "";
+
+
+  /*
+    BONDS FIRST
+    so atoms appear above them.
+  */
+
+  for(
+    const bond
+    of bonds
+  ) {
+
+    const a =
+      atoms.find(
+        x => x.id === bond.a
+      );
+
+    const b =
+      atoms.find(
+        x => x.id === bond.b
+      );
+
+    if(!a || !b)
+      continue;
+
+
+    drawBond(
+      a,
+      b,
+      bond.order
+    );
+
+  }
+
+
+  /*
+    ATOMS
+  */
+
+  for(
+    const atom
+    of atoms
+  ) {
+
+    drawAtom(
+      atom
+    );
+
+  }
+
+}
+
+
+/* ---------- DRAW BOND ---------- */
+
+function drawBond(
+  a,
+  b,
+  order
+) {
+
+  const dx =
+    b.x-a.x;
+
+  const dy =
+    b.y-a.y;
+
+  const length =
+    Math.hypot(
+      dx,
+      dy
+    );
+
+
+  if(length < 1)
+    return;
+
+
+  const nx =
+    -dy/length;
+
+  const ny =
+    dx/length;
+
+
+  /*
+    Keep bonds from entering
+    the atom circles.
+  */
+
+  const padding =
+    27;
+
+
+  const start = {
+
+    x:
+      a.x +
+      dx/length *
+      padding,
+
+    y:
+      a.y +
+      dy/length *
+      padding
+
+  };
+
+
+  const end = {
+
+    x:
+      b.x -
+      dx/length *
+      padding,
+
+    y:
+      b.y -
+      dy/length *
+      padding
+
+  };
+
+
+  let offsets = [];
+
+
+  if(order === 1)
+    offsets = [0];
+
+  if(order === 2)
+    offsets = [-5,5];
+
+  if(order === 3)
+    offsets = [-7,0,7];
+
+
+  offsets.forEach(
+    offset => {
+
+      const line =
+        document.createElementNS(
+          SVG_NS,
+          "line"
+        );
+
+
+      line.setAttribute(
+        "x1",
+        start.x +
+        nx*offset
+      );
+
+      line.setAttribute(
+        "y1",
+        start.y +
+        ny*offset
+      );
+
+      line.setAttribute(
+        "x2",
+        end.x +
+        nx*offset
+      );
+
+      line.setAttribute(
+        "y2",
+        end.y +
+        ny*offset
+      );
+
+
+      line.classList.add(
+        "bond",
+        "animatedBond"
+      );
+
+
+      svg.appendChild(
+        line
+      );
+
+    }
+  );
+
+}
+
+
+/* ---------- DRAW ATOM ---------- */
+
+function drawAtom(atom) {
+
+  const group =
+    document.createElementNS(
+      SVG_NS,
+      "g"
+    );
+
+
+  group.classList.add(
+    "animatedAtom"
+  );
+
+
+  group.style.transformOrigin =
+    `${atom.x}px ${atom.y}px`;
+
+
+  const circle =
+    document.createElementNS(
+      SVG_NS,
+      "circle"
+    );
+
+
+  circle.setAttribute(
+    "cx",
+    atom.x
+  );
+
+  circle.setAttribute(
+    "cy",
+    atom.y
+  );
+
+  circle.setAttribute(
+    "r",
+    27
+  );
+
+  circle.classList.add(
+    "atom"
+  );
+
+
+  const text =
+    document.createElementNS(
+      SVG_NS,
+      "text"
+    );
+
+
+  text.setAttribute(
+    "x",
+    atom.x
+  );
+
+  text.setAttribute(
+    "y",
+    atom.y+1
+  );
+
+  text.textContent =
+    atom.element;
+
+  text.classList.add(
+    "atomText"
+  );
+
+
+  group.appendChild(
+    circle
+  );
+
+  group.appendChild(
+    text
+  );
+
+
+  svg.appendChild(
+    group
+  );
+
+}
+
+
+/* =====================================================
+   POINTER INPUT
+   ===================================================== */
+
+svg.addEventListener(
+  "pointerdown",
+  event => {
+
+    event.preventDefault();
+
+    const position =
+      getPosition(
+        event
+      );
+
+
+    /*
+      MOVE MODE
+    */
+
+    if(mode === "move") {
+
+      const atom =
+        findAtom(
+          position
+        );
+
+      if(atom) {
+
+        saveState();
+
+        movingAtom =
+          atom;
+
+        moveStart = {
+
+          x:
+            atom.x,
+
+          y:
+            atom.y
+
+        };
+
+
+        svg.setPointerCapture(
+          event.pointerId
+        );
+
+      }
+
+      return;
+
+    }
+
+
+    /*
+      ERASE MODE
+    */
+
+    if(mode === "erase") {
+
+      const atom =
+        findAtom(
+          position
+        );
+
+      if(atom) {
+
+        saveState();
+
+
+        bonds =
+          bonds.filter(
+            bond =>
+              bond.a !== atom.id &&
+              bond.b !== atom.id
+          );
+
+
+        atoms =
+          atoms.filter(
+            x =>
+              x.id !== atom.id
+          );
+
+
+        render();
+
+        showStatus(
+          "Atom removed"
+        );
+
+      }
+
+      return;
+
+    }
+
+
+    /*
+      CREATE MODE
+    */
+
+    if(mode === "create") {
+
+      currentStroke = {
+
+        points: [
+          position
+        ]
+
+      };
+
+
+      svg.setPointerCapture(
+        event.pointerId
+      );
+
+    }
+
+  }
+);
+
+
+/* ---------- POINTER MOVE ---------- */
+
+svg.addEventListener(
+  "pointermove",
+  event => {
+
+    if(!movingAtom &&
+       !currentStroke)
+      return;
+
+
+    event.preventDefault();
+
+
+    const position =
+      getPosition(
+        event
+      );
+
+
+    /*
+      MOVE ATOM
+    */
+
+    if(movingAtom) {
+
+      movingAtom.x =
+        position.x;
+
+      movingAtom.y =
+        position.y;
+
+      render();
+
+      return;
+
+    }
+
+
+    /*
+      DRAW STROKE
+    */
+
+    if(currentStroke) {
+
+      currentStroke.points.push(
+        position
+      );
+
+    }
+
+  }
+);
+
+
+/* ---------- POINTER UP ---------- */
+
+svg.addEventListener(
+  "pointerup",
+  event => {
+
+    if(movingAtom) {
+
+      /*
+        Future:
+        bond breaking threshold.
+      */
+
+      movingAtom =
+        null;
+
+      moveStart =
+        null;
+
+      return;
+
+    }
+
+
+    if(currentStroke) {
+
+      analyzeStroke(
+        currentStroke.points
+      );
+
+      currentStroke =
+        null;
+
+    }
+
+  }
+);
+
+
+/* ---------- BUTTONS ---------- */
+
+undoButton.addEventListener(
+  "click",
+  undo
+);
+
+
+clearButton.addEventListener(
+  "click",
+  () => {
+
+    if(
+      atoms.length === 0 &&
+      bonds.length === 0
+    )
+      return;
+
+
+    saveState();
+
+    atoms = [];
+
+    bonds = [];
+
+    render();
+
+    emptyState
+      .classList
+      .remove("hidden");
+
+    showStatus(
+      "Canvas cleared"
+    );
+
+  }
+);
+
+
+/* ---------- TOOLBAR ---------- */
+
+document
+  .querySelectorAll(
+    ".tool"
+  )
+  .forEach(
+    button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          mode =
+            button.dataset.mode;
+
+
+          document
+            .querySelectorAll(
+              ".tool"
+            )
+            .forEach(
+              x =>
+                x.classList.remove(
+                  "active"
+                )
+            );
+
+
+          button.classList.add(
+            "active"
+          );
+
+
+          if(mode === "create") {
+
+            status.textContent =
+              "Create · Pencil";
+
+          }
+
+
+          if(mode === "move") {
+
+            status.textContent =
+              "Move · Finger";
+
+          }
+
+
+          if(mode === "erase") {
+
+            status.textContent =
+              "Erase";
+
+          }
+
+        }
+      );
+
+    }
+  );
+
+
+/* ---------- START ---------- */
+
+render();
+
+</script>
+
+</body>
+</html>
