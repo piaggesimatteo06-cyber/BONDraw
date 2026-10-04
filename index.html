@@ -3004,7 +3004,8 @@ function finalizeCreateStroke() {
 
         const box =
             strokeBounds(points);
-
+        
+removePendingAtom();
 
         if (box) {
 
