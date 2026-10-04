@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 
 <meta name="viewport"
-      content="width=device-width,
-               initial-scale=1.0,
-               maximum-scale=1.0,
-               user-scalable=no,
-               viewport-fit=cover">
+content="width=device-width,
+initial-scale=1.0,
+maximum-scale=1.0,
+user-scalable=no,
+viewport-fit=cover">
 
-<title>BONDraw 0.5.1</title>
+<title>BONDraw 0.5.2</title>
 
 <style>
 
@@ -91,7 +91,6 @@ header {
 .brand-name {
     font-size: 22px;
     font-weight: 750;
-
     letter-spacing: -.8px;
 }
 
@@ -408,7 +407,6 @@ button.danger {
 
 <body>
 
-
 <header>
 
     <div class="brand">
@@ -420,7 +418,7 @@ button.danger {
         </div>
 
         <div class="version">
-            0.5.1
+            0.5.2
         </div>
 
     </div>
@@ -437,7 +435,6 @@ button.danger {
 
 
 <div id="workspace">
-
 
 <svg
     id="canvas"
@@ -510,16 +507,16 @@ button.danger {
 
 <script>
 
-
 /* ============================================================
-   BONDraw 0.5.1
+   BONDraw 0.5.2
 
    Pencil = CREATE
    Finger = MOVE SINGLE ATOM
 
-   Important:
-   Moving an atom NEVER moves its neighbours.
-   Bonds dynamically follow both endpoints.
+   Recognition:
+   - strict circle detection
+   - H recognizer preserved
+   - new geometric C recognizer
 ============================================================ */
 
 
@@ -704,7 +701,7 @@ clearBtn.onclick = () => {
 
 
 /* ============================================================
-   BASIC HELPERS
+   HELPERS
 ============================================================ */
 
 function getAtom(id) {
@@ -723,16 +720,6 @@ function getRadius(atom) {
         ATOM_RADIUS[
             atom.element
         ] || 27
-    );
-
-}
-
-
-function distance(a,b) {
-
-    return Math.hypot(
-        a.x-b.x,
-        a.y-b.y
     );
 
 }
@@ -800,7 +787,7 @@ function canAddBond(
 
 
 /* ============================================================
-   HIT TEST ATOM
+   ATOM HIT TEST
 ============================================================ */
 
 function findAtomAt(x,y) {
@@ -836,7 +823,7 @@ function findAtomAt(x,y) {
 
 
 /* ============================================================
-   HIT TEST BOND
+   BOND HIT TEST
 ============================================================ */
 
 function pointToSegmentDistance(
@@ -936,7 +923,7 @@ function findBondAt(x,y) {
 
 
 /* ============================================================
-   SVG ELEMENT MAPS
+   SVG RENDERING
 ============================================================ */
 
 const atomElements =
@@ -945,10 +932,6 @@ const atomElements =
 const bondElements =
     new Map();
 
-
-/* ============================================================
-   CREATE ATOM SVG
-============================================================ */
 
 function createAtomElement(atom) {
 
@@ -1007,10 +990,6 @@ function createAtomElement(atom) {
 }
 
 
-/* ============================================================
-   UPDATE ATOM SVG
-============================================================ */
-
 function updateAtomElement(atom) {
 
     let group =
@@ -1061,10 +1040,6 @@ function updateAtomElement(atom) {
 }
 
 
-/* ============================================================
-   CREATE BOND SVG
-============================================================ */
-
 function createBondElement(bond) {
 
     const group =
@@ -1087,10 +1062,6 @@ function createBondElement(bond) {
 
 }
 
-
-/* ============================================================
-   UPDATE BOND
-============================================================ */
 
 function updateBondElement(
     bond,
@@ -1157,15 +1128,20 @@ function updateBondElement(
 
     const spacing = 6;
 
+
     let offsets;
 
 
-    if (bond.order === 1) {
+    if (
+        bond.order === 1
+    ) {
 
         offsets = [0];
 
     }
-    else if (bond.order === 2) {
+    else if (
+        bond.order === 2
+    ) {
 
         offsets = [
             -spacing/2,
@@ -1226,10 +1202,6 @@ function updateBondElement(
 }
 
 
-/* ============================================================
-   FULL RENDER
-============================================================ */
-
 function render() {
 
     atomElements.forEach(
@@ -1247,14 +1219,6 @@ function render() {
 
     bondElements.clear();
 
-
-    /*
-        Bonds FIRST.
-        Atoms SECOND.
-
-        This guarantees that atoms
-        visually sit above bonds.
-    */
 
     bonds.forEach(
         bond => {
@@ -1296,23 +1260,9 @@ function render() {
 }
 
 
-/* ============================================================
-   FAST VISUAL UPDATE
-============================================================ */
-
 function updateAtomAndItsBonds(
     atom
 ) {
-
-    /*
-        IMPORTANT:
-
-        We only update the selected atom.
-
-        Every connected bond is updated.
-
-        Neighbouring atoms are NOT moved.
-    */
 
     updateAtomElement(
         atom
@@ -1350,7 +1300,7 @@ function updateAtomAndItsBonds(
 
 
 /* ============================================================
-   FIND BOND BETWEEN TWO ATOMS
+   BOND CREATION
 ============================================================ */
 
 function findBondBetween(
@@ -1377,10 +1327,6 @@ function findBondBetween(
 }
 
 
-/* ============================================================
-   CONNECT ATOMS
-============================================================ */
-
 function connectAtoms(
     atomA,
     atomB
@@ -1388,12 +1334,13 @@ function connectAtoms(
 
     if (
         !atomA ||
-        !atomB
-    ) return;
-
-    if (
+        !atomB ||
         atomA.id === atomB.id
-    ) return;
+    ) {
+
+        return;
+
+    }
 
 
     const existing =
@@ -1492,7 +1439,7 @@ function connectAtoms(
 
 
 /* ============================================================
-   REMOVE ATOM
+   DELETE
 ============================================================ */
 
 function removeAtom(atom) {
@@ -1522,10 +1469,6 @@ function removeAtom(atom) {
 }
 
 
-/* ============================================================
-   REMOVE BOND
-============================================================ */
-
 function removeBond(bond) {
 
     if (!bond) return;
@@ -1546,7 +1489,7 @@ function removeBond(bond) {
 
 
 /* ============================================================
-   STROKE BOUNDS
+   STROKE UTILITIES
 ============================================================ */
 
 function strokeBounds(points) {
@@ -1611,10 +1554,6 @@ function strokeBounds(points) {
 }
 
 
-/* ============================================================
-   RESAMPLE STROKE
-============================================================ */
-
 function resampleStroke(
     points,
     count = 32
@@ -1635,8 +1574,8 @@ function resampleStroke(
 
 
     for (
-        let i = 1;
-        i < points.length;
+        let i=1;
+        i<points.length;
         i++
     ) {
 
@@ -1654,19 +1593,16 @@ function resampleStroke(
     }
 
 
-    if (total === 0) {
-
+    if (total === 0)
         return points.slice();
-
-    }
 
 
     const result = [];
 
 
     for (
-        let i = 0;
-        i < count;
+        let i=0;
+        i<count;
         i++
     ) {
 
@@ -1677,6 +1613,7 @@ function resampleStroke(
 
 
         let index = 1;
+
 
         while (
             index < lengths.length &&
@@ -1708,6 +1645,7 @@ function resampleStroke(
 
         const l2 =
             lengths[index];
+
 
         const ratio =
             (target-l1) /
@@ -1741,10 +1679,6 @@ function resampleStroke(
 }
 
 
-/* ============================================================
-   NORMALIZE STROKE
-============================================================ */
-
 function normalizeStroke(
     points
 ) {
@@ -1771,16 +1705,28 @@ function normalizeStroke(
         p => {
 
             minX =
-                Math.min(minX,p.x);
+                Math.min(
+                    minX,
+                    p.x
+                );
 
             maxX =
-                Math.max(maxX,p.x);
+                Math.max(
+                    maxX,
+                    p.x
+                );
 
             minY =
-                Math.min(minY,p.y);
+                Math.min(
+                    minY,
+                    p.y
+                );
 
             maxY =
-                Math.max(maxY,p.y);
+                Math.max(
+                    maxY,
+                    p.y
+                );
 
         }
     );
@@ -1828,7 +1774,268 @@ function normalizeStroke(
 
 
 /* ============================================================
-   TEMPLATE DISTANCE
+   STRICT CIRCLE DETECTOR
+
+   A line cannot be an atom.
+
+   Requirements:
+   1. enough points
+   2. sufficiently large
+   3. roughly circular bounding box
+   4. endpoint closure
+   5. radial consistency
+   6. circumference/diameter consistency
+============================================================ */
+
+function isCircle(points) {
+
+    if (
+        points.length < 18
+    ) {
+
+        return false;
+
+    }
+
+
+    const box =
+        strokeBounds(points);
+
+
+    if (!box)
+        return false;
+
+
+    const width =
+        box.width;
+
+    const height =
+        box.height;
+
+
+    if (
+        width < 28 ||
+        height < 28
+    ) {
+
+        return false;
+
+    }
+
+
+    const ratio =
+        Math.min(
+            width,
+            height
+        ) /
+        Math.max(
+            width,
+            height
+        );
+
+
+    /*
+        A real circle should be
+        reasonably close to 1:1.
+    */
+
+    if (
+        ratio < .72
+    ) {
+
+        return false;
+
+    }
+
+
+    /*
+        First and last point must
+        actually meet.
+    */
+
+    const first =
+        points[0];
+
+    const last =
+        points[
+            points.length-1
+        ];
+
+
+    const closure =
+        Math.hypot(
+            first.x-last.x,
+            first.y-last.y
+        );
+
+
+    const diameter =
+        Math.max(
+            width,
+            height
+        );
+
+
+    if (
+        closure >
+        diameter*.28
+    ) {
+
+        return false;
+
+    }
+
+
+    const centerX =
+        (
+            box.minX +
+            box.maxX
+        ) / 2;
+
+    const centerY =
+        (
+            box.minY +
+            box.maxY
+        ) / 2;
+
+
+    const expectedRadius =
+        (
+            width +
+            height
+        ) / 4;
+
+
+    /*
+        Measure radial consistency.
+    */
+
+    let radialError = 0;
+
+
+    points.forEach(
+        point => {
+
+            const radius =
+                Math.hypot(
+                    point.x-centerX,
+                    point.y-centerY
+                );
+
+
+            radialError +=
+                Math.abs(
+                    radius -
+                    expectedRadius
+                );
+
+        }
+    );
+
+
+    radialError /=
+        points.length;
+
+
+    /*
+        If the stroke is too irregular,
+        it is not a circle.
+    */
+
+    if (
+        radialError >
+        expectedRadius*.24
+    ) {
+
+        return false;
+
+    }
+
+
+    /*
+        Approximate circumference.
+
+        A circle should have a
+        path length around π × diameter.
+    */
+
+    let pathLength = 0;
+
+
+    for (
+        let i=1;
+        i<points.length;
+        i++
+    ) {
+
+        pathLength +=
+            Math.hypot(
+                points[i].x -
+                points[i-1].x,
+
+                points[i].y -
+                points[i-1].y
+            );
+
+    }
+
+
+    const expectedCircumference =
+        Math.PI * diameter;
+
+
+    const circumferenceRatio =
+        pathLength /
+        expectedCircumference;
+
+
+    if (
+        circumferenceRatio < .65 ||
+        circumferenceRatio > 1.55
+    ) {
+
+        return false;
+
+    }
+
+
+    return true;
+
+}
+
+
+/* ============================================================
+   H TEMPLATE
+
+   KEPT FROM 0.5.1
+============================================================ */
+
+const H_TEMPLATE =
+    normalizeStroke([
+
+        {x:-.90, y:-1.00},
+        {x:-.90, y:-.50},
+        {x:-.90, y: 0.00},
+        {x:-.90, y:.50},
+        {x:-.90, y:1.00},
+
+        {x:-.90, y:0.00},
+        {x:-.45, y:0.00},
+        {x: 0.00, y:0.00},
+        {x:.45, y:0.00},
+        {x:.90, y:0.00},
+
+        {x:.90, y:-1.00},
+        {x:.90, y:-.50},
+        {x:.90, y:0.00},
+        {x:.90, y:.50},
+        {x:.90, y:1.00}
+
+    ]);
+
+
+/* ============================================================
+   H DISTANCE
 ============================================================ */
 
 function templateDistance(
@@ -1857,8 +2064,8 @@ function templateDistance(
 
 
     for (
-        let i = 0;
-        i < count;
+        let i=0;
+        i<count;
         i++
     ) {
 
@@ -1871,26 +2078,79 @@ function templateDistance(
     }
 
 
-    return sum / count;
+    return sum/count;
 
 }
 
 
 /* ============================================================
-   CIRCLE RECOGNITION
+   H RECOGNITION
 ============================================================ */
 
-function isCircle(points) {
+function recognizeH(
+    points
+) {
+
+    const normalized =
+        normalizeStroke(
+            points
+        );
+
 
     if (
-        points.length < 12
-    ) return false;
+        normalized.length < 8
+    ) {
+
+        return false;
+
+    }
+
+
+    const distance =
+        templateDistance(
+            normalized,
+            H_TEMPLATE
+        );
+
+
+    return distance < .52;
+
+}
+
+
+/* ============================================================
+   NEW C RECOGNIZER
+
+   Instead of a single template,
+   evaluate the geometric properties
+   of a C.
+
+   A C should:
+   - have significant vertical span
+   - be substantially open
+   - occupy both upper and lower regions
+   - have a curved trajectory
+   - have endpoints on the same
+     general right side
+   - NOT contain a long horizontal
+     segment characteristic of L
+============================================================ */
+
+function recognizeC(
+    points
+) {
+
+    if (
+        points.length < 10
+    ) {
+
+        return false;
+
+    }
 
 
     const box =
-        strokeBounds(
-            points
-        );
+        strokeBounds(points);
 
 
     if (!box)
@@ -1905,8 +2165,8 @@ function isCircle(points) {
 
 
     if (
-        width < 20 ||
-        height < 20
+        width < 12 ||
+        height < 18
     ) {
 
         return false;
@@ -1914,25 +2174,81 @@ function isCircle(points) {
     }
 
 
-    const ratio =
-        Math.min(
-            width,
-            height
-        ) /
-        Math.max(
-            width,
-            height
+    /*
+        C normally has meaningful
+        vertical height.
+    */
+
+    const aspect =
+        width /
+        height;
+
+
+    if (
+        aspect < .35 ||
+        aspect > 1.45
+    ) {
+
+        return false;
+
+    }
+
+
+    /*
+        First and last points should
+        be relatively close in X,
+        usually toward the opening.
+    */
+
+    const first =
+        points[0];
+
+    const last =
+        points[
+            points.length-1
+        ];
+
+
+    const endpointXDifference =
+        Math.abs(
+            first.x-last.x
         );
 
 
     if (
-        ratio < .58
+        endpointXDifference >
+        width*.58
     ) {
 
         return false;
 
     }
 
+
+    /*
+        Endpoints should be separated
+        vertically. A C has an opening.
+    */
+
+    const endpointYDifference =
+        Math.abs(
+            first.y-last.y
+        );
+
+
+    if (
+        endpointYDifference <
+        height*.28
+    ) {
+
+        return false;
+
+    }
+
+
+    /*
+        Find center of bounding box.
+    */
 
     const centerX =
         (
@@ -1947,112 +2263,246 @@ function isCircle(points) {
         ) / 2;
 
 
-    const radius =
-        (
-            width +
-            height
-        ) / 4;
+    /*
+        Estimate whether most of the
+        curve lives on the left side
+        while endpoints approach the
+        right opening.
+    */
 
-
-    let error = 0;
+    let leftCount = 0;
+    let rightCount = 0;
 
 
     points.forEach(
         p => {
 
-            error +=
-                Math.abs(
-                    Math.hypot(
-                        p.x-centerX,
-                        p.y-centerY
-                    ) -
-                    radius
-                );
+            if (
+                p.x <
+                centerX
+            ) {
+
+                leftCount++;
+
+            }
+            else {
+
+                rightCount++;
+
+            }
 
         }
     );
 
 
-    error /=
+    const leftRatio =
+        leftCount /
         points.length;
 
 
-    return (
-        error <
-        radius*.38
+    /*
+        A C should have more trajectory
+        on its curved side than an L.
+    */
+
+    if (
+        leftRatio < .42
+    ) {
+
+        return false;
+
+    }
+
+
+    /*
+        Calculate path length.
+    */
+
+    let pathLength = 0;
+
+
+    for (
+        let i=1;
+        i<points.length;
+        i++
+    ) {
+
+        pathLength +=
+            Math.hypot(
+                points[i].x -
+                points[i-1].x,
+
+                points[i].y -
+                points[i-1].y
+            );
+
+    }
+
+
+    /*
+        Compare path length with
+        straight-line displacement.
+
+        A C must have substantially
+        more path than a simple line.
+    */
+
+    const directDistance =
+        Math.hypot(
+            last.x-first.x,
+            last.y-first.y
+        );
+
+
+    if (
+        directDistance === 0
+    ) {
+
+        return false;
+
+    }
+
+
+    const curvatureRatio =
+        pathLength /
+        directDistance;
+
+
+    if (
+        curvatureRatio < 2.0
+    ) {
+
+        return false;
+
+    }
+
+
+    /*
+        Check whether the path explores
+        both upper and lower halves.
+    */
+
+    let upper = false;
+    let lower = false;
+
+
+    points.forEach(
+        p => {
+
+            if (
+                p.y <
+                centerY-height*.20
+            ) {
+
+                upper = true;
+
+            }
+
+            if (
+                p.y >
+                centerY+height*.20
+            ) {
+
+                lower = true;
+
+            }
+
+        }
     );
+
+
+    if (
+        !upper ||
+        !lower
+    ) {
+
+        return false;
+
+    }
+
+
+    /*
+        Detect the characteristic
+        horizontal "foot" of an L.
+
+        If a large percentage of the
+        stroke is concentrated into
+        one long horizontal direction,
+        reject it.
+    */
+
+    let horizontalSegments = 0;
+
+    let totalSegments = 0;
+
+
+    for (
+        let i=1;
+        i<points.length;
+        i++
+    ) {
+
+        const dx =
+            Math.abs(
+                points[i].x -
+                points[i-1].x
+            );
+
+        const dy =
+            Math.abs(
+                points[i].y -
+                points[i-1].y
+            );
+
+
+        if (
+            dx+dy < 1
+        ) {
+
+            continue;
+
+        }
+
+
+        totalSegments++;
+
+
+        if (
+            dx > dy*2.4
+        ) {
+
+            horizontalSegments++;
+
+        }
+
+    }
+
+
+    if (
+        totalSegments > 0 &&
+        horizontalSegments /
+        totalSegments > .48
+    ) {
+
+        return false;
+
+    }
+
+
+    return true;
 
 }
 
 
 /* ============================================================
-   LETTER TEMPLATES
-
-   These are normalized examples.
-
-   C:
-   starts upper-right,
-   travels around left side,
-   finishes lower-right.
-
-   H:
-   left vertical,
-   middle horizontal,
-   right vertical.
-
-   The recognizer compares the user's
-   stroke against these shapes after
-   normalizing position and size.
-============================================================ */
-
-const C_TEMPLATE = normalizeStroke([
-
-    {x: .90, y:-.85},
-    {x: .55, y:-.98},
-    {x: .10, y:-1.00},
-    {x:-.35, y:-.82},
-    {x:-.70, y:-.45},
-    {x:-.88, y: 0.00},
-    {x:-.70, y: .45},
-    {x:-.35, y: .82},
-    {x: .10, y:1.00},
-    {x: .55, y:.98},
-    {x: .90, y:.85}
-
-]);
-
-
-const H_TEMPLATE = normalizeStroke([
-
-    {x:-.90, y:-1.00},
-    {x:-.90, y:-.50},
-    {x:-.90, y: 0.00},
-    {x:-.90, y:.50},
-    {x:-.90, y:1.00},
-
-    {x:-.90, y:0.00},
-    {x:-.45, y:0.00},
-    {x: 0.00, y:0.00},
-    {x:.45, y:0.00},
-    {x:.90, y:0.00},
-
-    {x:.90, y:-1.00},
-    {x:.90, y:-.50},
-    {x:.90, y:0.00},
-    {x:.90, y:.50},
-    {x:.90, y:1.00}
-
-]);
-
-
-/* ============================================================
    LETTER RECOGNITION
 
-   Important:
-   C and H are evaluated independently.
+   IMPORTANT:
 
-   We do NOT infer C/H from arbitrary
-   left/right point ratios anymore.
+   If neither C nor H is clearly
+   recognized, return null.
+
+   Never guess.
 ============================================================ */
 
 function recognizeElement(
@@ -2068,60 +2518,17 @@ function recognizeElement(
     }
 
 
-    const normalized =
-        normalizeStroke(
-            points
-        );
+    const isH =
+        recognizeH(points);
+
+
+    const isC =
+        recognizeC(points);
 
 
     if (
-        normalized.length < 8
-    ) {
-
-        return null;
-
-    }
-
-
-    const cDistance =
-        templateDistance(
-            normalized,
-            C_TEMPLATE
-        );
-
-
-    const hDistance =
-        templateDistance(
-            normalized,
-            H_TEMPLATE
-        );
-
-
-    /*
-        The threshold is intentionally
-        somewhat forgiving because
-        handwriting with Apple Pencil
-        will never perfectly match
-        the template.
-    */
-
-    const threshold =
-        .52;
-
-
-    if (
-        cDistance < threshold &&
-        cDistance < hDistance
-    ) {
-
-        return "C";
-
-    }
-
-
-    if (
-        hDistance < threshold &&
-        hDistance < cDistance
+        isH &&
+        !isC
     ) {
 
         return "H";
@@ -2129,65 +2536,21 @@ function recognizeElement(
     }
 
 
-    return null;
-
-}
-
-
-/* ============================================================
-   NEAREST ATOM TO STROKE
-============================================================ */
-
-function nearestAtomToStroke(
-    points
-) {
-
-    let best = null;
-
-    let bestDistance =
-        Infinity;
-
-
-    atoms.forEach(
-        atom => {
-
-            points.forEach(
-                point => {
-
-                    const d =
-                        Math.hypot(
-                            atom.x-point.x,
-                            atom.y-point.y
-                        );
-
-
-                    if (
-                        d < bestDistance
-                    ) {
-
-                        bestDistance =
-                            d;
-
-                        best =
-                            atom;
-
-                    }
-
-                }
-            );
-
-        }
-    );
-
-
     if (
-        bestDistance < 45
+        isC &&
+        !isH
     ) {
 
-        return best;
+        return "C";
 
     }
 
+
+    /*
+        Ambiguous = no result.
+
+        This is intentional.
+    */
 
     return null;
 
@@ -2245,7 +2608,6 @@ function createPendingAtom(
 
     atoms.push(atom);
 
-
     pendingAtom =
         atom;
 
@@ -2258,10 +2620,6 @@ function createPendingAtom(
 }
 
 
-/* ============================================================
-   FINALIZE PENDING ATOM
-============================================================ */
-
 function finalizePendingAtom(
     atom,
     element
@@ -2271,25 +2629,22 @@ function finalizePendingAtom(
         return;
 
 
+    /*
+        If recognition fails:
+        DO NOT delete the atom.
+
+        It remains empty so the user
+        can retry writing C or H.
+    */
+
     if (!element) {
 
-        atoms =
-            atoms.filter(
-                item =>
-                    item.id !== atom.id
-            );
+        atom.element = "?";
 
-
-        if (history.length) {
-
-            history.pop();
-
-        }
-
+        atom.pending = true;
 
         pendingAtom =
-            null;
-
+            atom;
 
         render();
 
@@ -2378,7 +2733,7 @@ function drawLiveStroke() {
 
 
 /* ============================================================
-   FINISH PEN STROKE
+   FINALIZE PEN STROKE
 ============================================================ */
 
 function finalizeCreateStroke() {
@@ -2398,13 +2753,11 @@ function finalizeCreateStroke() {
 
     currentStroke = [];
 
-
     strokeLayer.innerHTML = "";
 
 
     /*
-        STEP 1:
-        circle = create atom
+        1. CIRCLE
     */
 
     if (
@@ -2440,8 +2793,7 @@ function finalizeCreateStroke() {
 
 
     /*
-        STEP 2:
-        writing inside pending atom
+        2. LETTER INSIDE PENDING ATOM
     */
 
     if (
@@ -2466,8 +2818,7 @@ function finalizeCreateStroke() {
 
 
     /*
-        STEP 3:
-        bond
+        3. BOND
     */
 
     const start =
@@ -2510,18 +2861,21 @@ function finalizeCreateStroke() {
 
 
     /*
-        Fallback:
-        connect endpoints near atoms.
+        Fallback for slightly
+        imperfect bond endpoints.
     */
 
     const nearStart =
-        nearestAtomToStroke(
-            [start]
+        findAtomAt(
+            start.x,
+            start.y
         );
 
+
     const nearEnd =
-        nearestAtomToStroke(
-            [end]
+        findAtomAt(
+            end.x,
+            end.y
         );
 
 
@@ -2548,25 +2902,18 @@ function finalizeCreateStroke() {
 let activePointer =
     null;
 
+let selectedAtom =
+    null;
 
-/*
-    SINGLE ATOM DRAG
+let dragStart =
+    null;
 
-    This is deliberately NOT a
-    molecule/component drag.
-
-    Only selectedAtom moves.
-*/
-
-let selectedAtom = null;
-
-let dragStart = null;
-
-let originalAtomPosition = null;
+let originalAtomPosition =
+    null;
 
 
 /* ============================================================
-   POINTER TYPE
+   INTERACTION TYPE
 ============================================================ */
 
 function getInteractionType(
@@ -2597,7 +2944,7 @@ function getInteractionType(
 
 
 /* ============================================================
-   CANVAS POINT
+   CANVAS COORDINATES
 ============================================================ */
 
 function getCanvasPoint(
@@ -2660,9 +3007,9 @@ canvas.addEventListener(
         };
 
 
-        /* ==========================
-           ERASE
-        ========================== */
+        /*
+            ERASE
+        */
 
         if (
             manualMode === "erase"
@@ -2705,9 +3052,9 @@ canvas.addEventListener(
         }
 
 
-        /* ==========================
-           FINGER = SINGLE ATOM MOVE
-        ========================== */
+        /*
+            FINGER = SINGLE ATOM MOVE
+        */
 
         if (
             interaction === "move"
@@ -2763,9 +3110,9 @@ canvas.addEventListener(
         }
 
 
-        /* ==========================
-           PENCIL = CREATE
-        ========================== */
+        /*
+            PENCIL = CREATE
+        */
 
         if (
             interaction === "create"
@@ -2820,9 +3167,9 @@ canvas.addEventListener(
             );
 
 
-        /* ==========================
-           SINGLE ATOM MOVE
-        ========================== */
+        /*
+            SINGLE ATOM MOVE
+        */
 
         if (
             activePointer.type ===
@@ -2840,10 +3187,6 @@ canvas.addEventListener(
                 dragStart.y;
 
 
-            /*
-                ONLY selectedAtom changes.
-            */
-
             selectedAtom.x =
                 originalAtomPosition.x +
                 dx;
@@ -2853,15 +3196,6 @@ canvas.addEventListener(
                 originalAtomPosition.y +
                 dy;
 
-
-            /*
-                Update the selected atom
-                and every bond connected
-                to it.
-
-                Neighbours stay exactly
-                where they were.
-            */
 
             updateAtomAndItsBonds(
                 selectedAtom
@@ -2873,9 +3207,9 @@ canvas.addEventListener(
         }
 
 
-        /* ==========================
-           PENCIL DRAW
-        ========================== */
+        /*
+            PENCIL
+        */
 
         if (
             activePointer.type ===
@@ -2899,7 +3233,7 @@ canvas.addEventListener(
 
 
 /* ============================================================
-   FINISH POINTER
+   POINTER FINISH
 ============================================================ */
 
 function finishPointer(
@@ -2920,78 +3254,80 @@ function finishPointer(
     event.preventDefault();
 
 
-    /* ==========================
-       FINGER
-    ========================== */
+    /*
+        FINGER
+    */
 
     if (
         activePointer.type ===
         "move"
     ) {
 
-        /*
-            Save final position
-            for undo.
-        */
-
         if (
             selectedAtom
         ) {
 
-            saveHistory();
-
             /*
-                We don't want the saved
-                history to contain the
-                already-modified state.
-
-                Therefore replace the
-                latest snapshot with the
-                state from BEFORE the drag.
+                Store the state from
+                BEFORE the movement.
             */
 
-            const latest =
-                history.pop();
+            const snapshot = {
+
+                atoms:
+                    JSON.parse(
+                        JSON.stringify(atoms)
+                    ),
+
+                bonds:
+                    JSON.parse(
+                        JSON.stringify(bonds)
+                    )
+
+            };
 
 
-            if (latest) {
+            const movedId =
+                selectedAtom.id;
 
-                latest.atoms.forEach(
-                    oldAtom => {
 
-                        const current =
-                            atoms.find(
-                                a =>
-                                    a.id ===
-                                    oldAtom.id
-                            );
+            const oldX =
+                originalAtomPosition.x;
 
-                        if (
-                            current &&
-                            current.id ===
-                            selectedAtom.id
-                        ) {
+            const oldY =
+                originalAtomPosition.y;
 
-                            /*
-                                The old position
-                                remains in history.
-                            */
 
-                            oldAtom.x =
-                                originalAtomPosition.x;
+            snapshot.atoms.forEach(
+                atom => {
 
-                            oldAtom.y =
-                                originalAtomPosition.y;
+                    if (
+                        atom.id ===
+                        movedId
+                    ) {
 
-                        }
+                        atom.x =
+                            oldX;
+
+                        atom.y =
+                            oldY;
 
                     }
-                );
+
+                }
+            );
 
 
-                history.push(
-                    latest
-                );
+            history.push(
+                snapshot
+            );
+
+
+            if (
+                history.length > 50
+            ) {
+
+                history.shift();
 
             }
 
@@ -3007,9 +3343,9 @@ function finishPointer(
     }
 
 
-    /* ==========================
-       PENCIL
-    ========================== */
+    /*
+        PENCIL
+    */
 
     if (
         activePointer.type ===
@@ -3059,7 +3395,7 @@ canvas.addEventListener(
 
 
 /* ============================================================
-   INITIAL
+   INITIAL RENDER
 ============================================================ */
 
 render();
