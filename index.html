@@ -194,12 +194,15 @@
         stroke-width: 2.5;
     }
 
+    /*
+        Nodo temporaneo:
+        completamente fermo, nessuna oscillazione.
+    */
     .atom.pending {
-        fill: rgba(255,255,255,.65);
+        fill: rgba(255,255,255,.72);
         stroke: #999da6;
         stroke-width: 2;
         stroke-dasharray: 5 5;
-        animation: pendingPulse 1.2s ease-in-out infinite;
     }
 
     .atom-label {
@@ -238,23 +241,8 @@
         pointer-events: none;
     }
 
-    @keyframes pendingPulse {
-        0%, 100% {
-            opacity: .55;
-            transform: scale(1);
-        }
-        50% {
-            opacity: 1;
-            transform: scale(1.04);
-        }
-    }
-
     .appear {
         animation: appear .25s cubic-bezier(.2,.8,.2,1);
-    }
-
-    .morph {
-        animation: morph .32s cubic-bezier(.2,.9,.2,1);
     }
 
     @keyframes appear {
@@ -263,21 +251,6 @@
             transform: scale(.72);
         }
         to {
-            opacity: 1;
-            transform: scale(1);
-        }
-    }
-
-    @keyframes morph {
-        0% {
-            opacity: .45;
-            transform: scale(.72);
-        }
-        65% {
-            opacity: 1;
-            transform: scale(1.12);
-        }
-        100% {
             opacity: 1;
             transform: scale(1);
         }
@@ -405,8 +378,6 @@ const VALENCE = {
     C: 4,
     H: 1
 };
-
-const IDENTIFICATION_WINDOW = 1400;
 
 function saveState() {
 
@@ -608,8 +579,7 @@ function createPendingAtom(x, y) {
 
     pendingAtom = {
         x,
-        y,
-        createdAt: Date.now()
+        y
     };
 
     render();
@@ -635,21 +605,20 @@ function finalizePendingAtom(element) {
     render();
 }
 
-function isPointInsidePending(point) {
-
-    if (!pendingAtom) return false;
-
-    return distance(point, pendingAtom) <= 45;
-}
-
 /*
-    Simple handwriting recognition for C / H.
+    IMPORTANTE:
 
-    IMPORTANT:
-    The labels here are intentionally corrected:
+    Il riconoscitore geometrico risultava invertito
+    rispetto al comportamento reale osservato.
 
-    H-like stroke -> "H"
-    C-like stroke -> "C"
+    Quindi qui facciamo volutamente:
+
+    forma che prima veniva classificata come H -> C
+    forma che prima veniva classificata come C -> H
+
+    Questo corregge il comportamento reale:
+    scrivo C -> C
+    scrivo H -> H
 */
 
 function recognizeElement(points) {
@@ -709,9 +678,8 @@ function recognizeElement(points) {
     const rightRatio = rightCount / total;
 
     /*
-        H recognition:
-        - meaningful vertical structure on both sides
-        - meaningful central connection
+        Questo pattern veniva riconosciuto come H
+        ma nella pratica corrisponde al C dell'utente.
     */
 
     if (
@@ -719,14 +687,12 @@ function recognizeElement(points) {
         rightRatio > 0.12 &&
         centerCount > total * 0.10
     ) {
-        return "H";
+        return "C";
     }
 
     /*
-        C recognition:
-        - stroke occupies left side
-        - limited occupation of right side
-        - typical C-shaped width
+        Questo pattern veniva riconosciuto come C
+        ma nella pratica corrisponde all'H dell'utente.
     */
 
     if (
@@ -736,28 +702,24 @@ function recognizeElement(points) {
             width >= height * 0.65
         )
     ) {
-        return "C";
+        return "H";
     }
 
     /*
-        Additional H fallback
+        Fallback invertito
     */
 
     if (
         width < height * 0.72 &&
         centerCount > total * 0.16
     ) {
-        return "H";
+        return "C";
     }
-
-    /*
-        Additional C fallback
-    */
 
     if (
         leftRatio > 0.20
     ) {
-        return "C";
+        return "H";
     }
 
     return null;
@@ -775,7 +737,6 @@ function createRoughStroke(points) {
     let d = `M ${points[0].x} ${points[0].y}`;
 
     for (let i = 1; i < points.length; i++) {
-
         d += ` L ${points[i].x} ${points[i].y}`;
     }
 
@@ -848,9 +809,9 @@ function handleCreateStroke(points) {
     if (!points.length) return;
 
     /*
-        If a temporary atom exists,
-        this stroke is interpreted as
-        the element written inside it.
+        Se esiste un nodo temporaneo,
+        lo stroke successivo viene interpretato
+        come simbolo dell'elemento.
     */
 
     if (pendingAtom) {
@@ -873,12 +834,6 @@ function handleCreateStroke(points) {
         return;
     }
 
-    /*
-        First look for a bond gesture:
-        if the stroke starts near an atom
-        and ends near another atom.
-    */
-
     const start = points[0];
     const end = points[points.length - 1];
 
@@ -899,11 +854,6 @@ function handleCreateStroke(points) {
 
         return;
     }
-
-    /*
-        Otherwise check whether the user
-        drew a circle.
-    */
 
     if (isCircle(points)) {
 
@@ -964,10 +914,6 @@ function render() {
     atomLayer.innerHTML = "";
     bondLayer.innerHTML = "";
 
-    /*
-        Empty state
-    */
-
     if (
         atoms.length === 0 &&
         !pendingAtom
@@ -978,7 +924,7 @@ function render() {
     }
 
     /*
-        Bonds
+        BONDS
     */
 
     for (const bond of bonds) {
@@ -1061,7 +1007,10 @@ function render() {
     }
 
     /*
-        Pending atom
+        PENDING ATOM
+
+        Statico: niente scale, niente oscillazione,
+        niente movimento.
     */
 
     if (pendingAtom) {
@@ -1095,7 +1044,7 @@ function render() {
     }
 
     /*
-        Atoms
+        ATOMS
     */
 
     for (const atom of atoms) {
@@ -1165,10 +1114,6 @@ svg.addEventListener("pointerdown", event => {
 
     const point = pointFromEvent(event);
 
-    /*
-        MOVE
-    */
-
     if (mode === "move") {
 
         const atom = findAtomAt(point);
@@ -1187,20 +1132,12 @@ svg.addEventListener("pointerdown", event => {
         return;
     }
 
-    /*
-        ERASE
-    */
-
     if (mode === "erase") {
 
         eraseAt(point);
 
         return;
     }
-
-    /*
-        CREATE
-    */
 
     drawing = true;
     currentStroke = [point];
@@ -1220,10 +1157,6 @@ svg.addEventListener("pointermove", event => {
 
     const point = pointFromEvent(event);
 
-    /*
-        MOVE
-    */
-
     if (mode === "move" && movingAtom) {
 
         moveAtom(movingAtom, point);
@@ -1231,21 +1164,11 @@ svg.addEventListener("pointermove", event => {
         return;
     }
 
-    /*
-        CREATE
-    */
-
     if (!drawing) return;
 
     currentStroke.push(point);
 
     if (currentStroke.length >= 2) {
-
-        const last =
-            currentStroke[currentStroke.length - 1];
-
-        const previous =
-            currentStroke[currentStroke.length - 2];
 
         const line =
             document.getElementById("liveStroke");
@@ -1271,6 +1194,7 @@ svg.addEventListener("pointermove", event => {
                 );
 
             path.id = "liveStroke";
+
             path.setAttribute(
                 "class",
                 "rough-stroke"
@@ -1299,10 +1223,6 @@ svg.addEventListener("pointerup", event => {
 
     event.preventDefault();
 
-    /*
-        MOVE
-    */
-
     if (mode === "move") {
 
         movingAtom = null;
@@ -1314,10 +1234,6 @@ svg.addEventListener("pointerup", event => {
 
         return;
     }
-
-    /*
-        CREATE
-    */
 
     if (!drawing) {
         activePointerId = null;
@@ -1360,10 +1276,6 @@ svg.addEventListener("pointercancel", event => {
         liveStroke.remove();
     }
 });
-
-/*
-    INITIAL RENDER
-*/
 
 render();
 
