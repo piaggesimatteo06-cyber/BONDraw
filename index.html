@@ -518,8 +518,9 @@ button.danger {
 
    Recognition:
    - strict circle detection
-   - geometric H recognition
-   - geometric C recognition
+   - score-based H recognition
+   - score-based C recognition
+   - competitive letter classification
 ============================================================ */
 
 
@@ -687,11 +688,6 @@ undoBtn.onclick = () => {
     bonds =
         previous.bonds;
 
-
-    /*
-        Ricostruiamo il riferimento
-        al pending atom dopo Undo.
-    */
 
     pendingAtom =
         atoms.find(
@@ -2004,142 +2000,160 @@ function isCircle(points) {
 
 
 /* ============================================================
-   H TEMPLATE
+   RECOGNITION HELPERS
 ============================================================ */
 
-const H_TEMPLATE =
-    normalizeStroke([
+/*
+    Restituisce un valore compreso tra 0 e 1.
 
-        {x:-.90, y:-1.00},
-        {x:-.90, y:-.50},
-        {x:-.90, y: 0.00},
-        {x:-.90, y:.50},
-        {x:-.90, y:1.00},
+    0 = caratteristica praticamente assente
+    1 = caratteristica molto forte
+*/
 
-        {x:-.90, y:0.00},
-        {x:-.45, y:0.00},
-        {x: 0.00, y:0.00},
-        {x:.45, y:0.00},
-        {x:.90, y:0.00},
+function clamp01(value) {
 
-        {x:.90, y:-1.00},
-        {x:.90, y:-.50},
-        {x:.90, y:0.00},
-        {x:.90, y:.50},
-        {x:.90, y:1.00}
+    return Math.max(
+        0,
+        Math.min(
+            1,
+            value
+        )
+    );
 
-    ]);
+}
 
 
-/* ============================================================
-   H DISTANCE
-============================================================ */
-
-function templateDistance(
-    a,
-    b
+function rangeScore(
+    value,
+    idealMin,
+    idealMax,
+    tolerance
 ) {
 
     if (
-        !a.length ||
-        !b.length
+        value >= idealMin &&
+        value <= idealMax
     ) {
 
-        return Infinity;
+        return 1;
 
     }
 
 
-    const count =
-        Math.min(
-            a.length,
-            b.length
+    if (value < idealMin) {
+
+        return clamp01(
+            1 -
+            (
+                idealMin-value
+            ) /
+            tolerance
         );
 
-
-    let sum = 0;
-
-
-    for (
-        let i=0;
-        i<count;
-        i++
-    ) {
-
-        sum +=
-            Math.hypot(
-                a[i].x-b[i].x,
-                a[i].y-b[i].y
-            );
-
     }
 
 
-    return sum/count;
+    return clamp01(
+        1 -
+        (
+            value-idealMax
+        ) /
+        tolerance
+    );
 
 }
 
 
 /* ============================================================
-   H RECOGNITION
+   H SCORE
 ============================================================ */
 
-function recognizeH(points) {
+/*
+    La H non viene più riconosciuta con una singola
+    condizione.
 
-    if (points.length < 8) {
-        return false;
+    Costruiamo invece un punteggio sulla base di:
+
+    - due lati verticali
+    - altezza dei due lati
+    - barra orizzontale centrale
+    - presenza a sinistra/destra
+    - rapporto larghezza/altezza
+    - bassa presenza di diagonali
+    - bassa curvatura
+
+    Questo rende il riconoscimento molto più tollerante
+    rispetto alla velocità e allo stile della scrittura.
+*/
+
+function recognizeHScore(points) {
+
+    if (
+        points.length < 8
+    ) {
+
+        return 0;
+
     }
 
-    const box = strokeBounds(points);
+
+    const box =
+        strokeBounds(points);
+
 
     if (!box) {
-        return false;
+
+        return 0;
+
     }
 
-    const width = box.width;
-    const height = box.height;
 
-    if (width < 10 || height < 14) {
-        return false;
+    const width =
+        box.width;
+
+    const height =
+        box.height;
+
+
+    if (
+        width < 10 ||
+        height < 14
+    ) {
+
+        return 0;
+
     }
 
-    const aspect = width / height;
 
-    if (aspect < 0.20 || aspect > 1.40) {
-        return false;
-    }
+    const aspect =
+        width / height;
+
+
+    const aspectScore =
+        rangeScore(
+            aspect,
+            .25,
+            1.20,
+            .70
+        );
+
 
     const centerX =
-        (box.minX + box.maxX) / 2;
+        (
+            box.minX +
+            box.maxX
+        ) / 2;
+
 
     const centerY =
-        (box.minY + box.maxY) / 2;
+        (
+            box.minY +
+            box.maxY
+        ) / 2;
 
 
     let leftCount = 0;
     let rightCount = 0;
-
-    points.forEach(p => {
-
-        if (p.x < centerX) {
-            leftCount++;
-        } else {
-            rightCount++;
-        }
-
-    });
-
-
-    const leftRatio =
-        leftCount / points.length;
-
-    const rightRatio =
-        rightCount / points.length;
-
-
-    if (leftRatio < 0.18 || rightRatio < 0.18) {
-        return false;
-    }
 
 
     let leftMinY = Infinity;
@@ -2149,418 +2163,960 @@ function recognizeH(points) {
     let rightMaxY = -Infinity;
 
 
-    points.forEach(p => {
+    points.forEach(
+        p => {
 
-        if (p.x < centerX) {
+            if (
+                p.x < centerX
+            ) {
 
-            leftMinY =
-                Math.min(leftMinY, p.y);
+                leftCount++;
 
-            leftMaxY =
-                Math.max(leftMaxY, p.y);
+                leftMinY =
+                    Math.min(
+                        leftMinY,
+                        p.y
+                    );
 
-        } else {
+                leftMaxY =
+                    Math.max(
+                        leftMaxY,
+                        p.y
+                    );
 
-            rightMinY =
-                Math.min(rightMinY, p.y);
+            }
+            else {
 
-            rightMaxY =
-                Math.max(rightMaxY, p.y);
+                rightCount++;
+
+                rightMinY =
+                    Math.min(
+                        rightMinY,
+                        p.y
+                    );
+
+                rightMaxY =
+                    Math.max(
+                        rightMaxY,
+                        p.y
+                    );
+
+            }
 
         }
+    );
 
-    });
+
+    const leftRatio =
+        leftCount /
+        points.length;
+
+    const rightRatio =
+        rightCount /
+        points.length;
+
+
+    const sideBalance =
+        1 -
+        Math.min(
+            1,
+            Math.abs(
+                leftRatio -
+                rightRatio
+            ) * 2.5
+        );
 
 
     const leftHeight =
-        leftMaxY - leftMinY;
+        Math.max(
+            0,
+            leftMaxY -
+            leftMinY
+        );
 
     const rightHeight =
-        rightMaxY - rightMinY;
+        Math.max(
+            0,
+            rightMaxY -
+            rightMinY
+        );
 
 
-    if (
-        leftHeight < height * 0.55 ||
-        rightHeight < height * 0.55
-    ) {
-        return false;
-    }
+    const leftCoverage =
+        clamp01(
+            leftHeight /
+            (height * .72)
+        );
+
+    const rightCoverage =
+        clamp01(
+            rightHeight /
+            (height * .72)
+        );
 
 
     let totalLength = 0;
 
     let verticalLeftLength = 0;
+
     let verticalRightLength = 0;
 
     let centralHorizontalLength = 0;
 
+    let diagonalLength = 0;
 
-    for (let i = 1; i < points.length; i++) {
+    let horizontalLength = 0;
 
-        const p1 = points[i - 1];
-        const p2 = points[i];
+    let verticalLength = 0;
 
-        const dx = p2.x - p1.x;
-        const dy = p2.y - p1.y;
+
+    for (
+        let i=1;
+        i<points.length;
+        i++
+    ) {
+
+        const p1 =
+            points[i-1];
+
+        const p2 =
+            points[i];
+
+
+        const dx =
+            p2.x-p1.x;
+
+        const dy =
+            p2.y-p1.y;
+
+
+        const absDx =
+            Math.abs(dx);
+
+        const absDy =
+            Math.abs(dy);
+
 
         const length =
-            Math.sqrt(
-                dx * dx +
-                dy * dy
+            Math.hypot(
+                dx,
+                dy
             );
 
-        if (length < 0.5) {
+
+        if (
+            length < .5
+        ) {
+
             continue;
+
         }
+
 
         totalLength += length;
 
-        const absDx = Math.abs(dx);
-        const absDy = Math.abs(dy);
 
         const midX =
-            (p1.x + p2.x) / 2;
+            (
+                p1.x +
+                p2.x
+            ) / 2;
+
 
         const midY =
-            (p1.y + p2.y) / 2;
+            (
+                p1.y +
+                p2.y
+            ) / 2;
 
 
-        if (
-            absDy > absDx * 1.8 &&
-            midX < centerX - width * 0.20
-        ) {
-
-            verticalLeftLength += length;
-
-        }
-
+        /*
+            Segmento verticale.
+        */
 
         if (
-            absDy > absDx * 1.8 &&
-            midX > centerX + width * 0.20
+            absDy >
+            absDx * 1.55
         ) {
 
-            verticalRightLength += length;
+            verticalLength +=
+                length;
 
-        }
-
-
-        if (
-            absDx > absDy * 2.2 &&
-            Math.abs(midY - centerY) < height * 0.23
-        ) {
-
-            centralHorizontalLength += length;
-
-        }
-
-    }
-
-
-    if (totalLength <= 0) {
-        return false;
-    }
-
-
-    if (
-        verticalLeftLength < height * 0.25 ||
-        verticalRightLength < height * 0.25
-    ) {
-        return false;
-    }
-
-
-    if (
-        centralHorizontalLength <
-        width * 0.22
-    ) {
-        return false;
-    }
-
-
-    let horizontalLeft = false;
-    let horizontalRight = false;
-
-
-    for (let i = 1; i < points.length; i++) {
-
-        const p1 = points[i - 1];
-        const p2 = points[i];
-
-        const dx = p2.x - p1.x;
-        const dy = p2.y - p1.y;
-
-        if (
-            Math.abs(dx) >
-            Math.abs(dy) * 2.2
-        ) {
-
-            const midY =
-                (p1.y + p2.y) / 2;
 
             if (
-                Math.abs(midY - centerY) <
-                height * 0.25
+                midX <
+                centerX -
+                width * .18
             ) {
 
-                if (
-                    p1.x < centerX ||
-                    p2.x < centerX
-                ) {
+                verticalLeftLength +=
+                    length;
 
-                    horizontalLeft = true;
+            }
 
-                }
 
-                if (
-                    p1.x > centerX ||
-                    p2.x > centerX
-                ) {
+            if (
+                midX >
+                centerX +
+                width * .18
+            ) {
 
-                    horizontalRight = true;
-
-                }
+                verticalRightLength +=
+                    length;
 
             }
 
         }
 
+
+        /*
+            Segmento orizzontale.
+        */
+
+        if (
+            absDx >
+            absDy * 1.70
+        ) {
+
+            horizontalLength +=
+                length;
+
+
+            if (
+                Math.abs(
+                    midY -
+                    centerY
+                ) <
+                height * .27
+            ) {
+
+                centralHorizontalLength +=
+                    length;
+
+            }
+
+        }
+
+
+        /*
+            Segmento diagonale.
+        */
+
+        if (
+            absDx >
+            length * .30 &&
+            absDy >
+            length * .30
+        ) {
+
+            diagonalLength +=
+                length;
+
+        }
+
     }
 
 
     if (
-        !horizontalLeft ||
-        !horizontalRight
+        totalLength <= 0
     ) {
-        return false;
-    }
 
-
-    let diagonalLength = 0;
-
-
-    for (let i = 1; i < points.length; i++) {
-
-        const p1 = points[i - 1];
-        const p2 = points[i];
-
-        const dx = Math.abs(p2.x - p1.x);
-        const dy = Math.abs(p2.y - p1.y);
-
-        const length =
-            Math.sqrt(
-                dx * dx +
-                dy * dy
-            );
-
-        if (length < 0.5) {
-            continue;
-        }
-
-
-        if (
-            dx > length * 0.35 &&
-            dy > length * 0.35
-        ) {
-
-            diagonalLength += length;
-
-        }
+        return 0;
 
     }
+
+
+    const verticalLeftRatio =
+        verticalLeftLength /
+        totalLength;
+
+    const verticalRightRatio =
+        verticalRightLength /
+        totalLength;
+
+
+    const horizontalCentralRatio =
+        centralHorizontalLength /
+        totalLength;
 
 
     const diagonalRatio =
-        diagonalLength / totalLength;
+        diagonalLength /
+        totalLength;
 
 
-    if (diagonalRatio > 0.45) {
-        return false;
-    }
+    const verticalStructureScore =
+        (
+            clamp01(
+                verticalLeftRatio /
+                .20
+            )
+            +
+            clamp01(
+                verticalRightRatio /
+                .20
+            )
+        ) / 2;
 
 
-    return true;
+    const horizontalStructureScore =
+        clamp01(
+            centralHorizontalLength /
+            (width * .32)
+        );
+
+
+    const diagonalScore =
+        clamp01(
+            1 -
+            diagonalRatio /
+            .45
+        );
+
+
+    /*
+        Una H deve avere una quantità significativa
+        di struttura verticale.
+    */
+
+    const verticalDominance =
+        totalLength > 0
+            ? verticalLength /
+              totalLength
+            : 0;
+
+
+    const verticalDominanceScore =
+        clamp01(
+            verticalDominance /
+            .38
+        );
+
+
+    /*
+        Una H normalmente non è molto curva.
+        Qui misuriamo indirettamente la presenza
+        di segmenti fortemente orientati.
+    */
+
+    const directionalStructure =
+        clamp01(
+            (
+                verticalLength +
+                horizontalLength
+            ) /
+            totalLength /
+            .72
+        );
+
+
+    /*
+        Punteggio finale.
+
+        La struttura verticale e la barra centrale
+        hanno il peso maggiore.
+    */
+
+    const score =
+
+        verticalStructureScore * .28
+
+        +
+
+        horizontalStructureScore * .25
+
+        +
+
+        (
+            leftCoverage *
+            rightCoverage
+        ) * .15
+
+        +
+
+        sideBalance * .08
+
+        +
+
+        aspectScore * .08
+
+        +
+
+        verticalDominanceScore * .07
+
+        +
+
+        directionalStructure * .05
+
+        +
+
+        diagonalScore * .04;
+
+
+    return clamp01(score);
 
 }
 
 
 /* ============================================================
-   C RECOGNITION
+   C SCORE
 ============================================================ */
 
-function recognizeC(points) {
+/*
+    La C viene valutata cercando:
 
-    if (points.length < 8) {
-        return false;
+    - estremità separate verticalmente
+    - estremità non troppo lontane orizzontalmente
+    - traiettoria molto più lunga della corda diretta
+    - forte presenza sul lato sinistro
+    - bassa quantità di segmenti orizzontali
+    - struttura curva
+
+    Questo permette di distinguerla meglio
+    dalla H.
+*/
+
+function recognizeCScore(points) {
+
+    if (
+        points.length < 8
+    ) {
+
+        return 0;
+
     }
 
-    const box = strokeBounds(points);
+
+    const box =
+        strokeBounds(points);
+
 
     if (!box) {
-        return false;
+
+        return 0;
+
     }
 
-    const width = box.width;
-    const height = box.height;
 
-    if (width < 8 || height < 10) {
-        return false;
+    const width =
+        box.width;
+
+    const height =
+        box.height;
+
+
+    if (
+        width < 8 ||
+        height < 10
+    ) {
+
+        return 0;
+
     }
 
-    const aspect = width / height;
 
-    if (aspect < 0.25 || aspect > 1.75) {
-        return false;
-    }
+    const aspect =
+        width / height;
 
-    const first = points[0];
-    const last = points[points.length - 1];
+
+    const aspectScore =
+        rangeScore(
+            aspect,
+            .35,
+            1.20,
+            .75
+        );
+
+
+    const first =
+        points[0];
+
+    const last =
+        points[
+            points.length-1
+        ];
+
 
     const endpointYDifference =
-        Math.abs(first.y - last.y);
+        Math.abs(
+            first.y -
+            last.y
+        );
 
-    if (endpointYDifference < height * 0.20) {
-        return false;
-    }
+
+    const endpointYScore =
+        clamp01(
+            endpointYDifference /
+            (height * .45)
+        );
+
 
     const endpointXDifference =
-        Math.abs(first.x - last.x);
-
-    if (endpointXDifference > width * 0.80) {
-        return false;
-    }
-
-    const centerX =
-        (box.minX + box.maxX) / 2;
-
-    const centerY =
-        (box.minY + box.maxY) / 2;
+        Math.abs(
+            first.x -
+            last.x
+        );
 
 
-    let upper = false;
-    let lower = false;
-
-
-    points.forEach(p => {
-
-        if (p.y < centerY - height * 0.12) {
-            upper = true;
-        }
-
-        if (p.y > centerY + height * 0.12) {
-            lower = true;
-        }
-
-    });
-
-
-    if (!upper || !lower) {
-        return false;
-    }
-
-
-    let leftCount = 0;
-    let rightCount = 0;
-
-
-    points.forEach(p => {
-
-        if (p.x < centerX) {
-            leftCount++;
-        } else {
-            rightCount++;
-        }
-
-    });
-
-
-    const leftRatio =
-        leftCount / points.length;
-
-
-    if (leftRatio < 0.32) {
-        return false;
-    }
+    const endpointXScore =
+        clamp01(
+            1 -
+            endpointXDifference /
+            (width * .75)
+        );
 
 
     let pathLength = 0;
 
 
-    for (let i = 1; i < points.length; i++) {
+    for (
+        let i=1;
+        i<points.length;
+        i++
+    ) {
 
-        pathLength += Math.hypot(
-            points[i].x - points[i - 1].x,
-            points[i].y - points[i - 1].y
-        );
+        pathLength +=
+            Math.hypot(
+                points[i].x -
+                points[i-1].x,
+
+                points[i].y -
+                points[i-1].y
+            );
 
     }
 
 
     const directDistance =
         Math.hypot(
-            last.x - first.x,
-            last.y - first.y
+            last.x -
+            first.x,
+
+            last.y -
+            first.y
         );
 
 
-    if (directDistance === 0) {
-        return false;
+    let curvatureScore = 0;
+
+
+    if (
+        directDistance > 0
+    ) {
+
+        const curvatureRatio =
+            pathLength /
+            directDistance;
+
+
+        curvatureScore =
+            clamp01(
+                (
+                    curvatureRatio -
+                    1.25
+                ) /
+                1.10
+            );
+
     }
 
 
-    const curvatureRatio =
-        pathLength / directDistance;
+    const centerX =
+        (
+            box.minX +
+            box.maxX
+        ) / 2;
+
+    const centerY =
+        (
+            box.minY +
+            box.maxY
+        ) / 2;
 
 
-    if (curvatureRatio < 1.55) {
-        return false;
-    }
+    let leftCount = 0;
+    let rightCount = 0;
+
+    let upper = false;
+    let lower = false;
+
+
+    points.forEach(
+        p => {
+
+            if (
+                p.x < centerX
+            ) {
+
+                leftCount++;
+
+            }
+            else {
+
+                rightCount++;
+
+            }
+
+
+            if (
+                p.y <
+                centerY -
+                height * .12
+            ) {
+
+                upper = true;
+
+            }
+
+
+            if (
+                p.y >
+                centerY +
+                height * .12
+            ) {
+
+                lower = true;
+
+            }
+
+        }
+    );
+
+
+    const leftRatio =
+        leftCount /
+        points.length;
+
+
+    const rightRatio =
+        rightCount /
+        points.length;
+
+
+    const leftScore =
+        clamp01(
+            leftRatio /
+            .50
+        );
+
+
+    /*
+        Una C può naturalmente avere alcuni punti
+        sul lato destro, ma non deve essere simmetrica
+        come una H.
+    */
+
+    const rightPenalty =
+        clamp01(
+            rightRatio /
+            .58
+        );
+
+
+    const openShapeScore =
+        (
+            upper &&
+            lower
+        )
+            ? 1
+            : 0;
 
 
     let horizontalLength = 0;
-    let totalLength = 0;
+
+    let diagonalLength = 0;
 
 
-    for (let i = 1; i < points.length; i++) {
+    for (
+        let i=1;
+        i<points.length;
+        i++
+    ) {
 
         const dx =
             Math.abs(
                 points[i].x -
-                points[i - 1].x
+                points[i-1].x
             );
 
         const dy =
             Math.abs(
                 points[i].y -
-                points[i - 1].y
+                points[i-1].y
             );
 
+
         const segmentLength =
-            Math.hypot(dx, dy);
+            Math.hypot(
+                dx,
+                dy
+            );
 
-        totalLength += segmentLength;
+
+        if (
+            dx >
+            dy * 2.5
+        ) {
+
+            horizontalLength +=
+                segmentLength;
+
+        }
 
 
-        if (dx > dy * 2.8) {
-            horizontalLength += segmentLength;
+        if (
+            dx >
+            segmentLength * .30 &&
+            dy >
+            segmentLength * .30
+        ) {
+
+            diagonalLength +=
+                segmentLength;
+
         }
 
     }
 
 
-    if (totalLength > 0) {
+    const horizontalRatio =
+        totalSafeRatio(
+            horizontalLength,
+            pathLength
+        );
 
-        const horizontalRatio =
-            horizontalLength / totalLength;
 
-        if (horizontalRatio > 0.58) {
-            return false;
+    const diagonalRatio =
+        totalSafeRatio(
+            diagonalLength,
+            pathLength
+        );
+
+
+    const horizontalScore =
+        clamp01(
+            1 -
+            horizontalRatio /
+            .60
+        );
+
+
+    const diagonalScore =
+        clamp01(
+            1 -
+            diagonalRatio /
+            .60
+        );
+
+
+    /*
+        La C deve avere più struttura curva che struttura
+        verticale/orizzontale rigida.
+    */
+
+    const curvatureDominance =
+        clamp01(
+            curvatureScore *
+            (
+                1 -
+                verticalLikeRatio(points)
+            )
+        );
+
+
+    /*
+        La C deve avere una forte "apertura":
+        gli estremi devono essere separati soprattutto
+        verticalmente.
+    */
+
+    const openingScore =
+        (
+            endpointYScore * .65
+            +
+            endpointXScore * .35
+        );
+
+
+    /*
+        Penalizzazione forte se la forma mostra
+        una struttura molto simmetrica sinistra/destra.
+    */
+
+    const asymmetryScore =
+        clamp01(
+            1 -
+            Math.abs(
+                leftRatio -
+                rightRatio
+            )
+        );
+
+
+    const score =
+
+        openingScore * .19
+
+        +
+
+        curvatureScore * .25
+
+        +
+
+        leftScore * .16
+
+        +
+
+        openShapeScore * .08
+
+        +
+
+        horizontalScore * .10
+
+        +
+
+        diagonalScore * .05
+
+        +
+
+        curvatureDominance * .10
+
+        +
+
+        (
+            1 -
+            asymmetryScore
+        ) * .07;
+
+
+    /*
+        Una forma estremamente verticale con due lati
+        paralleli è molto più probabilmente H che C.
+    */
+
+    const hLike =
+        verticalLikeRatio(points);
+
+
+    const hPenalty =
+        clamp01(
+            (
+                hLike -
+                .30
+            ) /
+            .35
+        );
+
+
+    const finalScore =
+        clamp01(
+            score *
+            (
+                1 -
+                hPenalty * .65
+            )
+        );
+
+
+    return finalScore;
+
+}
+
+
+/* ============================================================
+   SMALL GEOMETRIC HELPERS
+============================================================ */
+
+function totalSafeRatio(
+    value,
+    total
+) {
+
+    if (
+        total <= 0
+    ) {
+
+        return 0;
+
+    }
+
+    return value / total;
+
+}
+
+
+function verticalLikeRatio(points) {
+
+    if (
+        points.length < 2
+    ) {
+
+        return 0;
+
+    }
+
+
+    let total = 0;
+
+    let vertical = 0;
+
+
+    for (
+        let i=1;
+        i<points.length;
+        i++
+    ) {
+
+        const dx =
+            points[i].x -
+            points[i-1].x;
+
+        const dy =
+            points[i].y -
+            points[i-1].y;
+
+
+        const length =
+            Math.hypot(
+                dx,
+                dy
+            );
+
+
+        if (
+            length < .5
+        ) {
+
+            continue;
+
+        }
+
+
+        total += length;
+
+
+        if (
+            Math.abs(dy) >
+            Math.abs(dx) * 1.55
+        ) {
+
+            vertical += length;
+
         }
 
     }
 
 
-    return true;
+    if (
+        total <= 0
+    ) {
+
+        return 0;
+
+    }
+
+
+    return vertical / total;
 
 }
 
@@ -2568,6 +3124,22 @@ function recognizeC(points) {
 /* ============================================================
    LETTER RECOGNITION
 ============================================================ */
+
+/*
+    Ora C e H competono tra loro.
+
+    Non basta più che una forma soddisfi una lista
+    di condizioni.
+
+    Ogni lettera produce un punteggio.
+
+    La lettera viene accettata solo se:
+
+    1. supera una soglia minima;
+    2. è sufficientemente migliore dell'altra.
+
+    Questo evita molte classificazioni casuali.
+*/
 
 function recognizeElement(points) {
 
@@ -2580,17 +3152,69 @@ function recognizeElement(points) {
     }
 
 
-    const isH =
-        recognizeH(points);
+    const hScore =
+        recognizeHScore(
+            points
+        );
 
 
-    const isC =
-        recognizeC(points);
+    const cScore =
+        recognizeCScore(
+            points
+        );
 
+
+    /*
+        Se entrambe sono deboli,
+        non indoviniamo.
+    */
 
     if (
-        isH &&
-        !isC
+        hScore < .48 &&
+        cScore < .48
+    ) {
+
+        return null;
+
+    }
+
+
+    /*
+        H nettamente migliore della C.
+    */
+
+    if (
+        hScore >= .52 &&
+        hScore > cScore + .08
+    ) {
+
+        return "H";
+
+    }
+
+
+    /*
+        C nettamente migliore della H.
+    */
+
+    if (
+        cScore >= .52 &&
+        cScore > hScore + .08
+    ) {
+
+        return "C";
+
+    }
+
+
+    /*
+        Caso in cui una delle due è chiaramente
+        molto forte anche se la differenza è piccola.
+    */
+
+    if (
+        hScore >= .70 &&
+        hScore >= cScore
     ) {
 
         return "H";
@@ -2599,14 +3223,20 @@ function recognizeElement(points) {
 
 
     if (
-        isC &&
-        !isH
+        cScore >= .70 &&
+        cScore >= hScore
     ) {
 
         return "C";
 
     }
 
+
+    /*
+        Ambiguità:
+        meglio lasciare ? che creare
+        un elemento sbagliato.
+    */
 
     return null;
 
@@ -2622,8 +3252,7 @@ function recognizeElement(points) {
 
     NON chiama render() da solo:
     la funzione viene usata come parte
-    di un'operazione più grande, così
-    evitiamo render multipli inutili.
+    di un'operazione più grande.
 */
 
 function removePendingAtom() {
@@ -2666,16 +3295,6 @@ function createPendingAtom(
     y
 ) {
 
-    /*
-        Prima controlliamo se il nuovo
-        punto è troppo vicino a un atomo
-        già esistente.
-
-        Un pending precedente non viene
-        eliminato se la nuova posizione
-        non è valida.
-    */
-
     const nearby =
         atoms.find(
             atom =>
@@ -2693,16 +3312,6 @@ function createPendingAtom(
 
     }
 
-
-    /*
-        UN SOLO PENDING:
-
-        Salviamo la situazione precedente
-        prima di sostituire il vecchio ?.
-
-        Così Undo può riportare esattamente
-        allo stato precedente.
-    */
 
     saveHistory();
 
