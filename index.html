@@ -2086,7 +2086,6 @@ function templateDistance(
 /* ============================================================
    H RECOGNITION
 ============================================================ */
-
 function recognizeH(points) {
 
     if (points.length < 8) {
@@ -2103,18 +2102,18 @@ function recognizeH(points) {
     const height = box.height;
 
     /*
-        Una H deve avere una dimensione reale
-        sufficiente per essere distinta da un
-        piccolo tratto casuale.
+        ========================================================
+        1. DIMENSIONI MINIME
+        ========================================================
     */
+
     if (width < 10 || height < 14) {
         return false;
     }
 
     /*
-        La H deve avere una forma abbastanza
-        verticale, ma non obbligatoriamente
-        stretta.
+        Una H non deve essere troppo larga
+        rispetto alla propria altezza.
     */
     const aspect = width / height;
 
@@ -2128,16 +2127,10 @@ function recognizeH(points) {
     const centerY =
         (box.minY + box.maxY) / 2;
 
-
     /*
         ========================================================
-        1. CERCHIAMO I DUE MONTANTI
+        2. DIVISIONE IN ZONA SINISTRA / DESTRA
         ========================================================
-
-        Dividiamo la figura in zona sinistra
-        e zona destra.
-
-        Una H vera deve occupare entrambe.
     */
 
     let leftCount = 0;
@@ -2159,24 +2152,18 @@ function recognizeH(points) {
     const rightRatio =
         rightCount / points.length;
 
-
     /*
-        Una linea verticale singola,
-        quindi, non può diventare H.
+        Una H deve avere due montanti.
     */
 
     if (leftRatio < 0.18 || rightRatio < 0.18) {
         return false;
     }
 
-
     /*
         ========================================================
-        2. CONTROLLO DELLA COPERTURA VERTICALE
+        3. COPERTURA VERTICALE DEI DUE MONTANTI
         ========================================================
-
-        Entrambi i montanti devono attraversare
-        una parte significativa dell'altezza.
     */
 
     let leftMinY = Infinity;
@@ -2184,7 +2171,6 @@ function recognizeH(points) {
 
     let rightMinY = Infinity;
     let rightMaxY = -Infinity;
-
 
     points.forEach(p => {
 
@@ -2208,222 +2194,291 @@ function recognizeH(points) {
 
     });
 
-
     const leftHeight =
         leftMaxY - leftMinY;
 
     const rightHeight =
         rightMaxY - rightMinY;
 
-
-    /*
-        I due lati devono essere abbastanza
-        verticalmente estesi.
-    */
-
     if (
         leftHeight < height * 0.55 ||
         rightHeight < height * 0.55
     ) {
-
-        return false;
-
-    }
-
-
-    /*
-        ========================================================
-        3. CERCHIAMO IL COLLEGAMENTO CENTRALE
-        ========================================================
-
-        La H deve avere punti vicini alla
-        fascia centrale dell'altezza.
-    */
-
-    let centerBandCount = 0;
-
-    const centerBand =
-        height * 0.18;
-
-
-    points.forEach(p => {
-
-        if (
-            Math.abs(
-                p.y - centerY
-            ) < centerBand
-        ) {
-
-            centerBandCount++;
-
-        }
-
-    });
-
-
-    const centerRatio =
-        centerBandCount /
-        points.length;
-
-
-    /*
-        Senza un tratto centrale sufficiente,
-        non è una H.
-    */
-
-    if (centerRatio < 0.12) {
         return false;
     }
 
-
     /*
         ========================================================
-        4. IL CENTRO DEVE COLLEGARE SINISTRA E DESTRA
+        4. ANALISI DEI TRATTI
         ========================================================
 
-        Non basta avere qualche punto al centro:
-        devono esistere punti nella fascia centrale
-        sia a sinistra che a destra.
+        Qui sta la differenza rispetto alla versione
+        precedente.
+
+        Analizziamo la direzione dei segmenti realmente
+        disegnati dall'utente.
+
+        H:
+            ↑
+            │
+            ├────
+            │
+            ↓
+
+        M:
+            ↑
+            ╲
+             ╲
+              ╱
+             ╱
+            ↓
+
+        La M quindi non dovrebbe avere abbastanza
+        tratto orizzontale centrale.
     */
 
-    let centerLeft = false;
-    let centerRight = false;
+    let totalLength = 0;
 
+    let verticalLeftLength = 0;
+    let verticalRightLength = 0;
 
-    points.forEach(p => {
+    let centralHorizontalLength = 0;
+
+    for (let i = 1; i < points.length; i++) {
+
+        const p1 = points[i - 1];
+        const p2 = points[i];
+
+        const dx = p2.x - p1.x;
+        const dy = p2.y - p1.y;
+
+        const length =
+            Math.sqrt(
+                dx * dx +
+                dy * dy
+            );
+
+        if (length < 0.5) {
+            continue;
+        }
+
+        totalLength += length;
+
+        const absDx = Math.abs(dx);
+        const absDy = Math.abs(dy);
+
+        const midX =
+            (p1.x + p2.x) / 2;
+
+        const midY =
+            (p1.y + p2.y) / 2;
+
+        /*
+            ====================================================
+            TRATTO VERTICALE SINISTRO
+            ====================================================
+        */
 
         if (
-            p.y >= centerY - centerBand &&
-            p.y <= centerY + centerBand
+            absDy > absDx * 1.8 &&
+            midX < centerX - width * 0.20
         ) {
 
-            if (p.x < centerX) {
-                centerLeft = true;
-            }
-
-            if (p.x > centerX) {
-                centerRight = true;
-            }
+            verticalLeftLength += length;
 
         }
 
-    });
+        /*
+            ====================================================
+            TRATTO VERTICALE DESTRO
+            ====================================================
+        */
 
+        if (
+            absDy > absDx * 1.8 &&
+            midX > centerX + width * 0.20
+        ) {
+
+            verticalRightLength += length;
+
+        }
+
+        /*
+            ====================================================
+            TRATTO ORIZZONTALE CENTRALE
+            ====================================================
+
+            Deve essere:
+            - abbastanza orizzontale
+            - vicino alla metà dell'altezza
+        */
+
+        if (
+            absDx > absDy * 2.2 &&
+            Math.abs(midY - centerY) < height * 0.23
+        ) {
+
+            centralHorizontalLength += length;
+
+        }
+
+    }
+
+    /*
+        ========================================================
+        5. I MONTANTI DEVONO ESSERE DAVVERO VERTICALI
+        ========================================================
+    */
+
+    if (totalLength <= 0) {
+        return false;
+    }
 
     if (
-        !centerLeft ||
-        !centerRight
+        verticalLeftLength < height * 0.25 ||
+        verticalRightLength < height * 0.25
     ) {
-
         return false;
-
     }
 
-
     /*
         ========================================================
-        5. PROTEZIONE CONTRO LA L
+        6. IL COLLEGAMENTO CENTRALE È OBBLIGATORIO
         ========================================================
 
-        Una L può avere:
-        - un montante verticale
-        - un segmento orizzontale
-
-        Ma non dovrebbe avere due montanti
-        verticali completi.
-
-        Il controllo precedente già elimina
-        gran parte delle L.
-
-        Qui aggiungiamo un controllo sulla
-        distribuzione verticale.
-    */
-
-    let upperLeft = false;
-    let lowerLeft = false;
-    let upperRight = false;
-    let lowerRight = false;
-
-
-    points.forEach(p => {
-
-        if (p.x < centerX) {
-
-            if (
-                p.y <
-                centerY - height * 0.20
-            ) {
-
-                upperLeft = true;
-
-            }
-
-            if (
-                p.y >
-                centerY + height * 0.20
-            ) {
-
-                lowerLeft = true;
-
-            }
-
-        } else {
-
-            if (
-                p.y <
-                centerY - height * 0.20
-            ) {
-
-                upperRight = true;
-
-            }
-
-            if (
-                p.y >
-                centerY + height * 0.20
-            ) {
-
-                lowerRight = true;
-
-            }
-
-        }
-
-    });
-
-
-    /*
-        Entrambi i montanti devono comparire
-        sia sopra che sotto il centro.
+        Questo è il filtro principale contro la M.
     */
 
     if (
-        !upperLeft ||
-        !lowerLeft ||
-        !upperRight ||
-        !lowerRight
+        centralHorizontalLength <
+        width * 0.22
     ) {
-
         return false;
-
     }
-
 
     /*
         ========================================================
-        6. CONTROLLO DELLA LINEA SEMPLICE
+        7. IL COLLEGAMENTO DEVE DAVVERO ANDARE
+           DA SINISTRA VERSO DESTRA
+        ========================================================
+    */
+
+    let horizontalLeft = false;
+    let horizontalRight = false;
+
+    for (let i = 1; i < points.length; i++) {
+
+        const p1 = points[i - 1];
+        const p2 = points[i];
+
+        const dx = p2.x - p1.x;
+        const dy = p2.y - p1.y;
+
+        if (
+            Math.abs(dx) >
+            Math.abs(dy) * 2.2
+        ) {
+
+            const midY =
+                (p1.y + p2.y) / 2;
+
+            if (
+                Math.abs(midY - centerY) <
+                height * 0.25
+            ) {
+
+                if (
+                    p1.x < centerX ||
+                    p2.x < centerX
+                ) {
+                    horizontalLeft = true;
+                }
+
+                if (
+                    p1.x > centerX ||
+                    p2.x > centerX
+                ) {
+                    horizontalRight = true;
+                }
+
+            }
+
+        }
+
+    }
+
+    if (
+        !horizontalLeft ||
+        !horizontalRight
+    ) {
+        return false;
+    }
+
+    /*
+        ========================================================
+        8. PROTEZIONE EXTRA CONTRO LA M
         ========================================================
 
-        Una H naturale può essere disegnata
-        in molti ordini diversi.
+        Una M contiene generalmente molti tratti diagonali.
+        Se una percentuale troppo grande del tratto totale
+        è diagonale, non la consideriamo H.
+    */
 
-        NON controlliamo più l'ordine dei punti.
+    let diagonalLength = 0;
 
-        Guardiamo solamente la geometria.
+    for (let i = 1; i < points.length; i++) {
+
+        const p1 = points[i - 1];
+        const p2 = points[i];
+
+        const dx = Math.abs(p2.x - p1.x);
+        const dy = Math.abs(p2.y - p1.y);
+
+        const length =
+            Math.sqrt(
+                dx * dx +
+                dy * dy
+            );
+
+        if (length < 0.5) {
+            continue;
+        }
+
+        /*
+            Diagonale significativa:
+            dx e dy sono entrambi importanti.
+        */
+
+        if (
+            dx > length * 0.35 &&
+            dy > length * 0.35
+        ) {
+
+            diagonalLength += length;
+
+        }
+
+    }
+
+    const diagonalRatio =
+        diagonalLength / totalLength;
+
+    /*
+        La H può avere piccole imperfezioni diagonali,
+        ma non può essere dominata da diagonali come una M.
+    */
+
+    if (diagonalRatio > 0.45) {
+        return false;
+    }
+
+    /*
+        ========================================================
+        H RICONOSCIUTA
+        ========================================================
     */
 
     return true;
-
 }
 
 /* ============================================================
