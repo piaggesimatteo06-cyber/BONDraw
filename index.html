@@ -2778,20 +2778,104 @@ function recognizeElement(
    PENDING ATOM
 ============================================================ */
 
+/*
+    BONDraw mantiene al massimo UN SOLO
+    atomo pending alla volta.
+
+    Il pending atom è solamente uno stato
+    temporaneo di riconoscimento:
+
+        ○  →  ?
+
+    Se l'utente disegna un nuovo cerchio
+    prima di aver definito quello precedente,
+    il vecchio ? viene eliminato.
+*/
+
 let pendingAtom = null;
 
+
+/* ============================================================
+   REMOVE PENDING ATOM
+============================================================ */
+
+function removePendingAtom() {
+
+    if (!pendingAtom) {
+        return;
+    }
+
+    const pendingId =
+        pendingAtom.id;
+
+
+    /*
+        Rimuoviamo eventuali bond collegati
+        per sicurezza.
+    */
+
+    bonds =
+        bonds.filter(
+            bond =>
+                bond.a !== pendingId &&
+                bond.b !== pendingId
+        );
+
+
+    /*
+        Rimuoviamo l'atomo pending.
+    */
+
+    atoms =
+        atoms.filter(
+            atom =>
+                atom.id !== pendingId
+        );
+
+
+    pendingAtom = null;
+
+}
+
+
+/* ============================================================
+   CREATE PENDING ATOM
+============================================================ */
 
 function createPendingAtom(
     x,
     y
 ) {
 
+    /*
+        Se esiste già un ? non ancora
+        riconosciuto, lo sostituiamo.
+
+        IMPORTANTE:
+        questo avviene prima di creare
+        il nuovo snapshot della storia,
+        così l'intera azione resta
+        un singolo step di Undo.
+    */
+
+    if (pendingAtom) {
+
+        removePendingAtom();
+
+    }
+
+
+    /*
+        Evitiamo di creare un atomo
+        sopra un atomo già esistente.
+    */
+
     const nearby =
         atoms.find(
             atom =>
                 Math.hypot(
-                    atom.x-x,
-                    atom.y-y
+                    atom.x - x,
+                    atom.y - y
                 ) < 30
         );
 
@@ -2802,6 +2886,11 @@ function createPendingAtom(
 
     }
 
+
+    /*
+        Salviamo lo stato PRIMA
+        della creazione del nuovo atomo.
+    */
 
     saveHistory();
 
@@ -2825,6 +2914,7 @@ function createPendingAtom(
 
     atoms.push(atom);
 
+
     pendingAtom =
         atom;
 
@@ -2837,28 +2927,35 @@ function createPendingAtom(
 }
 
 
+/* ============================================================
+   FINALIZE PENDING ATOM
+============================================================ */
+
 function finalizePendingAtom(
     atom,
     element
 ) {
 
-    if (!atom)
+    if (!atom) {
         return;
+    }
 
 
     /*
-        If recognition fails:
-        DO NOT delete the atom.
+        Se il recognizer non è sicuro,
+        lasciamo il ? al suo posto.
 
-        It remains empty so the user
-        can retry writing C or H.
+        L'utente può semplicemente
+        riprovare a scrivere C o H.
     */
 
     if (!element) {
 
-        atom.element = "?";
+        atom.element =
+            "?";
 
-        atom.pending = true;
+        atom.pending =
+            true;
 
         pendingAtom =
             atom;
@@ -2870,6 +2967,11 @@ function finalizePendingAtom(
     }
 
 
+    /*
+        Riconoscimento riuscito:
+        il pending diventa un vero atomo.
+    */
+
     atom.element =
         element;
 
@@ -2877,15 +2979,17 @@ function finalizePendingAtom(
         false;
 
 
-    pendingAtom =
-        null;
+    /*
+        Da questo momento non è più
+        un pending atom.
+    */
+
+    pendingAtom = null;
 
 
     render();
 
 }
-
-
 /* ============================================================
    LIVE STROKE
 ============================================================ */
