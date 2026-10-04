@@ -2752,18 +2752,247 @@ function finalizeCreateStroke() {
 /* ============================================================
    POINTER STATE
 ============================================================ */
+/* ============================================================
+   POINTER STATE — BONDraw 0.6
 
-let activePointer =
-    null;
+   Pencil = CREATE
+   Finger short drag = MOVE SINGLE ATOM
+   Finger long press = SELECT MOLECULE
+   Finger drag after long press = MOVE WHOLE MOLECULE
+============================================================ */
 
-let selectedAtom =
-    null;
+let activePointer = null;
 
-let dragStart =
-    null;
+let selectedAtom = null;
 
-let originalAtomPosition =
-    null;
+let selectedMolecule = new Set();
+
+let dragStart = null;
+
+let originalAtomPosition = null;
+
+let originalMoleculePositions = new Map();
+
+let longPressTimer = null;
+
+let longPressTriggered = false;
+
+let movementStarted = false;
+
+let historySavedForDrag = false;
+
+
+/* ============================================================
+   LONG PRESS SETTINGS
+============================================================ */
+
+const LONG_PRESS_DURATION = 550;
+
+/*
+    Dopo questa distanza, se il dito si è già mosso,
+    consideriamo l'azione un normale trascinamento.
+*/
+const LONG_PRESS_MOVE_THRESHOLD = 10;
+
+
+/* ============================================================
+   MOLECULE SELECTION
+============================================================ */
+
+/*
+    Trova tutti gli atomi collegati all'atomo iniziale
+    attraversando i legami.
+
+    È un normale attraversamento del grafo molecolare:
+    atom -> bond -> atom -> bond -> atom...
+*/
+
+function getConnectedMolecule(startAtom) {
+
+    const connected = new Set();
+
+    if (!startAtom) {
+        return connected;
+    }
+
+
+    const queue = [startAtom.id];
+
+    connected.add(startAtom.id);
+
+
+    while (queue.length) {
+
+        const currentId =
+            queue.shift();
+
+
+        bonds.forEach(bond => {
+
+            let nextId = null;
+
+
+            if (bond.a === currentId) {
+
+                nextId = bond.b;
+
+            }
+            else if (bond.b === currentId) {
+
+                nextId = bond.a;
+
+            }
+
+
+            if (
+                nextId !== null &&
+                !connected.has(nextId)
+            ) {
+
+                connected.add(nextId);
+
+                queue.push(nextId);
+
+            }
+
+        });
+
+    }
+
+
+    return connected;
+
+}
+
+
+/* ============================================================
+   PREPARE MOLECULE DRAG
+============================================================ */
+
+function prepareMoleculeDrag() {
+
+    selectedMolecule =
+        getConnectedMolecule(
+            selectedAtom
+        );
+
+
+    originalMoleculePositions =
+        new Map();
+
+
+    selectedMolecule.forEach(
+        atomId => {
+
+            const atom =
+                getAtom(atomId);
+
+
+            if (!atom) return;
+
+
+            originalMoleculePositions.set(
+                atomId,
+                {
+                    x: atom.x,
+                    y: atom.y
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* ============================================================
+   UPDATE WHOLE MOLECULE
+============================================================ */
+
+function updateMoleculeAndItsBonds() {
+
+    /*
+        Aggiorniamo prima tutti gli atomi.
+    */
+
+    selectedMolecule.forEach(
+        atomId => {
+
+            const atom =
+                getAtom(atomId);
+
+
+            if (!atom) return;
+
+
+            updateAtomElement(atom);
+
+        }
+    );
+
+
+    /*
+        Poi aggiorniamo tutti i bond che
+        appartengono alla molecola.
+
+        Usiamo un Set per evitare
+        aggiornamenti duplicati.
+    */
+
+    const affectedBonds =
+        new Set();
+
+
+    bonds.forEach(
+        bond => {
+
+            if (
+                selectedMolecule.has(bond.a) ||
+                selectedMolecule.has(bond.b)
+            ) {
+
+                affectedBonds.add(
+                    bond.id
+                );
+
+            }
+
+        }
+    );
+
+
+    affectedBonds.forEach(
+        bondId => {
+
+            const bond =
+                bonds.find(
+                    item =>
+                        item.id === bondId
+                );
+
+
+            if (!bond) return;
+
+
+            const group =
+                bondElements.get(
+                    bond.id
+                );
+
+
+            if (group) {
+
+                updateBondElement(
+                    bond,
+                    group
+                );
+
+            }
+
+        }
+    );
+
+}
 
 
 /* ============================================================
@@ -2825,6 +3054,81 @@ function getCanvasPoint(
 
 
 /* ============================================================
+   CANCEL LONG PRESS
+============================================================ */
+
+function cancelLongPress() {
+
+    if (
+        longPressTimer !== null
+    ) {
+
+        clearTimeout(
+            longPressTimer
+        );
+
+        longPressTimer = null;
+
+    }
+
+}
+
+
+/* ============================================================
+   START LONG PRESS
+============================================================ */
+
+function startLongPress() {
+
+    cancelLongPress();
+
+
+    longPressTimer =
+        setTimeout(
+            () => {
+
+                longPressTimer = null;
+
+
+                /*
+                    Se nel frattempo il dito
+                    si è già mosso, non selezioniamo
+                    la molecola.
+                */
+
+                if (
+                    movementStarted ||
+                    !selectedAtom
+                ) {
+
+                    return;
+
+                }
+
+
+                longPressTriggered =
+                    true;
+
+
+                prepareMoleculeDrag();
+
+
+                /*
+                    Da questo momento il dito
+                    controlla l'intera molecola.
+                */
+
+                status.textContent =
+                    "Molecule selected · Drag to move";
+
+            },
+            LONG_PRESS_DURATION
+        );
+
+}
+
+
+/* ============================================================
    POINTER DOWN
 ============================================================ */
 
@@ -2862,6 +3166,35 @@ canvas.addEventListener(
 
 
         /*
+            RESET STATO DRAG
+        */
+
+        selectedAtom = null;
+
+        selectedMolecule =
+            new Set();
+
+        dragStart = null;
+
+        originalAtomPosition = null;
+
+        originalMoleculePositions =
+            new Map();
+
+        longPressTriggered =
+            false;
+
+        movementStarted =
+            false;
+
+        historySavedForDrag =
+            false;
+
+
+        cancelLongPress();
+
+
+        /*
             ERASE
         */
 
@@ -2880,6 +3213,8 @@ canvas.addEventListener(
 
                 removeAtom(atom);
 
+                activePointer = null;
+
                 return;
 
             }
@@ -2896,10 +3231,14 @@ canvas.addEventListener(
 
                 removeBond(bond);
 
+                activePointer = null;
+
                 return;
 
             }
 
+
+            activePointer = null;
 
             return;
 
@@ -2907,7 +3246,7 @@ canvas.addEventListener(
 
 
         /*
-            FINGER = SINGLE ATOM MOVE
+            FINGER = MOVE / SELECT
         */
 
         if (
@@ -2922,6 +3261,8 @@ canvas.addEventListener(
 
 
             if (!atom) {
+
+                activePointer = null;
 
                 return;
 
@@ -2954,9 +3295,25 @@ canvas.addEventListener(
             };
 
 
+            /*
+                Prepariamo anche la molecola.
+                Non la muoviamo ancora.
+            */
+
+            prepareMoleculeDrag();
+
+
             canvas.setPointerCapture(
                 event.pointerId
             );
+
+
+            /*
+                Avviamo il timer solo per
+                il dito.
+            */
+
+            startLongPress();
 
 
             return;
@@ -3022,7 +3379,9 @@ canvas.addEventListener(
 
 
         /*
-            SINGLE ATOM MOVE
+            ====================================================
+            FINGER
+            ====================================================
         */
 
         if (
@@ -3041,28 +3400,168 @@ canvas.addEventListener(
                 dragStart.y;
 
 
-            selectedAtom.x =
-                originalAtomPosition.x +
-                dx;
+            const movementDistance =
+                Math.hypot(
+                    dx,
+                    dy
+                );
 
 
-            selectedAtom.y =
-                originalAtomPosition.y +
-                dy;
+            /*
+                Se il dito si muove prima
+                del long press, cancelliamo
+                la selezione prolungata.
+
+                Questo mantiene il vecchio
+                comportamento di movimento
+                del singolo atomo.
+            */
+
+            if (
+                !longPressTriggered &&
+                movementDistance >
+                LONG_PRESS_MOVE_THRESHOLD
+            ) {
+
+                cancelLongPress();
+
+            }
 
 
-            updateAtomAndItsBonds(
-                selectedAtom
-            );
+            /*
+                =================================================
+                MOVIMENTO SINGOLO ATOMO
+                =================================================
+            */
+
+            if (
+                !longPressTriggered
+            ) {
+
+                /*
+                    Salviamo UN SOLO snapshot,
+                    prima della prima modifica.
+                */
+
+                if (
+                    !historySavedForDrag &&
+                    movementDistance > 0
+                ) {
+
+                    saveHistory();
+
+                    historySavedForDrag =
+                        true;
+
+                }
 
 
-            return;
+                selectedAtom.x =
+                    originalAtomPosition.x +
+                    dx;
+
+
+                selectedAtom.y =
+                    originalAtomPosition.y +
+                    dy;
+
+
+                movementStarted =
+                    movementDistance > 0;
+
+
+                updateAtomAndItsBonds(
+                    selectedAtom
+                );
+
+
+                return;
+
+            }
+
+
+            /*
+                =================================================
+                MOVIMENTO INTERA MOLECOLA
+                =================================================
+            */
+
+            if (
+                longPressTriggered
+            ) {
+
+                /*
+                    Snapshot dello stato
+                    precedente al primo movimento.
+                */
+
+                if (
+                    !historySavedForDrag &&
+                    movementDistance > 0
+                ) {
+
+                    saveHistory();
+
+                    historySavedForDrag =
+                        true;
+
+                }
+
+
+                selectedMolecule.forEach(
+                    atomId => {
+
+                        const atom =
+                            getAtom(atomId);
+
+
+                        const original =
+                            originalMoleculePositions.get(
+                                atomId
+                            );
+
+
+                        if (
+                            !atom ||
+                            !original
+                        ) {
+
+                            return;
+
+                        }
+
+
+                        atom.x =
+                            original.x +
+                            dx;
+
+
+                        atom.y =
+                            original.y +
+                            dy;
+
+                    }
+                );
+
+
+                movementStarted =
+                    movementDistance > 0;
+
+
+                updateMoleculeAndItsBonds();
+
+
+                return;
+
+            }
 
         }
 
 
         /*
+            ====================================================
             PENCIL
+            ====================================================
         */
 
         if (
@@ -3109,7 +3608,16 @@ function finishPointer(
 
 
     /*
+        Cancella sempre il timer.
+    */
+
+    cancelLongPress();
+
+
+    /*
+        ========================================================
         FINGER
+        ========================================================
     */
 
     if (
@@ -3117,88 +3625,63 @@ function finishPointer(
         "move"
     ) {
 
+        /*
+            Se non c'è stato movimento,
+            non creiamo nessuna voce
+            nell'Undo.
+
+            Un semplice long press
+            seleziona soltanto.
+        */
+
+
         if (
-            selectedAtom
+            longPressTriggered
         ) {
 
             /*
-                Store the state from
-                BEFORE the movement.
+                La molecola resta semplicemente
+                selezionata fino alla fine
+                del gesto.
+
+                Per ora non aggiungiamo
+                ancora un'animazione visiva.
             */
-
-            const snapshot = {
-
-                atoms:
-                    JSON.parse(
-                        JSON.stringify(atoms)
-                    ),
-
-                bonds:
-                    JSON.parse(
-                        JSON.stringify(bonds)
-                    )
-
-            };
-
-
-            const movedId =
-                selectedAtom.id;
-
-
-            const oldX =
-                originalAtomPosition.x;
-
-            const oldY =
-                originalAtomPosition.y;
-
-
-            snapshot.atoms.forEach(
-                atom => {
-
-                    if (
-                        atom.id ===
-                        movedId
-                    ) {
-
-                        atom.x =
-                            oldX;
-
-                        atom.y =
-                            oldY;
-
-                    }
-
-                }
-            );
-
-
-            history.push(
-                snapshot
-            );
-
-
-            if (
-                history.length > 50
-            ) {
-
-                history.shift();
-
-            }
 
         }
 
 
         selectedAtom = null;
 
+        selectedMolecule =
+            new Set();
+
         dragStart = null;
 
         originalAtomPosition = null;
+
+        originalMoleculePositions =
+            new Map();
+
+        longPressTriggered =
+            false;
+
+        movementStarted =
+            false;
+
+        historySavedForDrag =
+            false;
+
+        status.textContent =
+            "Pencil creates · Finger moves";
 
     }
 
 
     /*
+        ========================================================
         PENCIL
+        ========================================================
     */
 
     if (
@@ -3210,6 +3693,10 @@ function finishPointer(
 
     }
 
+
+    /*
+        RILASCIO POINTER CAPTURE
+    */
 
     if (
         canvas.hasPointerCapture(
@@ -3230,6 +3717,10 @@ function finishPointer(
 }
 
 
+/* ============================================================
+   POINTER UP
+============================================================ */
+
 canvas.addEventListener(
     "pointerup",
     finishPointer,
@@ -3238,6 +3729,10 @@ canvas.addEventListener(
     }
 );
 
+
+/* ============================================================
+   POINTER CANCEL
+============================================================ */
 
 canvas.addEventListener(
     "pointercancel",
@@ -3253,6 +3748,7 @@ canvas.addEventListener(
 ============================================================ */
 
 render();
+
 
 status.textContent =
     "Pencil creates · Finger moves";
