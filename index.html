@@ -3056,28 +3056,7 @@ function drawLiveStroke() {
 /* ============================================================
    FINALIZE PEN STROKE
 ============================================================ */
-    
-function removePendingAtom() {
 
-    if (pendingAtomId === null) {
-        return;
-    }
-
-    atoms = atoms.filter(
-        atom => atom.id !== pendingAtomId
-    );
-
-    bonds = bonds.filter(
-        bond =>
-            bond.atomA !== pendingAtomId &&
-            bond.atomB !== pendingAtomId
-    );
-
-    pendingAtomId = null;
-
-    render();
-}
-    
 function finalizeCreateStroke() {
 
     if (
