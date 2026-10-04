@@ -1,0 +1,3263 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width,
+initial-scale=1.0,
+maximum-scale=1.0,
+user-scalable=no,
+viewport-fit=cover">
+
+<title>BONDraw 0.5.2</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+
+    background: #f4f5f7;
+
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "SF Pro Display",
+        "SF Pro Text",
+        sans-serif;
+
+    color: #181a1f;
+
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* ================================
+   HEADER
+================================ */
+
+header {
+    height: 72px;
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 20px;
+
+    background: rgba(255,255,255,.88);
+
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+
+    border-bottom:
+        1px solid rgba(0,0,0,.07);
+
+    z-index: 10;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo-dot {
+    width: 13px;
+    height: 13px;
+
+    border-radius: 50%;
+
+    background: #181a1f;
+}
+
+.brand-name {
+    font-size: 22px;
+    font-weight: 750;
+    letter-spacing: -.8px;
+}
+
+.version {
+    font-size: 13px;
+    color: #858992;
+    font-weight: 600;
+}
+
+.status {
+    font-size: 13px;
+    color: #858992;
+    font-weight: 500;
+}
+
+
+/* ================================
+   WORKSPACE
+================================ */
+
+#workspace {
+    position: relative;
+
+    flex: 1;
+    min-height: 0;
+
+    overflow: hidden;
+}
+
+#canvas {
+    position: absolute;
+
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    background:
+        radial-gradient(
+            circle at 50% 45%,
+            rgba(255,255,255,.9),
+            rgba(244,245,247,.95)
+        );
+
+    touch-action: none;
+}
+
+
+/* ================================
+   EMPTY STATE
+================================ */
+
+#emptyState {
+    position: absolute;
+
+    left: 50%;
+    top: 50%;
+
+    transform:
+        translate(-50%, -50%);
+
+    text-align: center;
+
+    pointer-events: none;
+
+    transition: opacity .2s ease;
+}
+
+#emptyState.hidden {
+    opacity: 0;
+}
+
+.empty-title {
+    font-size: 24px;
+
+    font-weight: 700;
+
+    letter-spacing: -.6px;
+
+    margin-bottom: 7px;
+}
+
+.empty-subtitle {
+    font-size: 15px;
+
+    color: #858992;
+
+    line-height: 1.45;
+}
+
+
+/* ================================
+   TOOLBAR
+================================ */
+
+#toolbar {
+    position: absolute;
+
+    left: 50%;
+    bottom: 22px;
+
+    transform:
+        translateX(-50%);
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    padding: 7px;
+
+    background:
+        rgba(255,255,255,.9);
+
+    backdrop-filter:
+        blur(18px);
+
+    -webkit-backdrop-filter:
+        blur(18px);
+
+    border:
+        1px solid rgba(0,0,0,.08);
+
+    border-radius: 18px;
+
+    box-shadow:
+        0 10px 35px rgba(0,0,0,.10);
+
+    z-index: 20;
+}
+
+button {
+    border: 0;
+    outline: 0;
+
+    height: 40px;
+
+    padding:
+        0 15px;
+
+    border-radius: 12px;
+
+    background: transparent;
+
+    color: #686c74;
+
+    font-family: inherit;
+
+    font-size: 14px;
+    font-weight: 650;
+
+    cursor: pointer;
+}
+
+button:active {
+    transform: scale(.97);
+}
+
+button.active {
+    background: #181a1f;
+    color: white;
+}
+
+button.danger {
+    color: #b04444;
+}
+
+.divider {
+    width: 1px;
+    height: 25px;
+
+    background:
+        rgba(0,0,0,.09);
+
+    margin:
+        0 2px;
+}
+
+
+/* ================================
+   CHEMISTRY
+================================ */
+
+.bond {
+    stroke: #202228;
+
+    stroke-width: 2.6;
+
+    stroke-linecap: round;
+
+    fill: none;
+
+    pointer-events: none;
+}
+
+.atom-circle {
+    fill:
+        rgba(255,255,255,.96);
+
+    stroke: #202228;
+
+    stroke-width: 2.4;
+}
+
+.atom-label {
+    fill: #202228;
+
+    font-size: 17px;
+
+    font-weight: 700;
+
+    text-anchor: middle;
+
+    dominant-baseline: central;
+
+    pointer-events: none;
+}
+
+.atom.pending .atom-circle {
+    fill:
+        rgba(255,255,255,.72);
+
+    stroke: #999da6;
+
+    stroke-width: 2;
+
+    stroke-dasharray: 5 5;
+}
+
+.atom.pending .atom-label {
+    fill: #999da6;
+}
+
+.rough-stroke {
+    fill: none;
+
+    stroke: #8e929b;
+
+    stroke-width: 2;
+
+    stroke-linecap: round;
+    stroke-linejoin: round;
+
+    opacity: .8;
+
+    pointer-events: none;
+}
+
+
+/* ================================
+   HINT
+================================ */
+
+#interactionHint {
+    position: absolute;
+
+    right: 18px;
+    bottom: 25px;
+
+    padding:
+        8px 11px;
+
+    border-radius: 11px;
+
+    background:
+        rgba(255,255,255,.78);
+
+    border:
+        1px solid rgba(0,0,0,.06);
+
+    color: #888c94;
+
+    font-size: 12px;
+    font-weight: 550;
+
+    pointer-events: none;
+}
+
+@media (max-width: 650px) {
+
+    header {
+        height: 64px;
+        padding: 0 15px;
+    }
+
+    .brand-name {
+        font-size: 20px;
+    }
+
+    .status {
+        display: none;
+    }
+
+    #toolbar {
+        bottom: 14px;
+    }
+
+    button {
+        padding:
+            0 12px;
+    }
+
+    #interactionHint {
+        display: none;
+    }
+}
+
+</style>
+</head>
+
+
+<body>
+
+<header>
+
+    <div class="brand">
+
+        <div class="logo-dot"></div>
+
+        <div class="brand-name">
+            BONDraw
+        </div>
+
+        <div class="version">
+            0.5.2
+        </div>
+
+    </div>
+
+    <div
+        class="status"
+        id="status">
+
+        Pencil creates · Finger moves
+
+    </div>
+
+</header>
+
+
+<div id="workspace">
+
+<svg
+    id="canvas"
+    xmlns="http://www.w3.org/2000/svg">
+
+    <g id="bondLayer"></g>
+
+    <g id="atomLayer"></g>
+
+    <g id="strokeLayer"></g>
+
+</svg>
+
+
+<div id="emptyState">
+
+    <div class="empty-title">
+        Draw chemistry naturally.
+    </div>
+
+    <div class="empty-subtitle">
+        Use Apple Pencil to create atoms and bonds.<br>
+        Use your finger to move atoms.
+    </div>
+
+</div>
+
+
+<div id="interactionHint">
+    🖊️ Create &nbsp;·&nbsp; 👆 Move
+</div>
+
+
+<div id="toolbar">
+
+    <button
+        id="createBtn"
+        class="active">
+
+        Create
+
+    </button>
+
+    <button id="moveBtn">
+        Move
+    </button>
+
+    <button id="eraseBtn">
+        Erase
+    </button>
+
+    <div class="divider"></div>
+
+    <button id="undoBtn">
+        Undo
+    </button>
+
+    <button
+        id="clearBtn"
+        class="danger">
+
+        Clear
+
+    </button>
+
+</div>
+
+</div>
+
+
+<script>
+
+/* ============================================================
+   BONDraw 0.5.2
+
+   Pencil = CREATE
+   Finger = MOVE SINGLE ATOM
+
+   Recognition:
+   - strict circle detection
+   - H recognizer preserved
+   - new geometric C recognizer
+============================================================ */
+
+
+/* ============================================================
+   DOM
+============================================================ */
+
+const canvas =
+    document.getElementById("canvas");
+
+const atomLayer =
+    document.getElementById("atomLayer");
+
+const bondLayer =
+    document.getElementById("bondLayer");
+
+const strokeLayer =
+    document.getElementById("strokeLayer");
+
+const emptyState =
+    document.getElementById("emptyState");
+
+const status =
+    document.getElementById("status");
+
+const createBtn =
+    document.getElementById("createBtn");
+
+const moveBtn =
+    document.getElementById("moveBtn");
+
+const eraseBtn =
+    document.getElementById("eraseBtn");
+
+const undoBtn =
+    document.getElementById("undoBtn");
+
+const clearBtn =
+    document.getElementById("clearBtn");
+
+
+/* ============================================================
+   CHEMICAL MODEL
+============================================================ */
+
+let atoms = [];
+
+let bonds = [];
+
+let nextAtomId = 1;
+
+let nextBondId = 1;
+
+
+const ATOM_RADIUS = {
+
+    C: 27,
+
+    H: 23
+
+};
+
+
+const VALENCE = {
+
+    C: 4,
+
+    H: 1
+
+};
+
+
+/* ============================================================
+   HISTORY
+============================================================ */
+
+const history = [];
+
+
+function saveHistory() {
+
+    history.push({
+
+        atoms:
+            JSON.parse(
+                JSON.stringify(atoms)
+            ),
+
+        bonds:
+            JSON.parse(
+                JSON.stringify(bonds)
+            )
+
+    });
+
+    if (history.length > 50) {
+
+        history.shift();
+
+    }
+
+}
+
+
+/* ============================================================
+   MODE
+============================================================ */
+
+let manualMode = "create";
+
+
+function setManualMode(mode) {
+
+    manualMode = mode;
+
+    createBtn.classList.toggle(
+        "active",
+        mode === "create"
+    );
+
+    moveBtn.classList.toggle(
+        "active",
+        mode === "move"
+    );
+
+    eraseBtn.classList.toggle(
+        "active",
+        mode === "erase"
+    );
+
+}
+
+
+createBtn.onclick = () =>
+    setManualMode("create");
+
+moveBtn.onclick = () =>
+    setManualMode("move");
+
+eraseBtn.onclick = () =>
+    setManualMode("erase");
+
+
+/* ============================================================
+   UNDO / CLEAR
+============================================================ */
+
+undoBtn.onclick = () => {
+
+    if (!history.length) return;
+
+    const previous =
+        history.pop();
+
+    atoms =
+        previous.atoms;
+
+    bonds =
+        previous.bonds;
+
+    render();
+
+};
+
+
+clearBtn.onclick = () => {
+
+    if (
+        !atoms.length &&
+        !bonds.length
+    ) return;
+
+    saveHistory();
+
+    atoms = [];
+
+    bonds = [];
+
+    render();
+
+};
+
+
+/* ============================================================
+   HELPERS
+============================================================ */
+
+function getAtom(id) {
+
+    return atoms.find(
+        atom =>
+            atom.id === id
+    );
+
+}
+
+
+function getRadius(atom) {
+
+    return (
+        ATOM_RADIUS[
+            atom.element
+        ] || 27
+    );
+
+}
+
+
+function getValence(atom) {
+
+    return bonds.reduce(
+        (sum,bond) => {
+
+            if (
+                bond.a === atom.id ||
+                bond.b === atom.id
+            ) {
+
+                return sum + bond.order;
+
+            }
+
+            return sum;
+
+        },
+        0
+    );
+
+}
+
+
+function canAddBond(
+    atomA,
+    atomB,
+    order
+) {
+
+    if (
+        !atomA ||
+        !atomB
+    ) return false;
+
+    const maxA =
+        VALENCE[
+            atomA.element
+        ] || 4;
+
+    const maxB =
+        VALENCE[
+            atomB.element
+        ] || 4;
+
+    return (
+
+        getValence(atomA)
+        + order
+        <= maxA
+
+        &&
+
+        getValence(atomB)
+        + order
+        <= maxB
+
+    );
+
+}
+
+
+/* ============================================================
+   ATOM HIT TEST
+============================================================ */
+
+function findAtomAt(x,y) {
+
+    for (
+        let i = atoms.length - 1;
+        i >= 0;
+        i--
+    ) {
+
+        const atom =
+            atoms[i];
+
+        const radius =
+            getRadius(atom) + 8;
+
+        if (
+            Math.hypot(
+                atom.x-x,
+                atom.y-y
+            ) <= radius
+        ) {
+
+            return atom;
+
+        }
+
+    }
+
+    return null;
+
+}
+
+
+/* ============================================================
+   BOND HIT TEST
+============================================================ */
+
+function pointToSegmentDistance(
+    px,
+    py,
+    x1,
+    y1,
+    x2,
+    y2
+) {
+
+    const dx =
+        x2-x1;
+
+    const dy =
+        y2-y1;
+
+    if (
+        dx === 0 &&
+        dy === 0
+    ) {
+
+        return Math.hypot(
+            px-x1,
+            py-y1
+        );
+
+    }
+
+    const t =
+        Math.max(
+            0,
+            Math.min(
+                1,
+                (
+                    (px-x1)*dx +
+                    (py-y1)*dy
+                ) /
+                (dx*dx + dy*dy)
+            )
+        );
+
+    const cx =
+        x1+t*dx;
+
+    const cy =
+        y1+t*dy;
+
+    return Math.hypot(
+        px-cx,
+        py-cy
+    );
+
+}
+
+
+function findBondAt(x,y) {
+
+    for (
+        let i = bonds.length-1;
+        i >= 0;
+        i--
+    ) {
+
+        const bond =
+            bonds[i];
+
+        const a =
+            getAtom(bond.a);
+
+        const b =
+            getAtom(bond.b);
+
+        if (!a || !b) continue;
+
+        const d =
+            pointToSegmentDistance(
+                x,
+                y,
+                a.x,
+                a.y,
+                b.x,
+                b.y
+            );
+
+        if (d < 12) {
+
+            return bond;
+
+        }
+
+    }
+
+    return null;
+
+}
+
+
+/* ============================================================
+   SVG RENDERING
+============================================================ */
+
+const atomElements =
+    new Map();
+
+const bondElements =
+    new Map();
+
+
+function createAtomElement(atom) {
+
+    const group =
+        document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "g"
+        );
+
+    group.setAttribute(
+        "class",
+        "atom"
+    );
+
+    group.dataset.atomId =
+        atom.id;
+
+
+    const circle =
+        document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "circle"
+        );
+
+    circle.setAttribute(
+        "class",
+        "atom-circle"
+    );
+
+
+    const label =
+        document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "text"
+        );
+
+    label.setAttribute(
+        "class",
+        "atom-label"
+    );
+
+
+    group.appendChild(circle);
+
+    group.appendChild(label);
+
+    atomLayer.appendChild(group);
+
+    atomElements.set(
+        atom.id,
+        group
+    );
+
+    return group;
+
+}
+
+
+function updateAtomElement(atom) {
+
+    let group =
+        atomElements.get(
+            atom.id
+        );
+
+    if (!group) {
+
+        group =
+            createAtomElement(atom);
+
+    }
+
+
+    group.setAttribute(
+        "transform",
+        `translate(${atom.x} ${atom.y})`
+    );
+
+
+    const circle =
+        group.querySelector(
+            ".atom-circle"
+        );
+
+    const label =
+        group.querySelector(
+            ".atom-label"
+        );
+
+
+    circle.setAttribute(
+        "r",
+        getRadius(atom)
+    );
+
+
+    label.textContent =
+        atom.element || "?";
+
+
+    group.classList.toggle(
+        "pending",
+        atom.pending === true
+    );
+
+}
+
+
+function createBondElement(bond) {
+
+    const group =
+        document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "g"
+        );
+
+    group.dataset.bondId =
+        bond.id;
+
+    bondLayer.appendChild(group);
+
+    bondElements.set(
+        bond.id,
+        group
+    );
+
+    return group;
+
+}
+
+
+function updateBondElement(
+    bond,
+    group
+) {
+
+    const a =
+        getAtom(bond.a);
+
+    const b =
+        getAtom(bond.b);
+
+    if (!a || !b) return;
+
+
+    group.innerHTML = "";
+
+
+    const dx =
+        b.x-a.x;
+
+    const dy =
+        b.y-a.y;
+
+    const length =
+        Math.hypot(dx,dy);
+
+    if (length === 0) return;
+
+
+    const ux =
+        dx/length;
+
+    const uy =
+        dy/length;
+
+
+    const nx =
+        -uy;
+
+    const ny =
+        ux;
+
+
+    const startRadius =
+        getRadius(a);
+
+    const endRadius =
+        getRadius(b);
+
+
+    const startX =
+        a.x + ux*startRadius;
+
+    const startY =
+        a.y + uy*startRadius;
+
+    const endX =
+        b.x - ux*endRadius;
+
+    const endY =
+        b.y - uy*endRadius;
+
+
+    const spacing = 6;
+
+
+    let offsets;
+
+
+    if (
+        bond.order === 1
+    ) {
+
+        offsets = [0];
+
+    }
+    else if (
+        bond.order === 2
+    ) {
+
+        offsets = [
+            -spacing/2,
+            spacing/2
+        ];
+
+    }
+    else {
+
+        offsets = [
+            -spacing,
+            0,
+            spacing
+        ];
+
+    }
+
+
+    offsets.forEach(
+        offset => {
+
+            const line =
+                document.createElementNS(
+                    "http://www.w3.org/2000/svg",
+                    "line"
+                );
+
+            line.setAttribute(
+                "class",
+                "bond"
+            );
+
+            line.setAttribute(
+                "x1",
+                startX + nx*offset
+            );
+
+            line.setAttribute(
+                "y1",
+                startY + ny*offset
+            );
+
+            line.setAttribute(
+                "x2",
+                endX + nx*offset
+            );
+
+            line.setAttribute(
+                "y2",
+                endY + ny*offset
+            );
+
+            group.appendChild(line);
+
+        }
+    );
+
+}
+
+
+function render() {
+
+    atomElements.forEach(
+        element =>
+            element.remove()
+    );
+
+    bondElements.forEach(
+        element =>
+            element.remove()
+    );
+
+
+    atomElements.clear();
+
+    bondElements.clear();
+
+
+    bonds.forEach(
+        bond => {
+
+            const group =
+                createBondElement(
+                    bond
+                );
+
+            updateBondElement(
+                bond,
+                group
+            );
+
+        }
+    );
+
+
+    atoms.forEach(
+        atom => {
+
+            createAtomElement(
+                atom
+            );
+
+            updateAtomElement(
+                atom
+            );
+
+        }
+    );
+
+
+    emptyState.classList.toggle(
+        "hidden",
+        atoms.length > 0
+    );
+
+}
+
+
+function updateAtomAndItsBonds(
+    atom
+) {
+
+    updateAtomElement(
+        atom
+    );
+
+
+    bonds.forEach(
+        bond => {
+
+            if (
+                bond.a === atom.id ||
+                bond.b === atom.id
+            ) {
+
+                const group =
+                    bondElements.get(
+                        bond.id
+                    );
+
+                if (group) {
+
+                    updateBondElement(
+                        bond,
+                        group
+                    );
+
+                }
+
+            }
+
+        }
+    );
+
+}
+
+
+/* ============================================================
+   BOND CREATION
+============================================================ */
+
+function findBondBetween(
+    atomA,
+    atomB
+) {
+
+    return bonds.find(
+        bond =>
+
+            (
+                bond.a === atomA.id &&
+                bond.b === atomB.id
+            )
+
+            ||
+
+            (
+                bond.a === atomB.id &&
+                bond.b === atomA.id
+            )
+    );
+
+}
+
+
+function connectAtoms(
+    atomA,
+    atomB
+) {
+
+    if (
+        !atomA ||
+        !atomB ||
+        atomA.id === atomB.id
+    ) {
+
+        return;
+
+    }
+
+
+    const existing =
+        findBondBetween(
+            atomA,
+            atomB
+        );
+
+
+    saveHistory();
+
+
+    if (!existing) {
+
+        if (
+            !canAddBond(
+                atomA,
+                atomB,
+                1
+            )
+        ) {
+
+            history.pop();
+
+            return;
+
+        }
+
+
+        bonds.push({
+
+            id:
+                nextBondId++,
+
+            a:
+                atomA.id,
+
+            b:
+                atomB.id,
+
+            order:
+                1
+
+        });
+
+    }
+    else {
+
+        const nextOrder =
+            existing.order === 3
+                ? 1
+                : existing.order + 1;
+
+
+        const maxA =
+            VALENCE[
+                atomA.element
+            ] || 4;
+
+        const maxB =
+            VALENCE[
+                atomB.element
+            ] || 4;
+
+
+        const valenceA =
+            getValence(atomA)
+            - existing.order;
+
+        const valenceB =
+            getValence(atomB)
+            - existing.order;
+
+
+        if (
+            valenceA + nextOrder > maxA ||
+            valenceB + nextOrder > maxB
+        ) {
+
+            history.pop();
+
+            return;
+
+        }
+
+
+        existing.order =
+            nextOrder;
+
+    }
+
+
+    render();
+
+}
+
+
+/* ============================================================
+   DELETE
+============================================================ */
+
+function removeAtom(atom) {
+
+    if (!atom) return;
+
+    saveHistory();
+
+
+    bonds =
+        bonds.filter(
+            bond =>
+                bond.a !== atom.id &&
+                bond.b !== atom.id
+        );
+
+
+    atoms =
+        atoms.filter(
+            item =>
+                item.id !== atom.id
+        );
+
+
+    render();
+
+}
+
+
+function removeBond(bond) {
+
+    if (!bond) return;
+
+    saveHistory();
+
+
+    bonds =
+        bonds.filter(
+            item =>
+                item.id !== bond.id
+        );
+
+
+    render();
+
+}
+
+
+/* ============================================================
+   STROKE UTILITIES
+============================================================ */
+
+function strokeBounds(points) {
+
+    if (!points.length)
+        return null;
+
+
+    let minX = Infinity;
+    let maxX = -Infinity;
+
+    let minY = Infinity;
+    let maxY = -Infinity;
+
+
+    points.forEach(
+        point => {
+
+            minX =
+                Math.min(
+                    minX,
+                    point.x
+                );
+
+            maxX =
+                Math.max(
+                    maxX,
+                    point.x
+                );
+
+            minY =
+                Math.min(
+                    minY,
+                    point.y
+                );
+
+            maxY =
+                Math.max(
+                    maxY,
+                    point.y
+                );
+
+        }
+    );
+
+
+    return {
+
+        minX,
+        maxX,
+        minY,
+        maxY,
+
+        width:
+            maxX-minX,
+
+        height:
+            maxY-minY
+
+    };
+
+}
+
+
+function resampleStroke(
+    points,
+    count = 32
+) {
+
+    if (
+        points.length < 2
+    ) {
+
+        return points.slice();
+
+    }
+
+
+    const lengths = [0];
+
+    let total = 0;
+
+
+    for (
+        let i=1;
+        i<points.length;
+        i++
+    ) {
+
+        total +=
+            Math.hypot(
+                points[i].x -
+                points[i-1].x,
+
+                points[i].y -
+                points[i-1].y
+            );
+
+        lengths.push(total);
+
+    }
+
+
+    if (total === 0)
+        return points.slice();
+
+
+    const result = [];
+
+
+    for (
+        let i=0;
+        i<count;
+        i++
+    ) {
+
+        const target =
+            total *
+            i /
+            (count-1);
+
+
+        let index = 1;
+
+
+        while (
+            index < lengths.length &&
+            lengths[index] < target
+        ) {
+
+            index++;
+
+        }
+
+
+        if (
+            index >= lengths.length
+        ) {
+
+            result.push(
+                points[
+                    points.length-1
+                ]
+            );
+
+            continue;
+
+        }
+
+
+        const l1 =
+            lengths[index-1];
+
+        const l2 =
+            lengths[index];
+
+
+        const ratio =
+            (target-l1) /
+            (l2-l1 || 1);
+
+
+        const p1 =
+            points[index-1];
+
+        const p2 =
+            points[index];
+
+
+        result.push({
+
+            x:
+                p1.x +
+                (p2.x-p1.x)*ratio,
+
+            y:
+                p1.y +
+                (p2.y-p1.y)*ratio
+
+        });
+
+    }
+
+
+    return result;
+
+}
+
+
+function normalizeStroke(
+    points
+) {
+
+    const sampled =
+        resampleStroke(
+            points,
+            32
+        );
+
+
+    if (!sampled.length)
+        return [];
+
+
+    let minX = Infinity;
+    let maxX = -Infinity;
+
+    let minY = Infinity;
+    let maxY = -Infinity;
+
+
+    sampled.forEach(
+        p => {
+
+            minX =
+                Math.min(
+                    minX,
+                    p.x
+                );
+
+            maxX =
+                Math.max(
+                    maxX,
+                    p.x
+                );
+
+            minY =
+                Math.min(
+                    minY,
+                    p.y
+                );
+
+            maxY =
+                Math.max(
+                    maxY,
+                    p.y
+                );
+
+        }
+    );
+
+
+    const width =
+        Math.max(
+            maxX-minX,
+            1
+        );
+
+    const height =
+        Math.max(
+            maxY-minY,
+            1
+        );
+
+
+    const size =
+        Math.max(
+            width,
+            height
+        );
+
+
+    return sampled.map(
+        p => ({
+
+            x:
+                (
+                    p.x -
+                    (minX+maxX)/2
+                ) / size,
+
+            y:
+                (
+                    p.y -
+                    (minY+maxY)/2
+                ) / size
+
+        })
+    );
+
+}
+
+
+/* ============================================================
+   STRICT CIRCLE DETECTOR
+
+   A line cannot be an atom.
+
+   Requirements:
+   1. enough points
+   2. sufficiently large
+   3. roughly circular bounding box
+   4. endpoint closure
+   5. radial consistency
+   6. circumference/diameter consistency
+============================================================ */
+
+function isCircle(points) {
+
+    if (
+        points.length < 18
+    ) {
+
+        return false;
+
+    }
+
+
+    const box =
+        strokeBounds(points);
+
+
+    if (!box)
+        return false;
+
+
+    const width =
+        box.width;
+
+    const height =
+        box.height;
+
+
+    if (
+        width < 28 ||
+        height < 28
+    ) {
+
+        return false;
+
+    }
+
+
+    const ratio =
+        Math.min(
+            width,
+            height
+        ) /
+        Math.max(
+            width,
+            height
+        );
+
+
+    /*
+        A real circle should be
+        reasonably close to 1:1.
+    */
+
+    if (
+        ratio < .72
+    ) {
+
+        return false;
+
+    }
+
+
+    /*
+        First and last point must
+        actually meet.
+    */
+
+    const first =
+        points[0];
+
+    const last =
+        points[
+            points.length-1
+        ];
+
+
+    const closure =
+        Math.hypot(
+            first.x-last.x,
+            first.y-last.y
+        );
+
+
+    const diameter =
+        Math.max(
+            width,
+            height
+        );
+
+
+    if (
+        closure >
+        diameter*.28
+    ) {
+
+        return false;
+
+    }
+
+
+    const centerX =
+        (
+            box.minX +
+            box.maxX
+        ) / 2;
+
+    const centerY =
+        (
+            box.minY +
+            box.maxY
+        ) / 2;
+
+
+    const expectedRadius =
+        (
+            width +
+            height
+        ) / 4;
+
+
+    /*
+        Measure radial consistency.
+    */
+
+    let radialError = 0;
+
+
+    points.forEach(
+        point => {
+
+            const radius =
+                Math.hypot(
+                    point.x-centerX,
+                    point.y-centerY
+                );
+
+
+            radialError +=
+                Math.abs(
+                    radius -
+                    expectedRadius
+                );
+
+        }
+    );
+
+
+    radialError /=
+        points.length;
+
+
+    /*
+        If the stroke is too irregular,
+        it is not a circle.
+    */
+
+    if (
+        radialError >
+        expectedRadius*.24
+    ) {
+
+        return false;
+
+    }
+
+
+    /*
+        Approximate circumference.
+
+        A circle should have a
+        path length around π × diameter.
+    */
+
+    let pathLength = 0;
+
+
+    for (
+        let i=1;
+        i<points.length;
+        i++
+    ) {
+
+        pathLength +=
+            Math.hypot(
+                points[i].x -
+                points[i-1].x,
+
+                points[i].y -
+                points[i-1].y
+            );
+
+    }
+
+
+    const expectedCircumference =
+        Math.PI * diameter;
+
+
+    const circumferenceRatio =
+        pathLength /
+        expectedCircumference;
+
+
+    if (
+        circumferenceRatio < .65 ||
+        circumferenceRatio > 1.55
+    ) {
+
+        return false;
+
+    }
+
+
+    return true;
+
+}
+
+
+/* ============================================================
+   H TEMPLATE
+
+   KEPT FROM 0.5.1
+============================================================ */
+
+const H_TEMPLATE =
+    normalizeStroke([
+
+        {x:-.90, y:-1.00},
+        {x:-.90, y:-.50},
+        {x:-.90, y: 0.00},
+        {x:-.90, y:.50},
+        {x:-.90, y:1.00},
+
+        {x:-.90, y:0.00},
+        {x:-.45, y:0.00},
+        {x: 0.00, y:0.00},
+        {x:.45, y:0.00},
+        {x:.90, y:0.00},
+
+        {x:.90, y:-1.00},
+        {x:.90, y:-.50},
+        {x:.90, y:0.00},
+        {x:.90, y:.50},
+        {x:.90, y:1.00}
+
+    ]);
+
+
+/* ============================================================
+   H DISTANCE
+============================================================ */
+
+function templateDistance(
+    a,
+    b
+) {
+
+    if (
+        !a.length ||
+        !b.length
+    ) {
+
+        return Infinity;
+
+    }
+
+
+    const count =
+        Math.min(
+            a.length,
+            b.length
+        );
+
+
+    let sum = 0;
+
+
+    for (
+        let i=0;
+        i<count;
+        i++
+    ) {
+
+        sum +=
+            Math.hypot(
+                a[i].x-b[i].x,
+                a[i].y-b[i].y
+            );
+
+    }
+
+
+    return sum/count;
+
+}
+
+
+/* ============================================================
+   H RECOGNITION
+============================================================ */
+
+function recognizeH(
+    points
+) {
+
+    const normalized =
+        normalizeStroke(
+            points
+        );
+
+
+    if (
+        normalized.length < 8
+    ) {
+
+        return false;
+
+    }
+
+
+    const distance =
+        templateDistance(
+            normalized,
+            H_TEMPLATE
+        );
+
+
+    return distance < .52;
+
+}
+
+
+/* ============================================================
+   NEW C RECOGNIZER
+
+   Instead of a single template,
+   evaluate the geometric properties
+   of a C.
+
+   A C should:
+   - have significant vertical span
+   - be substantially open
+   - occupy both upper and lower regions
+   - have a curved trajectory
+   - have endpoints on the same
+     general right side
+   - NOT contain a long horizontal
+     segment characteristic of L
+============================================================ */
+function recognizeC(points) {
+
+    if (points.length < 8) {
+        return false;
+    }
+
+    const box = strokeBounds(points);
+
+    if (!box) {
+        return false;
+    }
+
+    const width = box.width;
+    const height = box.height;
+
+    /*
+        La dimensione assoluta non deve essere
+        troppo importante.
+
+        Accettiamo C piccole e grandi.
+    */
+    if (width < 8 || height < 10) {
+        return false;
+    }
+
+    /*
+        Rapporto larghezza/altezza più permissivo.
+
+        La C può essere:
+        - stretta
+        - larga
+        - tondeggiante
+        - leggermente schiacciata
+    */
+    const aspect = width / height;
+
+    if (aspect < 0.25 || aspect > 1.75) {
+        return false;
+    }
+
+    const first = points[0];
+    const last = points[points.length - 1];
+
+    /*
+        Gli estremi della C devono essere
+        verticalmente separati.
+    */
+    const endpointYDifference =
+        Math.abs(first.y - last.y);
+
+    if (endpointYDifference < height * 0.20) {
+        return false;
+    }
+
+    /*
+        Non pretendiamo più che gli estremi
+        siano quasi perfettamente allineati
+        orizzontalmente.
+    */
+    const endpointXDifference =
+        Math.abs(first.x - last.x);
+
+    if (endpointXDifference > width * 0.80) {
+        return false;
+    }
+
+    const centerX =
+        (box.minX + box.maxX) / 2;
+
+    const centerY =
+        (box.minY + box.maxY) / 2;
+
+    /*
+        Una C deve esplorare sia la parte
+        superiore che quella inferiore.
+    */
+    let upper = false;
+    let lower = false;
+
+    points.forEach(p => {
+
+        if (p.y < centerY - height * 0.12) {
+            upper = true;
+        }
+
+        if (p.y > centerY + height * 0.12) {
+            lower = true;
+        }
+
+    });
+
+    if (!upper || !lower) {
+        return false;
+    }
+
+    /*
+        Controlliamo che la traiettoria
+        occupi effettivamente la zona curva
+        della C.
+    */
+    let leftCount = 0;
+    let rightCount = 0;
+
+    points.forEach(p => {
+
+        if (p.x < centerX) {
+            leftCount++;
+        } else {
+            rightCount++;
+        }
+
+    });
+
+    const leftRatio =
+        leftCount / points.length;
+
+    /*
+        Meno severo del precedente,
+        ma impedisce che una semplice linea
+        verticale venga scambiata per C.
+    */
+    if (leftRatio < 0.32) {
+        return false;
+    }
+
+    /*
+        Lunghezza totale del tratto.
+    */
+    let pathLength = 0;
+
+    for (let i = 1; i < points.length; i++) {
+
+        pathLength += Math.hypot(
+            points[i].x - points[i - 1].x,
+            points[i].y - points[i - 1].y
+        );
+
+    }
+
+    const directDistance =
+        Math.hypot(
+            last.x - first.x,
+            last.y - first.y
+        );
+
+    if (directDistance === 0) {
+        return false;
+    }
+
+    /*
+        Una C deve essere abbastanza curva.
+        Soglia abbassata rispetto alla 0.5.2.
+    */
+    const curvatureRatio =
+        pathLength / directDistance;
+
+    if (curvatureRatio < 1.55) {
+        return false;
+    }
+
+    /*
+        Evitiamo di riconoscere una L.
+
+        Una C può naturalmente avere
+        qualche segmento quasi orizzontale,
+        quindi la soglia viene resa meno severa.
+    */
+    let horizontalLength = 0;
+    let totalLength = 0;
+
+    for (let i = 1; i < points.length; i++) {
+
+        const dx =
+            Math.abs(
+                points[i].x -
+                points[i - 1].x
+            );
+
+        const dy =
+            Math.abs(
+                points[i].y -
+                points[i - 1].y
+            );
+
+        const segmentLength =
+            Math.hypot(dx, dy);
+
+        totalLength += segmentLength;
+
+        if (dx > dy * 2.8) {
+            horizontalLength += segmentLength;
+        }
+
+    }
+
+    if (totalLength > 0) {
+
+        const horizontalRatio =
+            horizontalLength / totalLength;
+
+        /*
+            Manteniamo una protezione
+            contro la L, ma più permissiva.
+        */
+        if (horizontalRatio > 0.58) {
+            return false;
+        }
+
+    }
+
+    return true;
+}
+
+/* ============================================================
+   LETTER RECOGNITION
+
+   IMPORTANT:
+
+   If neither C nor H is clearly
+   recognized, return null.
+
+   Never guess.
+============================================================ */
+
+function recognizeElement(
+    points
+) {
+
+    if (
+        points.length < 8
+    ) {
+
+        return null;
+
+    }
+
+
+    const isH =
+        recognizeH(points);
+
+
+    const isC =
+        recognizeC(points);
+
+
+    if (
+        isH &&
+        !isC
+    ) {
+
+        return "H";
+
+    }
+
+
+    if (
+        isC &&
+        !isH
+    ) {
+
+        return "C";
+
+    }
+
+
+    /*
+        Ambiguous = no result.
+
+        This is intentional.
+    */
+
+    return null;
+
+}
+
+
+/* ============================================================
+   PENDING ATOM
+============================================================ */
+
+let pendingAtom = null;
+
+
+function createPendingAtom(
+    x,
+    y
+) {
+
+    const nearby =
+        atoms.find(
+            atom =>
+                Math.hypot(
+                    atom.x-x,
+                    atom.y-y
+                ) < 30
+        );
+
+
+    if (nearby) {
+
+        return null;
+
+    }
+
+
+    saveHistory();
+
+
+    const atom = {
+
+        id:
+            nextAtomId++,
+
+        x,
+        y,
+
+        element:
+            "?",
+
+        pending:
+            true
+
+    };
+
+
+    atoms.push(atom);
+
+    pendingAtom =
+        atom;
+
+
+    render();
+
+
+    return atom;
+
+}
+
+
+function finalizePendingAtom(
+    atom,
+    element
+) {
+
+    if (!atom)
+        return;
+
+
+    /*
+        If recognition fails:
+        DO NOT delete the atom.
+
+        It remains empty so the user
+        can retry writing C or H.
+    */
+
+    if (!element) {
+
+        atom.element = "?";
+
+        atom.pending = true;
+
+        pendingAtom =
+            atom;
+
+        render();
+
+        return;
+
+    }
+
+
+    atom.element =
+        element;
+
+    atom.pending =
+        false;
+
+
+    pendingAtom =
+        null;
+
+
+    render();
+
+}
+
+
+/* ============================================================
+   LIVE STROKE
+============================================================ */
+
+let currentStroke = [];
+
+
+function drawLiveStroke() {
+
+    strokeLayer.innerHTML = "";
+
+
+    if (
+        currentStroke.length < 2
+    ) {
+
+        return;
+
+    }
+
+
+    const path =
+        document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "path"
+        );
+
+
+    let d =
+        `M ${currentStroke[0].x} ${currentStroke[0].y}`;
+
+
+    for (
+        let i=1;
+        i<currentStroke.length;
+        i++
+    ) {
+
+        d +=
+            ` L ${currentStroke[i].x} ${currentStroke[i].y}`;
+
+    }
+
+
+    path.setAttribute(
+        "d",
+        d
+    );
+
+
+    path.setAttribute(
+        "class",
+        "rough-stroke"
+    );
+
+
+    strokeLayer.appendChild(
+        path
+    );
+
+}
+
+
+/* ============================================================
+   FINALIZE PEN STROKE
+============================================================ */
+
+function finalizeCreateStroke() {
+
+    if (
+        !currentStroke.length
+    ) {
+
+        return;
+
+    }
+
+
+    const points =
+        currentStroke.slice();
+
+
+    currentStroke = [];
+
+    strokeLayer.innerHTML = "";
+
+
+    /*
+        1. CIRCLE
+    */
+
+    if (
+        isCircle(points)
+    ) {
+
+        const box =
+            strokeBounds(points);
+
+
+        if (box) {
+
+            createPendingAtom(
+
+                (
+                    box.minX +
+                    box.maxX
+                ) / 2,
+
+                (
+                    box.minY +
+                    box.maxY
+                ) / 2
+
+            );
+
+        }
+
+
+        return;
+
+    }
+
+
+    /*
+        2. LETTER INSIDE PENDING ATOM
+    */
+
+    if (
+        pendingAtom
+    ) {
+
+        const element =
+            recognizeElement(
+                points
+            );
+
+
+        finalizePendingAtom(
+            pendingAtom,
+            element
+        );
+
+
+        return;
+
+    }
+
+
+    /*
+        3. BOND
+    */
+
+    const start =
+        points[0];
+
+    const end =
+        points[
+            points.length-1
+        ];
+
+
+    const atomA =
+        findAtomAt(
+            start.x,
+            start.y
+        );
+
+
+    const atomB =
+        findAtomAt(
+            end.x,
+            end.y
+        );
+
+
+    if (
+        atomA &&
+        atomB &&
+        atomA.id !== atomB.id
+    ) {
+
+        connectAtoms(
+            atomA,
+            atomB
+        );
+
+        return;
+
+    }
+
+
+    /*
+        Fallback for slightly
+        imperfect bond endpoints.
+    */
+
+    const nearStart =
+        findAtomAt(
+            start.x,
+            start.y
+        );
+
+
+    const nearEnd =
+        findAtomAt(
+            end.x,
+            end.y
+        );
+
+
+    if (
+        nearStart &&
+        nearEnd &&
+        nearStart.id !== nearEnd.id
+    ) {
+
+        connectAtoms(
+            nearStart,
+            nearEnd
+        );
+
+    }
+
+}
+
+
+/* ============================================================
+   POINTER STATE
+============================================================ */
+
+let activePointer =
+    null;
+
+let selectedAtom =
+    null;
+
+let dragStart =
+    null;
+
+let originalAtomPosition =
+    null;
+
+
+/* ============================================================
+   INTERACTION TYPE
+============================================================ */
+
+function getInteractionType(
+    event
+) {
+
+    if (
+        event.pointerType === "pen"
+    ) {
+
+        return "create";
+
+    }
+
+
+    if (
+        event.pointerType === "touch"
+    ) {
+
+        return "move";
+
+    }
+
+
+    return manualMode;
+
+}
+
+
+/* ============================================================
+   CANVAS COORDINATES
+============================================================ */
+
+function getCanvasPoint(
+    event
+) {
+
+    const rect =
+        canvas.getBoundingClientRect();
+
+
+    return {
+
+        x:
+            event.clientX -
+            rect.left,
+
+        y:
+            event.clientY -
+            rect.top
+
+    };
+
+}
+
+
+/* ============================================================
+   POINTER DOWN
+============================================================ */
+
+canvas.addEventListener(
+    "pointerdown",
+    event => {
+
+        event.preventDefault();
+
+
+        const point =
+            getCanvasPoint(
+                event
+            );
+
+
+        const interaction =
+            getInteractionType(
+                event
+            );
+
+
+        activePointer = {
+
+            id:
+                event.pointerId,
+
+            type:
+                interaction,
+
+            pointerType:
+                event.pointerType
+
+        };
+
+
+        /*
+            ERASE
+        */
+
+        if (
+            manualMode === "erase"
+        ) {
+
+            const atom =
+                findAtomAt(
+                    point.x,
+                    point.y
+                );
+
+
+            if (atom) {
+
+                removeAtom(atom);
+
+                return;
+
+            }
+
+
+            const bond =
+                findBondAt(
+                    point.x,
+                    point.y
+                );
+
+
+            if (bond) {
+
+                removeBond(bond);
+
+                return;
+
+            }
+
+
+            return;
+
+        }
+
+
+        /*
+            FINGER = SINGLE ATOM MOVE
+        */
+
+        if (
+            interaction === "move"
+        ) {
+
+            const atom =
+                findAtomAt(
+                    point.x,
+                    point.y
+                );
+
+
+            if (!atom) {
+
+                return;
+
+            }
+
+
+            selectedAtom =
+                atom;
+
+
+            dragStart = {
+
+                x:
+                    point.x,
+
+                y:
+                    point.y
+
+            };
+
+
+            originalAtomPosition = {
+
+                x:
+                    atom.x,
+
+                y:
+                    atom.y
+
+            };
+
+
+            canvas.setPointerCapture(
+                event.pointerId
+            );
+
+
+            return;
+
+        }
+
+
+        /*
+            PENCIL = CREATE
+        */
+
+        if (
+            interaction === "create"
+        ) {
+
+            currentStroke = [
+                point
+            ];
+
+
+            canvas.setPointerCapture(
+                event.pointerId
+            );
+
+
+            drawLiveStroke();
+
+        }
+
+    },
+    {
+        passive:false
+    }
+);
+
+
+/* ============================================================
+   POINTER MOVE
+============================================================ */
+
+canvas.addEventListener(
+    "pointermove",
+    event => {
+
+        if (
+            !activePointer ||
+            activePointer.id !==
+            event.pointerId
+        ) {
+
+            return;
+
+        }
+
+
+        event.preventDefault();
+
+
+        const point =
+            getCanvasPoint(
+                event
+            );
+
+
+        /*
+            SINGLE ATOM MOVE
+        */
+
+        if (
+            activePointer.type ===
+            "move" &&
+            selectedAtom
+        ) {
+
+            const dx =
+                point.x -
+                dragStart.x;
+
+
+            const dy =
+                point.y -
+                dragStart.y;
+
+
+            selectedAtom.x =
+                originalAtomPosition.x +
+                dx;
+
+
+            selectedAtom.y =
+                originalAtomPosition.y +
+                dy;
+
+
+            updateAtomAndItsBonds(
+                selectedAtom
+            );
+
+
+            return;
+
+        }
+
+
+        /*
+            PENCIL
+        */
+
+        if (
+            activePointer.type ===
+            "create"
+        ) {
+
+            currentStroke.push(
+                point
+            );
+
+
+            drawLiveStroke();
+
+        }
+
+    },
+    {
+        passive:false
+    }
+);
+
+
+/* ============================================================
+   POINTER FINISH
+============================================================ */
+
+function finishPointer(
+    event
+) {
+
+    if (
+        !activePointer ||
+        activePointer.id !==
+        event.pointerId
+    ) {
+
+        return;
+
+    }
+
+
+    event.preventDefault();
+
+
+    /*
+        FINGER
+    */
+
+    if (
+        activePointer.type ===
+        "move"
+    ) {
+
+        if (
+            selectedAtom
+        ) {
+
+            /*
+                Store the state from
+                BEFORE the movement.
+            */
+
+            const snapshot = {
+
+                atoms:
+                    JSON.parse(
+                        JSON.stringify(atoms)
+                    ),
+
+                bonds:
+                    JSON.parse(
+                        JSON.stringify(bonds)
+                    )
+
+            };
+
+
+            const movedId =
+                selectedAtom.id;
+
+
+            const oldX =
+                originalAtomPosition.x;
+
+            const oldY =
+                originalAtomPosition.y;
+
+
+            snapshot.atoms.forEach(
+                atom => {
+
+                    if (
+                        atom.id ===
+                        movedId
+                    ) {
+
+                        atom.x =
+                            oldX;
+
+                        atom.y =
+                            oldY;
+
+                    }
+
+                }
+            );
+
+
+            history.push(
+                snapshot
+            );
+
+
+            if (
+                history.length > 50
+            ) {
+
+                history.shift();
+
+            }
+
+        }
+
+
+        selectedAtom = null;
+
+        dragStart = null;
+
+        originalAtomPosition = null;
+
+    }
+
+
+    /*
+        PENCIL
+    */
+
+    if (
+        activePointer.type ===
+        "create"
+    ) {
+
+        finalizeCreateStroke();
+
+    }
+
+
+    if (
+        canvas.hasPointerCapture(
+            event.pointerId
+        )
+    ) {
+
+        canvas.releasePointerCapture(
+            event.pointerId
+        );
+
+    }
+
+
+    activePointer =
+        null;
+
+}
+
+
+canvas.addEventListener(
+    "pointerup",
+    finishPointer,
+    {
+        passive:false
+    }
+);
+
+
+canvas.addEventListener(
+    "pointercancel",
+    finishPointer,
+    {
+        passive:false
+    }
+);
+
+
+/* ============================================================
+   INITIAL RENDER
+============================================================ */
+
+render();
+
+status.textContent =
+    "Pencil creates · Finger moves";
+
+</script>
+
+</body>
+</html>
