@@ -10,7 +10,7 @@ maximum-scale=1.0,
 user-scalable=no,
 viewport-fit=cover">
 
-<title>BONDraw 0.7.0</title>
+<title>BONDraw 0.7.1</title>
 
 <style>
 
@@ -37,9 +37,17 @@ body {
 
     color: #181a1f;
 
+    /*
+        IMPORTANTE:
+        touch-action:none permette al canvas di ricevere
+        correttamente i Pointer Events su iPad.
+    */
     touch-action: none;
+
     user-select: none;
     -webkit-user-select: none;
+
+    overscroll-behavior: none;
 }
 
 body {
@@ -71,6 +79,8 @@ header {
         1px solid rgba(0,0,0,.07);
 
     z-index: 10;
+
+    touch-action: none;
 }
 
 .brand {
@@ -114,6 +124,8 @@ header {
     flex: 1;
     min-height: 0;
     overflow: hidden;
+
+    touch-action: none;
 }
 
 #canvas {
@@ -133,6 +145,14 @@ header {
         );
 
     touch-action: none;
+
+    /*
+        Safari/iPadOS:
+        impedisce che il browser interpreti il gesto
+        come scroll/zoom invece che come input.
+    */
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 
@@ -211,6 +231,8 @@ header {
         0 10px 35px rgba(0,0,0,.10);
 
     z-index: 20;
+
+    touch-action: manipulation;
 }
 
 button {
@@ -232,6 +254,8 @@ button {
     font-weight: 650;
 
     cursor: pointer;
+
+    touch-action: manipulation;
 }
 
 button:active {
@@ -289,6 +313,8 @@ button.danger {
         0 14px 40px rgba(0,0,0,.16);
 
     z-index: 40;
+
+    touch-action: manipulation;
 }
 
 #moleculeMenu.visible {
@@ -502,7 +528,7 @@ button.danger {
         </div>
 
         <div class="version">
-            0.7.0
+            0.7.1
         </div>
 
     </div>
@@ -639,7 +665,8 @@ button.danger {
 <script>
 
 /* ============================================================
-   BONDraw 0.7.0
+   BONDraw 0.7.1
+   INPUT ENGINE RISCRITTO PER iPad / Safari
 ============================================================ */
 
 
@@ -721,30 +748,23 @@ const VALENCE = {
 let moleculeClipboard = null;
 
 let moleculeMenuAnchor = null;
-
 let moleculeMenuAtom = null;
 
 
 /* ============================================================
-   TOUCH PROTECTION
+   INPUT STATE
 ============================================================ */
 
 /*
-    IMPORTANTE:
+    NON usiamo più width/height del touch per decidere
+    se il contatto è un dito o un palmo.
 
-    Il touch normale non viene modificato.
+    Su iPadOS Safari quei valori possono essere abbastanza
+    grandi anche per un normale dito.
 
-    Queste protezioni intervengono solo in tre casi:
-
-    1. un secondo touch arriva mentre un altro touch
-       è già attivo;
-    2. un contatto touch è molto grande e quindi
-       probabilmente è il palmo;
-    3. due paste avvengono troppo ravvicinati.
-
-    Non viene usato un blocco generale del touch.
+    Questa è la parte che molto probabilmente stava
+    uccidendo tutti i touch.
 */
-
 
 const activePenPointers =
     new Set();
@@ -752,88 +772,35 @@ const activePenPointers =
 const activeTouchPointers =
     new Set();
 
-const PASTE_DEBOUNCE_MS = 350;
+
+/*
+    Ultimo paste effettuato.
+*/
 
 let lastPasteTime = 0;
 
+const PASTE_DEBOUNCE_MS = 350;
+
 
 /*
-    Soglia volutamente alta.
+    Un solo dito alla volta.
 
-    Non usiamo 30 px perché su iPad alcuni
-    normali contatti del dito possono avere
-    dimensioni superiori.
-
-    Il controllo viene applicato solo quando
-    il browser fornisce effettivamente
-    width/height.
+    Se arrivano altri touch mentre un dito è già
+    impegnato, li ignoriamo.
 */
-
-const PALM_CONTACT_SIZE = 45;
-
-
-function isLikelyPalmTouch(event) {
-
-    if (
-        event.pointerType !== "touch"
-    ) {
-
-        return false;
-
-    }
-
-    const width =
-        Number(event.width) || 0;
-
-    const height =
-        Number(event.height) || 0;
-
-
-    /*
-        Se il browser non fornisce la dimensione
-        del contatto, NON blocchiamo il touch.
-    */
-
-    if (
-        width <= 0 &&
-        height <= 0
-    ) {
-
-        return false;
-
-    }
-
-
-    /*
-        Usiamo entrambe le dimensioni grandi.
-
-        Questo evita di scambiare un dito
-        leggermente schiacciato per un palmo.
-    */
-
-    return (
-        width >= PALM_CONTACT_SIZE &&
-        height >= PALM_CONTACT_SIZE
-    );
-
-}
-
 
 function registerPointer(event) {
 
-    if (
-        event.pointerType === "pen"
-    ) {
+    if (event.pointerType === "pen") {
 
         activePenPointers.add(
             event.pointerId
         );
 
+        return;
     }
 
-    if (
-        event.pointerType === "touch"
-    ) {
+    if (event.pointerType === "touch") {
 
         activeTouchPointers.add(
             event.pointerId
@@ -846,19 +813,16 @@ function registerPointer(event) {
 
 function unregisterPointer(event) {
 
-    if (
-        event.pointerType === "pen"
-    ) {
+    if (event.pointerType === "pen") {
 
         activePenPointers.delete(
             event.pointerId
         );
 
+        return;
     }
 
-    if (
-        event.pointerType === "touch"
-    ) {
+    if (event.pointerType === "touch") {
 
         activeTouchPointers.delete(
             event.pointerId
@@ -870,17 +834,12 @@ function unregisterPointer(event) {
 
 
 /*
-    Controllo volutamente minimale.
+    Touch filtering semplice e affidabile.
 
-    Il primo touch passa normalmente.
+    1. Se la Pencil è attiva, il touch viene ignorato.
+    2. Se è già attivo un altro dito, il secondo viene ignorato.
 
-    Un touch successivo viene ignorato solo
-    mentre il primo è ancora attivo.
-
-    Un contatto molto grande viene ignorato
-    indipendentemente dagli altri touch.
-
-    La Pencil NON viene mai bloccata da questa funzione.
+    NIENTE width/height.
 */
 
 function shouldIgnoreTouch(event) {
@@ -894,7 +853,7 @@ function shouldIgnoreTouch(event) {
     }
 
     if (
-        isLikelyPalmTouch(event)
+        activePenPointers.size > 0
     ) {
 
         return true;
@@ -902,11 +861,8 @@ function shouldIgnoreTouch(event) {
     }
 
     /*
-        Quando questa funzione viene chiamata,
-        il pointer corrente è già stato registrato.
-
-        Quindi size > 1 significa che esiste
-        già almeno un altro touch.
+        Il pointer corrente è già stato registrato,
+        quindi size > 1 significa davvero "secondo dito".
     */
 
     if (
@@ -936,8 +892,7 @@ function canPasteNow() {
 
     }
 
-    lastPasteTime =
-        now;
+    lastPasteTime = now;
 
     return true;
 
@@ -3537,10 +3492,6 @@ function copyMolecule(startAtom) {
 }
 
 
-/* ============================================================
-   CLIPBOARD VALIDATION
-============================================================ */
-
 function hasMoleculeClipboard() {
 
     return !!(
@@ -3883,20 +3834,6 @@ document.addEventListener(
 
         }
 
-        /*
-            Un contatto palmare non deve chiudere
-            accidentalmente il menu.
-        */
-
-        if (
-            event.pointerType === "touch" &&
-            isLikelyPalmTouch(event)
-        ) {
-
-            return;
-
-        }
-
         if (
             moleculeMenu.contains(
                 event.target
@@ -3954,11 +3891,21 @@ let pencilMenuPoint = null;
 ============================================================ */
 
 const LONG_PRESS_DURATION = 550;
-
 const LONG_PRESS_MOVE_THRESHOLD = 10;
 
 
 function getInteractionType(event) {
+
+    /*
+        Pencil:
+        sempre Create.
+
+        Finger:
+        sempre Move/Paste.
+
+        Mouse:
+        segue la modalità manuale.
+    */
 
     if (
         event.pointerType === "pen"
@@ -4103,6 +4050,47 @@ function startPencilMenuLongPress(
 
 
 /* ============================================================
+   RESET POINTER
+============================================================ */
+
+function resetPointerState() {
+
+    cancelLongPress();
+
+    activePointer = null;
+
+    selectedAtom = null;
+
+    selectedMolecule =
+        new Set();
+
+    dragStart = null;
+
+    originalAtomPosition =
+        null;
+
+    originalMoleculePositions =
+        new Map();
+
+    longPressTriggered =
+        false;
+
+    movementStarted =
+        false;
+
+    historySavedForDrag =
+        false;
+
+    pencilMenuTriggered =
+        false;
+
+    pencilMenuPoint =
+        null;
+
+}
+
+
+/* ============================================================
    POINTER DOWN
 ============================================================ */
 
@@ -4110,34 +4098,46 @@ canvas.addEventListener(
     "pointerdown",
     event => {
 
-        event.preventDefault();
-
-
         /*
-            Prima registriamo il pointer.
+            IMPORTANTISSIMO:
 
-            Questo NON blocca il primo touch:
-            activeTouchPointers.size sarà 1.
+            NON facciamo return prima di registrare
+            il pointer.
 
-            Un eventuale secondo touch arriverà
-            con size 2 e verrà ignorato.
+            Questo evita lo stato "fantasma" di Safari.
         */
 
         registerPointer(event);
 
 
         /*
-            TOUCH PROTECTION
-
-            Il touch normale passa invariato.
-
-            Vengono bloccati soltanto:
-            - palmo evidente
-            - secondo touch simultaneo
+            Ignora esclusivamente:
+            - touch mentre la Pencil è attiva
+            - secondo dito
         */
 
         if (
             shouldIgnoreTouch(event)
+        ) {
+
+            return;
+
+        }
+
+
+        event.preventDefault();
+
+
+        /*
+            Se esiste già un activePointer diverso,
+            non permettiamo che un secondo input
+            rubi il controllo.
+        */
+
+        if (
+            activePointer &&
+            activePointer.id !==
+            event.pointerId
         ) {
 
             return;
@@ -4155,6 +4155,7 @@ canvas.addEventListener(
                 event
             );
 
+
         activePointer = {
 
             id:
@@ -4167,6 +4168,7 @@ canvas.addEventListener(
                 event.pointerType
 
         };
+
 
         selectedAtom = null;
 
@@ -4203,7 +4205,8 @@ canvas.addEventListener(
         ================================= */
 
         if (
-            manualMode === "erase"
+            manualMode === "erase" &&
+            event.pointerType !== "pen"
         ) {
 
             const atom =
@@ -4215,8 +4218,9 @@ canvas.addEventListener(
             if (atom) {
 
                 removeAtom(atom);
+                resetPointerState();
 
-                activePointer = null;
+                unregisterPointer(event);
 
                 return;
 
@@ -4231,14 +4235,17 @@ canvas.addEventListener(
             if (bond) {
 
                 removeBond(bond);
+                resetPointerState();
 
-                activePointer = null;
+                unregisterPointer(event);
 
                 return;
 
             }
 
-            activePointer = null;
+            resetPointerState();
+
+            unregisterPointer(event);
 
             return;
 
@@ -4262,11 +4269,10 @@ canvas.addEventListener(
 
             /*
                 FINGER + VUOTO
+                =========================
 
-                Incolla direttamente.
-
-                Il debounce viene applicato
-                SOLO a questo paste.
+                Se esiste una molecola copiata,
+                il tap incolla.
             */
 
             if (!atom) {
@@ -4283,31 +4289,54 @@ canvas.addEventListener(
 
                 }
 
-                activePointer = null;
+                resetPointerState();
+
+                unregisterPointer(event);
 
                 return;
 
             }
 
 
+            /*
+                FINGER + ATOMO
+                =========================
+
+                Prepara il drag.
+            */
+
             selectedAtom =
                 atom;
 
             dragStart = {
-                x: point.x,
-                y: point.y
+
+                x:
+                    point.x,
+
+                y:
+                    point.y
+
             };
 
             originalAtomPosition = {
-                x: atom.x,
-                y: atom.y
+
+                x:
+                    atom.x,
+
+                y:
+                    atom.y
+
             };
+
 
             prepareMoleculeDrag();
 
-            canvas.setPointerCapture(
-                event.pointerId
-            );
+            /*
+                NON usiamo più setPointerCapture.
+                Il pointermove continua normalmente
+                sul canvas e Safari/iPadOS è meno
+                problematico.
+            */
 
             startLongPress();
 
@@ -4338,13 +4367,14 @@ canvas.addEventListener(
             }
 
             dragStart = {
-                x: point.x,
-                y: point.y
-            };
 
-            canvas.setPointerCapture(
-                event.pointerId
-            );
+                x:
+                    point.x,
+
+                y:
+                    point.y
+
+            };
 
             startPencilMenuLongPress(
                 point,
@@ -4412,6 +4442,13 @@ canvas.addEventListener(
                     dy
                 );
 
+
+            /*
+                Se il dito si muove prima
+                del long press, è un normale
+                spostamento atomico.
+            */
+
             if (
                 !longPressTriggered &&
                 movementDistance >
@@ -4421,6 +4458,7 @@ canvas.addEventListener(
                 cancelLongPress();
 
             }
+
 
             if (
                 !longPressTriggered
@@ -4457,6 +4495,11 @@ canvas.addEventListener(
 
             }
 
+
+            /*
+                Long press:
+                trascina l'intera molecola.
+            */
 
             if (
                 longPressTriggered
@@ -4524,6 +4567,12 @@ canvas.addEventListener(
             "create"
         ) {
 
+            /*
+                Prima del long press:
+                distinguiamo gesto di disegno
+                da pressione prolungata.
+            */
+
             if (
                 !pencilMenuTriggered &&
                 currentStroke.length === 0 &&
@@ -4552,15 +4601,23 @@ canvas.addEventListener(
                     cancelLongPress();
 
                     const startPoint = {
-                        x: dragStart.x,
-                        y: dragStart.y
+
+                        x:
+                            dragStart.x,
+
+                        y:
+                            dragStart.y
+
                     };
 
                     selectedAtom = null;
 
                     currentStroke = [
+
                         startPoint,
+
                         point
+
                     ];
 
                     dragStart = null;
@@ -4606,19 +4663,20 @@ canvas.addEventListener(
 
 function finishPointer(event) {
 
-    /*
-        Se questo pointer non è quello attualmente
-        gestito dal canvas, significa che potrebbe
-        essere un secondo touch ignorato.
-
-        Lo deregistriamo semplicemente.
-    */
-
     const isCurrentPointer =
         !!activePointer &&
         activePointer.id ===
         event.pointerId;
 
+
+    /*
+        Questo pointer non è quello principale.
+
+        È probabilmente:
+        - secondo dito
+        - touch ignorato mentre Pencil attiva
+        - altro pointer.
+    */
 
     if (
         !isCurrentPointer
@@ -4629,6 +4687,7 @@ function finishPointer(event) {
         return;
 
     }
+
 
     event.preventDefault();
 
@@ -4705,19 +4764,18 @@ function finishPointer(event) {
     }
 
 
-    if (
-        canvas.hasPointerCapture(
-            event.pointerId
-        )
-    ) {
+    /*
+        Niente releasePointerCapture:
+        non ne abbiamo mai fatto uso.
+    */
 
-        canvas.releasePointerCapture(
-            event.pointerId
-        );
-
-    }
+    activePointer =
+        null;
 
     selectedAtom = null;
+
+    selectedMolecule =
+        new Set();
 
     dragStart = null;
 
@@ -4727,8 +4785,22 @@ function finishPointer(event) {
     pencilMenuPoint =
         null;
 
-    activePointer =
+    movementStarted =
+        false;
+
+    historySavedForDrag =
+        false;
+
+    originalAtomPosition =
         null;
+
+    originalMoleculePositions =
+        new Map();
+
+    longPressTriggered =
+        false;
+
+    cancelLongPress();
 
     unregisterPointer(event);
 
@@ -4756,34 +4828,64 @@ canvas.addEventListener(
 );
 
 
+/* ============================================================
+   SAFARI / iPadOS TOUCH FALLBACK
+============================================================ */
+
 /*
-    IMPORTANTE:
+    Questi listener NON implementano il movimento.
 
-    Un touch ignorato può non avere pointer capture,
-    quindi il canvas potrebbe non ricevere il suo
-    pointerup.
+    Servono soltanto a impedire a Safari di trasformare
+    un gesto touch sul canvas in scrolling/zooming della pagina.
 
-    Questi listener globali servono esclusivamente
-    a ripulire i Set di tracking.
-
-    Non modificano l'interazione normale.
+    Il vero input continua a passare dai Pointer Events.
 */
 
-document.addEventListener(
-    "pointerup",
+canvas.addEventListener(
+    "touchstart",
     event => {
 
-        unregisterPointer(event);
+        event.preventDefault();
 
+    },
+    {
+        passive:false
     }
 );
 
-document.addEventListener(
-    "pointercancel",
+canvas.addEventListener(
+    "touchmove",
     event => {
 
-        unregisterPointer(event);
+        event.preventDefault();
 
+    },
+    {
+        passive:false
+    }
+);
+
+canvas.addEventListener(
+    "touchend",
+    event => {
+
+        event.preventDefault();
+
+    },
+    {
+        passive:false
+    }
+);
+
+canvas.addEventListener(
+    "touchcancel",
+    event => {
+
+        event.preventDefault();
+
+    },
+    {
+        passive:false
     }
 );
 
