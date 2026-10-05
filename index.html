@@ -82,9 +82,7 @@ header {
 .logo-dot {
     width: 13px;
     height: 13px;
-
     border-radius: 50%;
-
     background: #181a1f;
 }
 
@@ -113,16 +111,13 @@ header {
 
 #workspace {
     position: relative;
-
     flex: 1;
     min-height: 0;
-
     overflow: hidden;
 }
 
 #canvas {
     position: absolute;
-
     inset: 0;
 
     width: 100%;
@@ -167,19 +162,14 @@ header {
 
 .empty-title {
     font-size: 24px;
-
     font-weight: 700;
-
     letter-spacing: -.6px;
-
     margin-bottom: 7px;
 }
 
 .empty-subtitle {
     font-size: 15px;
-
     color: #858992;
-
     line-height: 1.45;
 }
 
@@ -198,9 +188,7 @@ header {
         translateX(-50%);
 
     display: flex;
-
     align-items: center;
-
     gap: 6px;
 
     padding: 7px;
@@ -230,9 +218,7 @@ button {
     outline: 0;
 
     height: 40px;
-
-    padding:
-        0 15px;
+    padding: 0 15px;
 
     border-radius: 12px;
 
@@ -268,8 +254,7 @@ button.danger {
     background:
         rgba(0,0,0,.09);
 
-    margin:
-        0 2px;
+    margin: 0 2px;
 }
 
 
@@ -331,9 +316,7 @@ button.danger {
     height: 42px;
 
     display: flex;
-
     align-items: center;
-
     justify-content: flex-start;
 
     gap: 9px;
@@ -346,7 +329,6 @@ button.danger {
     color: #25272d;
 
     font-size: 14px;
-
     font-weight: 650;
 
     background: transparent;
@@ -364,9 +346,7 @@ button.danger {
 
 .menu-icon {
     width: 20px;
-
     text-align: center;
-
     font-size: 16px;
 }
 
@@ -387,13 +367,9 @@ button.danger {
 
 .bond {
     stroke: #202228;
-
     stroke-width: 2.6;
-
     stroke-linecap: round;
-
     fill: none;
-
     pointer-events: none;
 }
 
@@ -402,7 +378,6 @@ button.danger {
         rgba(255,255,255,.96);
 
     stroke: #202228;
-
     stroke-width: 2.4;
 }
 
@@ -410,11 +385,9 @@ button.danger {
     fill: #202228;
 
     font-size: 17px;
-
     font-weight: 700;
 
     text-anchor: middle;
-
     dominant-baseline: central;
 
     pointer-events: none;
@@ -425,9 +398,7 @@ button.danger {
         rgba(255,255,255,.72);
 
     stroke: #999da6;
-
     stroke-width: 2;
-
     stroke-dasharray: 5 5;
 }
 
@@ -554,9 +525,7 @@ button.danger {
     xmlns="http://www.w3.org/2000/svg">
 
     <g id="bondLayer"></g>
-
     <g id="atomLayer"></g>
-
     <g id="strokeLayer"></g>
 
 </svg>
@@ -581,10 +550,6 @@ button.danger {
 </div>
 
 
-<!-- ================================
-     MOLECULE MENU
-================================ -->
-
 <div id="moleculeMenu">
 
     <div class="menu-title">
@@ -596,9 +561,7 @@ button.danger {
         class="menu-button"
         id="copyMoleculeBtn">
 
-        <span class="menu-icon">
-            📋
-        </span>
+        <span class="menu-icon">📋</span>
 
         <span>
             Copia molecola
@@ -612,9 +575,7 @@ button.danger {
         class="menu-button"
         id="pasteMoleculeBtn">
 
-        <span class="menu-icon">
-            📌
-        </span>
+        <span class="menu-icon">📌</span>
 
         <span>
             Incolla molecola
@@ -631,9 +592,7 @@ button.danger {
         class="menu-button"
         id="closeMenuBtn">
 
-        <span class="menu-icon">
-            ✕
-        </span>
+        <span class="menu-icon">✕</span>
 
         <span>
             Chiudi
@@ -649,9 +608,7 @@ button.danger {
     <button
         id="createBtn"
         class="active">
-
         Create
-
     </button>
 
     <button id="moveBtn">
@@ -671,9 +628,7 @@ button.danger {
     <button
         id="clearBtn"
         class="danger">
-
         Clear
-
     </button>
 
 </div>
@@ -685,23 +640,6 @@ button.danger {
 
 /* ============================================================
    BONDraw 0.7.0
-
-   Pencil = CREATE
-   Pencil long press = MOLECULE MENU
-   Finger = MOVE SINGLE ATOM
-   Finger long press = SELECT / MOVE MOLECULE
-
-   Molecule menu:
-   - Copy molecule
-   - Paste molecule
-   - Pencil long press on empty space = menu
-   - Finger tap on empty space = direct paste
-
-   Recognition:
-   - strict circle detection
-   - score-based H recognition
-   - score-based C recognition
-   - competitive letter classification
 ============================================================ */
 
 
@@ -742,26 +680,17 @@ const undoBtn =
 const clearBtn =
     document.getElementById("clearBtn");
 
-
 const moleculeMenu =
-    document.getElementById(
-        "moleculeMenu"
-    );
+    document.getElementById("moleculeMenu");
 
 const copyMoleculeBtn =
-    document.getElementById(
-        "copyMoleculeBtn"
-    );
+    document.getElementById("copyMoleculeBtn");
 
 const pasteMoleculeBtn =
-    document.getElementById(
-        "pasteMoleculeBtn"
-    );
+    document.getElementById("pasteMoleculeBtn");
 
 const closeMenuBtn =
-    document.getElementById(
-        "closeMenuBtn"
-    );
+    document.getElementById("closeMenuBtn");
 
 
 /* ============================================================
@@ -769,48 +698,25 @@ const closeMenuBtn =
 ============================================================ */
 
 let atoms = [];
-
 let bonds = [];
 
 let nextAtomId = 1;
-
 let nextBondId = 1;
 
-
 const ATOM_RADIUS = {
-
     C: 27,
-
     H: 23
-
 };
 
-
 const VALENCE = {
-
     C: 4,
-
     H: 1
-
 };
 
 
 /* ============================================================
-   MOLECULE CLIPBOARD
+   CLIPBOARD
 ============================================================ */
-
-/*
-    Clipboard interno di BONDraw.
-
-    Non utilizza il clipboard di sistema:
-    memorizza una copia strutturale della molecola.
-
-    Questo permette di:
-    - creare nuovi ID
-    - mantenere i legami
-    - mantenere gli ordini dei legami
-    - mantenere le posizioni relative
-*/
 
 let moleculeClipboard = null;
 
@@ -841,9 +747,7 @@ function saveHistory() {
     });
 
     if (history.length > 50) {
-
         history.shift();
-
     }
 
 }
@@ -914,13 +818,11 @@ undoBtn.onclick = () => {
     bonds =
         previous.bonds;
 
-
     pendingAtom =
         atoms.find(
             atom =>
                 atom.pending === true
         ) || null;
-
 
     render();
 
@@ -939,7 +841,6 @@ clearBtn.onclick = () => {
     saveHistory();
 
     atoms = [];
-
     bonds = [];
 
     pendingAtom = null;
@@ -1019,24 +920,15 @@ function canAddBond(
         ] || 4;
 
     return (
-
-        getValence(atomA)
-        + order
-        <= maxA
-
-        &&
-
-        getValence(atomB)
-        + order
-        <= maxB
-
+        getValence(atomA) + order <= maxA &&
+        getValence(atomB) + order <= maxB
     );
 
 }
 
 
 /* ============================================================
-   ATOM HIT TEST
+   HIT TESTS
 ============================================================ */
 
 function findAtomAt(x,y) {
@@ -1071,10 +963,6 @@ function findAtomAt(x,y) {
 }
 
 
-/* ============================================================
-   BOND HIT TEST
-============================================================ */
-
 function pointToSegmentDistance(
     px,
     py,
@@ -1084,11 +972,8 @@ function pointToSegmentDistance(
     y2
 ) {
 
-    const dx =
-        x2-x1;
-
-    const dy =
-        y2-y1;
+    const dx = x2-x1;
+    const dy = y2-y1;
 
     if (
         dx === 0 &&
@@ -1115,11 +1000,8 @@ function pointToSegmentDistance(
             )
         );
 
-    const cx =
-        x1+t*dx;
-
-    const cy =
-        y1+t*dy;
+    const cx = x1+t*dx;
+    const cy = y1+t*dy;
 
     return Math.hypot(
         px-cx,
@@ -1148,7 +1030,7 @@ function findBondAt(x,y) {
 
         if (!a || !b) continue;
 
-        const d =
+        const distance =
             pointToSegmentDistance(
                 x,
                 y,
@@ -1158,10 +1040,8 @@ function findBondAt(x,y) {
                 b.y
             );
 
-        if (d < 12) {
-
+        if (distance < 12) {
             return bond;
-
         }
 
     }
@@ -1198,7 +1078,6 @@ function createAtomElement(atom) {
     group.dataset.atomId =
         atom.id;
 
-
     const circle =
         document.createElementNS(
             "http://www.w3.org/2000/svg",
@@ -1209,7 +1088,6 @@ function createAtomElement(atom) {
         "class",
         "atom-circle"
     );
-
 
     const label =
         document.createElementNS(
@@ -1222,9 +1100,7 @@ function createAtomElement(atom) {
         "atom-label"
     );
 
-
     group.appendChild(circle);
-
     group.appendChild(label);
 
     atomLayer.appendChild(group);
@@ -1247,18 +1123,14 @@ function updateAtomElement(atom) {
         );
 
     if (!group) {
-
         group =
             createAtomElement(atom);
-
     }
-
 
     group.setAttribute(
         "transform",
         `translate(${atom.x} ${atom.y})`
     );
-
 
     const circle =
         group.querySelector(
@@ -1270,16 +1142,13 @@ function updateAtomElement(atom) {
             ".atom-label"
         );
 
-
     circle.setAttribute(
         "r",
         getRadius(atom)
     );
 
-
     label.textContent =
         atom.element || "?";
-
 
     group.classList.toggle(
         "pending",
@@ -1325,9 +1194,7 @@ function updateBondElement(
 
     if (!a || !b) return;
 
-
     group.innerHTML = "";
-
 
     const dx =
         b.x-a.x;
@@ -1340,27 +1207,17 @@ function updateBondElement(
 
     if (length === 0) return;
 
+    const ux = dx/length;
+    const uy = dy/length;
 
-    const ux =
-        dx/length;
-
-    const uy =
-        dy/length;
-
-
-    const nx =
-        -uy;
-
-    const ny =
-        ux;
-
+    const nx = -uy;
+    const ny = ux;
 
     const startRadius =
         getRadius(a);
 
     const endRadius =
         getRadius(b);
-
 
     const startX =
         a.x + ux*startRadius;
@@ -1374,23 +1231,16 @@ function updateBondElement(
     const endY =
         b.y - uy*endRadius;
 
-
     const spacing = 6;
-
 
     let offsets;
 
-
-    if (
-        bond.order === 1
-    ) {
+    if (bond.order === 1) {
 
         offsets = [0];
 
     }
-    else if (
-        bond.order === 2
-    ) {
+    else if (bond.order === 2) {
 
         offsets = [
             -spacing/2,
@@ -1407,7 +1257,6 @@ function updateBondElement(
         ];
 
     }
-
 
     offsets.forEach(
         offset => {
@@ -1463,11 +1312,8 @@ function render() {
             element.remove()
     );
 
-
     atomElements.clear();
-
     bondElements.clear();
-
 
     bonds.forEach(
         bond => {
@@ -1485,7 +1331,6 @@ function render() {
         }
     );
 
-
     atoms.forEach(
         atom => {
 
@@ -1500,7 +1345,6 @@ function render() {
         }
     );
 
-
     emptyState.classList.toggle(
         "hidden",
         atoms.length > 0
@@ -1509,14 +1353,9 @@ function render() {
 }
 
 
-function updateAtomAndItsBonds(
-    atom
-) {
+function updateAtomAndItsBonds(atom) {
 
-    updateAtomElement(
-        atom
-    );
-
+    updateAtomElement(atom);
 
     bonds.forEach(
         bond => {
@@ -1549,7 +1388,7 @@ function updateAtomAndItsBonds(
 
 
 /* ============================================================
-   BOND CREATION
+   BONDS
 ============================================================ */
 
 function findBondBetween(
@@ -1585,12 +1424,7 @@ function connectAtoms(
         !atomA ||
         !atomB ||
         atomA.id === atomB.id
-    ) {
-
-        return;
-
-    }
-
+    ) return;
 
     const existing =
         findBondBetween(
@@ -1598,9 +1432,7 @@ function connectAtoms(
             atomB
         );
 
-
     saveHistory();
-
 
     if (!existing) {
 
@@ -1613,11 +1445,9 @@ function connectAtoms(
         ) {
 
             history.pop();
-
             return;
 
         }
-
 
         bonds.push({
 
@@ -1643,7 +1473,6 @@ function connectAtoms(
                 ? 1
                 : existing.order + 1;
 
-
         const maxA =
             VALENCE[
                 atomA.element
@@ -1654,7 +1483,6 @@ function connectAtoms(
                 atomB.element
             ] || 4;
 
-
         const valenceA =
             getValence(atomA)
             - existing.order;
@@ -1663,24 +1491,20 @@ function connectAtoms(
             getValence(atomB)
             - existing.order;
 
-
         if (
             valenceA + nextOrder > maxA ||
             valenceB + nextOrder > maxB
         ) {
 
             history.pop();
-
             return;
 
         }
-
 
         existing.order =
             nextOrder;
 
     }
-
 
     render();
 
@@ -1697,7 +1521,6 @@ function removeAtom(atom) {
 
     saveHistory();
 
-
     if (
         pendingAtom &&
         pendingAtom.id === atom.id
@@ -1707,7 +1530,6 @@ function removeAtom(atom) {
 
     }
 
-
     bonds =
         bonds.filter(
             bond =>
@@ -1715,13 +1537,11 @@ function removeAtom(atom) {
                 bond.b !== atom.id
         );
 
-
     atoms =
         atoms.filter(
             item =>
                 item.id !== atom.id
         );
-
 
     render();
 
@@ -1734,13 +1554,11 @@ function removeBond(bond) {
 
     saveHistory();
 
-
     bonds =
         bonds.filter(
             item =>
                 item.id !== bond.id
         );
-
 
     render();
 
@@ -1748,7 +1566,7 @@ function removeBond(bond) {
 
 
 /* ============================================================
-   STROKE UTILITIES
+   STROKE
 ============================================================ */
 
 function strokeBounds(points) {
@@ -1756,13 +1574,11 @@ function strokeBounds(points) {
     if (!points.length)
         return null;
 
-
     let minX = Infinity;
     let maxX = -Infinity;
 
     let minY = Infinity;
     let maxY = -Infinity;
-
 
     points.forEach(
         point => {
@@ -1793,7 +1609,6 @@ function strokeBounds(points) {
 
         }
     );
-
 
     return {
 
@@ -1826,11 +1641,9 @@ function resampleStroke(
 
     }
 
-
     const lengths = [0];
 
     let total = 0;
-
 
     for (
         let i=1;
@@ -1851,13 +1664,10 @@ function resampleStroke(
 
     }
 
-
     if (total === 0)
         return points.slice();
 
-
     const result = [];
-
 
     for (
         let i=0;
@@ -1870,9 +1680,7 @@ function resampleStroke(
             i /
             (count-1);
 
-
         let index = 1;
-
 
         while (
             index < lengths.length &&
@@ -1882,7 +1690,6 @@ function resampleStroke(
             index++;
 
         }
-
 
         if (
             index >= lengths.length
@@ -1898,25 +1705,21 @@ function resampleStroke(
 
         }
 
-
         const l1 =
             lengths[index-1];
 
         const l2 =
             lengths[index];
 
-
         const ratio =
             (target-l1) /
             (l2-l1 || 1);
-
 
         const p1 =
             points[index-1];
 
         const p2 =
             points[index];
-
 
         result.push({
 
@@ -1932,15 +1735,12 @@ function resampleStroke(
 
     }
 
-
     return result;
 
 }
 
 
-function normalizeStroke(
-    points
-) {
+function normalizeStroke(points) {
 
     const sampled =
         resampleStroke(
@@ -1948,17 +1748,14 @@ function normalizeStroke(
             32
         );
 
-
     if (!sampled.length)
         return [];
-
 
     let minX = Infinity;
     let maxX = -Infinity;
 
     let minY = Infinity;
     let maxY = -Infinity;
-
 
     sampled.forEach(
         p => {
@@ -1990,7 +1787,6 @@ function normalizeStroke(
         }
     );
 
-
     const width =
         Math.max(
             maxX-minX,
@@ -2003,13 +1799,11 @@ function normalizeStroke(
             1
         );
 
-
     const size =
         Math.max(
             width,
             height
         );
-
 
     return sampled.map(
         p => ({
@@ -2033,44 +1827,27 @@ function normalizeStroke(
 
 
 /* ============================================================
-   STRICT CIRCLE DETECTOR
+   CIRCLE
 ============================================================ */
 
 function isCircle(points) {
 
     if (
         points.length < 18
-    ) {
-
-        return false;
-
-    }
-
+    ) return false;
 
     const box =
         strokeBounds(points);
 
+    if (!box) return false;
 
-    if (!box)
-        return false;
-
-
-    const width =
-        box.width;
-
-    const height =
-        box.height;
-
+    const width = box.width;
+    const height = box.height;
 
     if (
         width < 28 ||
         height < 28
-    ) {
-
-        return false;
-
-    }
-
+    ) return false;
 
     const ratio =
         Math.min(
@@ -2082,24 +1859,15 @@ function isCircle(points) {
             height
         );
 
-
-    if (
-        ratio < .72
-    ) {
-
+    if (ratio < .72)
         return false;
 
-    }
-
-
-    const first =
-        points[0];
+    const first = points[0];
 
     const last =
         points[
             points.length-1
         ];
-
 
     const closure =
         Math.hypot(
@@ -2107,23 +1875,16 @@ function isCircle(points) {
             first.y-last.y
         );
 
-
     const diameter =
         Math.max(
             width,
             height
         );
 
-
     if (
         closure >
         diameter*.28
-    ) {
-
-        return false;
-
-    }
-
+    ) return false;
 
     const centerX =
         (
@@ -2137,16 +1898,13 @@ function isCircle(points) {
             box.maxY
         ) / 2;
 
-
     const expectedRadius =
         (
             width +
             height
         ) / 4;
 
-
     let radialError = 0;
-
 
     points.forEach(
         point => {
@@ -2157,7 +1915,6 @@ function isCircle(points) {
                     point.y-centerY
                 );
 
-
             radialError +=
                 Math.abs(
                     radius -
@@ -2165,26 +1922,17 @@ function isCircle(points) {
                 );
 
         }
-
     );
-
 
     radialError /=
         points.length;
 
-
     if (
         radialError >
         expectedRadius*.24
-    ) {
-
-        return false;
-
-    }
-
+    ) return false;
 
     let pathLength = 0;
-
 
     for (
         let i=1;
@@ -2203,25 +1951,17 @@ function isCircle(points) {
 
     }
 
-
     const expectedCircumference =
         Math.PI * diameter;
-
 
     const circumferenceRatio =
         pathLength /
         expectedCircumference;
 
-
     if (
         circumferenceRatio < .65 ||
         circumferenceRatio > 1.55
-    ) {
-
-        return false;
-
-    }
-
+    ) return false;
 
     return true;
 
@@ -2229,7 +1969,7 @@ function isCircle(points) {
 
 
 /* ============================================================
-   RECOGNITION HELPERS
+   RECOGNITION
 ============================================================ */
 
 function clamp01(value) {
@@ -2255,12 +1995,7 @@ function rangeScore(
     if (
         value >= idealMin &&
         value <= idealMax
-    ) {
-
-        return 1;
-
-    }
-
+    ) return 1;
 
     if (value < idealMin) {
 
@@ -2274,7 +2009,6 @@ function rangeScore(
 
     }
 
-
     return clamp01(
         1 -
         (
@@ -2286,52 +2020,27 @@ function rangeScore(
 }
 
 
-/* ============================================================
-   H SCORE
-============================================================ */
-
 function recognizeHScore(points) {
 
-    if (
-        points.length < 8
-    ) {
-
+    if (points.length < 8)
         return 0;
-
-    }
-
 
     const box =
         strokeBounds(points);
 
-
-    if (!box) {
-
+    if (!box)
         return 0;
 
-    }
-
-
-    const width =
-        box.width;
-
-    const height =
-        box.height;
-
+    const width = box.width;
+    const height = box.height;
 
     if (
         width < 10 ||
         height < 14
-    ) {
-
-        return 0;
-
-    }
-
+    ) return 0;
 
     const aspect =
         width / height;
-
 
     const aspectScore =
         rangeScore(
@@ -2341,13 +2050,11 @@ function recognizeHScore(points) {
             .70
         );
 
-
     const centerX =
         (
             box.minX +
             box.maxX
         ) / 2;
-
 
     const centerY =
         (
@@ -2355,10 +2062,8 @@ function recognizeHScore(points) {
             box.maxY
         ) / 2;
 
-
     let leftCount = 0;
     let rightCount = 0;
-
 
     let leftMinY = Infinity;
     let leftMaxY = -Infinity;
@@ -2366,13 +2071,10 @@ function recognizeHScore(points) {
     let rightMinY = Infinity;
     let rightMaxY = -Infinity;
 
-
     points.forEach(
         p => {
 
-            if (
-                p.x < centerX
-            ) {
+            if (p.x < centerX) {
 
                 leftCount++;
 
@@ -2410,7 +2112,6 @@ function recognizeHScore(points) {
         }
     );
 
-
     const leftRatio =
         leftCount /
         points.length;
@@ -2418,7 +2119,6 @@ function recognizeHScore(points) {
     const rightRatio =
         rightCount /
         points.length;
-
 
     const sideBalance =
         1 -
@@ -2430,49 +2130,37 @@ function recognizeHScore(points) {
             ) * 2.5
         );
 
-
     const leftHeight =
         Math.max(
             0,
-            leftMaxY -
-            leftMinY
+            leftMaxY-leftMinY
         );
 
     const rightHeight =
         Math.max(
             0,
-            rightMaxY -
-            rightMinY
+            rightMaxY-rightMinY
         );
-
 
     const leftCoverage =
         clamp01(
             leftHeight /
-            (height * .72)
+            (height*.72)
         );
 
     const rightCoverage =
         clamp01(
             rightHeight /
-            (height * .72)
+            (height*.72)
         );
 
-
     let totalLength = 0;
-
     let verticalLeftLength = 0;
-
     let verticalRightLength = 0;
-
     let centralHorizontalLength = 0;
-
     let diagonalLength = 0;
-
     let horizontalLength = 0;
-
     let verticalLength = 0;
-
 
     for (
         let i=1;
@@ -2486,13 +2174,11 @@ function recognizeHScore(points) {
         const p2 =
             points[i];
 
-
         const dx =
             p2.x-p1.x;
 
         const dy =
             p2.y-p1.y;
-
 
         const absDx =
             Math.abs(dx);
@@ -2500,53 +2186,37 @@ function recognizeHScore(points) {
         const absDy =
             Math.abs(dy);
 
-
         const length =
             Math.hypot(
                 dx,
                 dy
             );
 
-
-        if (
-            length < .5
-        ) {
-
+        if (length < .5)
             continue;
-
-        }
-
 
         totalLength += length;
 
-
         const midX =
             (
-                p1.x +
-                p2.x
+                p1.x+p2.x
             ) / 2;
-
 
         const midY =
             (
-                p1.y +
-                p2.y
+                p1.y+p2.y
             ) / 2;
-
 
         if (
             absDy >
-            absDx * 1.55
+            absDx*1.55
         ) {
 
-            verticalLength +=
-                length;
-
+            verticalLength += length;
 
             if (
                 midX <
-                centerX -
-                width * .18
+                centerX-width*.18
             ) {
 
                 verticalLeftLength +=
@@ -2554,11 +2224,9 @@ function recognizeHScore(points) {
 
             }
 
-
             if (
                 midX >
-                centerX +
-                width * .18
+                centerX+width*.18
             ) {
 
                 verticalRightLength +=
@@ -2568,22 +2236,19 @@ function recognizeHScore(points) {
 
         }
 
-
         if (
             absDx >
-            absDy * 1.70
+            absDy*1.70
         ) {
 
             horizontalLength +=
                 length;
 
-
             if (
                 Math.abs(
-                    midY -
-                    centerY
+                    midY-centerY
                 ) <
-                height * .27
+                height*.27
             ) {
 
                 centralHorizontalLength +=
@@ -2593,12 +2258,11 @@ function recognizeHScore(points) {
 
         }
 
-
         if (
             absDx >
-            length * .30 &&
+            length*.30 &&
             absDy >
-            length * .30
+            length*.30
         ) {
 
             diagonalLength +=
@@ -2608,15 +2272,8 @@ function recognizeHScore(points) {
 
     }
 
-
-    if (
-        totalLength <= 0
-    ) {
-
+    if (totalLength <= 0)
         return 0;
-
-    }
-
 
     const verticalLeftRatio =
         verticalLeftLength /
@@ -2626,59 +2283,40 @@ function recognizeHScore(points) {
         verticalRightLength /
         totalLength;
 
-
-    const horizontalCentralRatio =
-        centralHorizontalLength /
-        totalLength;
-
-
     const diagonalRatio =
         diagonalLength /
         totalLength;
 
-
     const verticalStructureScore =
         (
             clamp01(
-                verticalLeftRatio /
-                .20
-            )
-            +
+                verticalLeftRatio/.20
+            ) +
             clamp01(
-                verticalRightRatio /
-                .20
+                verticalRightRatio/.20
             )
         ) / 2;
-
 
     const horizontalStructureScore =
         clamp01(
             centralHorizontalLength /
-            (width * .32)
+            (width*.32)
         );
-
 
     const diagonalScore =
         clamp01(
             1 -
-            diagonalRatio /
-            .45
+            diagonalRatio/.45
         );
 
-
     const verticalDominance =
-        totalLength > 0
-            ? verticalLength /
-              totalLength
-            : 0;
-
+        verticalLength /
+        totalLength;
 
     const verticalDominanceScore =
         clamp01(
-            verticalDominance /
-            .38
+            verticalDominance/.38
         );
-
 
     const directionalStructure =
         clamp01(
@@ -2690,94 +2328,53 @@ function recognizeHScore(points) {
             .72
         );
 
-
     const score =
 
-        verticalStructureScore * .28
+        verticalStructureScore*.28 +
 
-        +
-
-        horizontalStructureScore * .25
-
-        +
+        horizontalStructureScore*.25 +
 
         (
             leftCoverage *
             rightCoverage
-        ) * .15
+        )*.15 +
 
-        +
+        sideBalance*.08 +
 
-        sideBalance * .08
+        aspectScore*.08 +
 
-        +
+        verticalDominanceScore*.07 +
 
-        aspectScore * .08
+        directionalStructure*.05 +
 
-        +
-
-        verticalDominanceScore * .07
-
-        +
-
-        directionalStructure * .05
-
-        +
-
-        diagonalScore * .04;
-
+        diagonalScore*.04;
 
     return clamp01(score);
 
 }
 
 
-/* ============================================================
-   C SCORE
-============================================================ */
-
 function recognizeCScore(points) {
 
-    if (
-        points.length < 8
-    ) {
-
+    if (points.length < 8)
         return 0;
-
-    }
-
 
     const box =
         strokeBounds(points);
 
-
-    if (!box) {
-
+    if (!box)
         return 0;
 
-    }
-
-
-    const width =
-        box.width;
-
-    const height =
-        box.height;
-
+    const width = box.width;
+    const height = box.height;
 
     if (
         width < 8 ||
         height < 10
-    ) {
-
-        return 0;
-
-    }
-
+    ) return 0;
 
     const aspect =
-        width / height;
-
+        width/height;
 
     const aspectScore =
         rangeScore(
@@ -2787,47 +2384,37 @@ function recognizeCScore(points) {
             .75
         );
 
-
-    const first =
-        points[0];
+    const first = points[0];
 
     const last =
         points[
             points.length-1
         ];
 
-
     const endpointYDifference =
         Math.abs(
-            first.y -
-            last.y
+            first.y-last.y
         );
-
 
     const endpointYScore =
         clamp01(
             endpointYDifference /
-            (height * .45)
+            (height*.45)
         );
-
 
     const endpointXDifference =
         Math.abs(
-            first.x -
-            last.x
+            first.x-last.x
         );
-
 
     const endpointXScore =
         clamp01(
             1 -
             endpointXDifference /
-            (width * .75)
+            (width*.75)
         );
 
-
     let pathLength = 0;
-
 
     for (
         let i=1;
@@ -2846,53 +2433,40 @@ function recognizeCScore(points) {
 
     }
 
-
     const directDistance =
         Math.hypot(
-            last.x -
-            first.x,
-
-            last.y -
-            first.y
+            last.x-first.x,
+            last.y-first.y
         );
-
 
     let curvatureScore = 0;
 
-
-    if (
-        directDistance > 0
-    ) {
+    if (directDistance > 0) {
 
         const curvatureRatio =
             pathLength /
             directDistance;
 
-
         curvatureScore =
             clamp01(
                 (
-                    curvatureRatio -
-                    1.25
-                ) /
-                1.10
+                    curvatureRatio-1.25
+                )/1.10
             );
 
     }
-
 
     const centerX =
         (
             box.minX +
             box.maxX
-        ) / 2;
+        )/2;
 
     const centerY =
         (
             box.minY +
             box.maxY
-        ) / 2;
-
+        )/2;
 
     let leftCount = 0;
     let rightCount = 0;
@@ -2900,86 +2474,47 @@ function recognizeCScore(points) {
     let upper = false;
     let lower = false;
 
-
     points.forEach(
         p => {
 
-            if (
-                p.x < centerX
-            ) {
-
+            if (p.x < centerX)
                 leftCount++;
-
-            }
-            else {
-
+            else
                 rightCount++;
-
-            }
-
 
             if (
                 p.y <
-                centerY -
-                height * .12
-            ) {
-
+                centerY-height*.12
+            )
                 upper = true;
-
-            }
-
 
             if (
                 p.y >
-                centerY +
-                height * .12
-            ) {
-
+                centerY+height*.12
+            )
                 lower = true;
-
-            }
 
         }
     );
 
-
     const leftRatio =
-        leftCount /
-        points.length;
-
+        leftCount/points.length;
 
     const rightRatio =
-        rightCount /
-        points.length;
-
+        rightCount/points.length;
 
     const leftScore =
         clamp01(
-            leftRatio /
-            .50
+            leftRatio/.50
         );
-
-
-    const rightPenalty =
-        clamp01(
-            rightRatio /
-            .58
-        );
-
 
     const openShapeScore =
-        (
-            upper &&
-            lower
-        )
+        upper && lower
             ? 1
             : 0;
 
-
     let horizontalLength = 0;
-
     let diagonalLength = 0;
-
 
     for (
         let i=1;
@@ -2999,17 +2534,15 @@ function recognizeCScore(points) {
                 points[i-1].y
             );
 
-
         const segmentLength =
             Math.hypot(
                 dx,
                 dy
             );
 
-
         if (
             dx >
-            dy * 2.5
+            dy*2.5
         ) {
 
             horizontalLength +=
@@ -3017,12 +2550,11 @@ function recognizeCScore(points) {
 
         }
 
-
         if (
             dx >
-            segmentLength * .30 &&
+            segmentLength*.30 &&
             dy >
-            segmentLength * .30
+            segmentLength*.30
         ) {
 
             diagonalLength +=
@@ -3032,13 +2564,11 @@ function recognizeCScore(points) {
 
     }
 
-
     const horizontalRatio =
         totalSafeRatio(
             horizontalLength,
             pathLength
         );
-
 
     const diagonalRatio =
         totalSafeRatio(
@@ -3046,22 +2576,15 @@ function recognizeCScore(points) {
             pathLength
         );
 
-
     const horizontalScore =
         clamp01(
-            1 -
-            horizontalRatio /
-            .60
+            1-horizontalRatio/.60
         );
-
 
     const diagonalScore =
         clamp01(
-            1 -
-            diagonalRatio /
-            .60
+            1-diagonalRatio/.60
         );
-
 
     const curvatureDominance =
         clamp01(
@@ -3072,127 +2595,79 @@ function recognizeCScore(points) {
             )
         );
 
-
     const openingScore =
-        (
-            endpointYScore * .65
-            +
-            endpointXScore * .35
-        );
-
+        endpointYScore*.65 +
+        endpointXScore*.35;
 
     const asymmetryScore =
         clamp01(
             1 -
             Math.abs(
-                leftRatio -
-                rightRatio
+                leftRatio-rightRatio
             )
         );
 
-
     const score =
 
-        openingScore * .19
+        openingScore*.19 +
 
-        +
+        curvatureScore*.25 +
 
-        curvatureScore * .25
+        leftScore*.16 +
 
-        +
+        openShapeScore*.08 +
 
-        leftScore * .16
+        horizontalScore*.10 +
 
-        +
+        diagonalScore*.05 +
 
-        openShapeScore * .08
-
-        +
-
-        horizontalScore * .10
-
-        +
-
-        diagonalScore * .05
-
-        +
-
-        curvatureDominance * .10
-
-        +
+        curvatureDominance*.10 +
 
         (
-            1 -
-            asymmetryScore
-        ) * .07;
-
+            1-asymmetryScore
+        )*.07;
 
     const hLike =
         verticalLikeRatio(points);
 
-
     const hPenalty =
         clamp01(
             (
-                hLike -
-                .30
-            ) /
-            .35
+                hLike-.30
+            )/.35
         );
 
-
-    const finalScore =
-        clamp01(
-            score *
-            (
-                1 -
-                hPenalty * .65
-            )
-        );
-
-
-    return finalScore;
+    return clamp01(
+        score *
+        (
+            1 -
+            hPenalty*.65
+        )
+    );
 
 }
 
-
-/* ============================================================
-   SMALL GEOMETRIC HELPERS
-============================================================ */
 
 function totalSafeRatio(
     value,
     total
 ) {
 
-    if (
-        total <= 0
-    ) {
-
+    if (total <= 0)
         return 0;
 
-    }
-
-    return value / total;
+    return value/total;
 
 }
 
 
 function verticalLikeRatio(points) {
 
-    if (
-        points.length < 2
-    ) {
-
+    if (points.length < 2)
         return 0;
 
-    }
-
-
     let total = 0;
-
     let vertical = 0;
-
 
     for (
         let i=1;
@@ -3208,29 +2683,20 @@ function verticalLikeRatio(points) {
             points[i].y -
             points[i-1].y;
 
-
         const length =
             Math.hypot(
                 dx,
                 dy
             );
 
-
-        if (
-            length < .5
-        ) {
-
+        if (length < .5)
             continue;
-
-        }
-
 
         total += length;
 
-
         if (
             Math.abs(dy) >
-            Math.abs(dx) * 1.55
+            Math.abs(dx)*1.55
         ) {
 
             vertical += length;
@@ -3239,47 +2705,24 @@ function verticalLikeRatio(points) {
 
     }
 
-
-    if (
-        total <= 0
-    ) {
-
+    if (total <= 0)
         return 0;
 
-    }
-
-
-    return vertical / total;
+    return vertical/total;
 
 }
 
 
-/* ============================================================
-   LETTER RECOGNITION
-============================================================ */
-
 function recognizeElement(points) {
 
-    if (
-        points.length < 8
-    ) {
-
+    if (points.length < 8)
         return null;
 
-    }
-
-
     const hScore =
-        recognizeHScore(
-            points
-        );
-
+        recognizeHScore(points);
 
     const cScore =
-        recognizeCScore(
-            points
-        );
-
+        recognizeCScore(points);
 
     if (
         hScore < .48 &&
@@ -3290,26 +2733,23 @@ function recognizeElement(points) {
 
     }
 
-
     if (
         hScore >= .52 &&
-        hScore > cScore + .08
+        hScore > cScore+.08
     ) {
 
         return "H";
 
     }
 
-
     if (
         cScore >= .52 &&
-        cScore > hScore + .08
+        cScore > hScore+.08
     ) {
 
         return "C";
 
     }
-
 
     if (
         hScore >= .70 &&
@@ -3320,7 +2760,6 @@ function recognizeElement(points) {
 
     }
 
-
     if (
         cScore >= .70 &&
         cScore >= hScore
@@ -3330,26 +2769,22 @@ function recognizeElement(points) {
 
     }
 
-
     return null;
 
 }
 
 
 /* ============================================================
-   REMOVE PENDING ATOM
+   PENDING ATOM
 ============================================================ */
 
 function removePendingAtom() {
 
-    if (!pendingAtom) {
+    if (!pendingAtom)
         return;
-    }
-
 
     const pendingId =
         pendingAtom.id;
-
 
     bonds =
         bonds.filter(
@@ -3358,55 +2793,36 @@ function removePendingAtom() {
                 bond.b !== pendingId
         );
 
-
     atoms =
         atoms.filter(
             atom =>
                 atom.id !== pendingId
         );
 
-
     pendingAtom = null;
 
 }
 
 
-/* ============================================================
-   CREATE PENDING ATOM
-============================================================ */
-
-function createPendingAtom(
-    x,
-    y
-) {
+function createPendingAtom(x,y) {
 
     const nearby =
         atoms.find(
             atom =>
                 !atom.pending &&
                 Math.hypot(
-                    atom.x - x,
-                    atom.y - y
+                    atom.x-x,
+                    atom.y-y
                 ) < 30
         );
 
-
-    if (nearby) {
-
+    if (nearby)
         return null;
-
-    }
-
 
     saveHistory();
 
-
-    if (pendingAtom) {
-
+    if (pendingAtom)
         removePendingAtom();
-
-    }
-
 
     const atom = {
 
@@ -3424,43 +2840,30 @@ function createPendingAtom(
 
     };
 
-
     atoms.push(atom);
-
 
     pendingAtom =
         atom;
 
-
     render();
-
 
     return atom;
 
 }
 
 
-/* ============================================================
-   FINALIZE PENDING ATOM
-============================================================ */
-
 function finalizePendingAtom(
     atom,
     element
 ) {
 
-    if (!atom) {
+    if (!atom)
         return;
-    }
-
 
     if (!element) {
 
-        atom.element =
-            "?";
-
-        atom.pending =
-            true;
+        atom.element = "?";
+        atom.pending = true;
 
         pendingAtom =
             atom;
@@ -3471,16 +2874,13 @@ function finalizePendingAtom(
 
     }
 
-
     atom.element =
         element;
 
     atom.pending =
         false;
 
-
     pendingAtom = null;
-
 
     render();
 
@@ -3498,15 +2898,9 @@ function drawLiveStroke() {
 
     strokeLayer.innerHTML = "";
 
-
     if (
         currentStroke.length < 2
-    ) {
-
-        return;
-
-    }
-
+    ) return;
 
     const path =
         document.createElementNS(
@@ -3514,10 +2908,8 @@ function drawLiveStroke() {
             "path"
         );
 
-
     let d =
         `M ${currentStroke[0].x} ${currentStroke[0].y}`;
-
 
     for (
         let i=1;
@@ -3530,57 +2922,41 @@ function drawLiveStroke() {
 
     }
 
-
     path.setAttribute(
         "d",
         d
     );
-
 
     path.setAttribute(
         "class",
         "rough-stroke"
     );
 
-
-    strokeLayer.appendChild(
-        path
-    );
+    strokeLayer.appendChild(path);
 
 }
 
 
 /* ============================================================
-   FINALIZE PEN STROKE
+   FINALIZE STROKE
 ============================================================ */
 
 function finalizeCreateStroke() {
 
-    if (
-        !currentStroke.length
-    ) {
-
+    if (!currentStroke.length)
         return;
-
-    }
-
 
     const points =
         currentStroke.slice();
-
 
     currentStroke = [];
 
     strokeLayer.innerHTML = "";
 
-
-    if (
-        isCircle(points)
-    ) {
+    if (isCircle(points)) {
 
         const box =
             strokeBounds(points);
-
 
         if (box) {
 
@@ -3589,43 +2965,34 @@ function finalizeCreateStroke() {
                 (
                     box.minX +
                     box.maxX
-                ) / 2,
+                )/2,
 
                 (
                     box.minY +
                     box.maxY
-                ) / 2
+                )/2
 
             );
 
         }
 
-
         return;
 
     }
 
-
-    if (
-        pendingAtom
-    ) {
+    if (pendingAtom) {
 
         const element =
-            recognizeElement(
-                points
-            );
-
+            recognizeElement(points);
 
         finalizePendingAtom(
             pendingAtom,
             element
         );
 
-
         return;
 
     }
-
 
     const start =
         points[0];
@@ -3635,20 +3002,17 @@ function finalizeCreateStroke() {
             points.length-1
         ];
 
-
     const atomA =
         findAtomAt(
             start.x,
             start.y
         );
 
-
     const atomB =
         findAtomAt(
             end.x,
             end.y
         );
-
 
     if (
         atomA &&
@@ -3661,97 +3025,76 @@ function finalizeCreateStroke() {
             atomB
         );
 
-        return;
-
-    }
-
-
-    const nearStart =
-        findAtomAt(
-            start.x,
-            start.y
-        );
-
-
-    const nearEnd =
-        findAtomAt(
-            end.x,
-            end.y
-        );
-
-
-    if (
-        nearStart &&
-        nearEnd &&
-        nearStart.id !== nearEnd.id
-    ) {
-
-        connectAtoms(
-            nearStart,
-            nearEnd
-        );
-
     }
 
 }
 
 
 /* ============================================================
-   MOLECULE SELECTION
+   MOLECULE
 ============================================================ */
 
 function getConnectedMolecule(startAtom) {
 
-    const connected = new Set();
+    const connected =
+        new Set();
 
-    if (!startAtom) {
+    if (!startAtom)
         return connected;
-    }
 
+    const queue =
+        [startAtom.id];
 
-    const queue = [startAtom.id];
-
-    connected.add(startAtom.id);
-
+    connected.add(
+        startAtom.id
+    );
 
     while (queue.length) {
 
         const currentId =
             queue.shift();
 
+        bonds.forEach(
+            bond => {
 
-        bonds.forEach(bond => {
+                let nextId = null;
 
-            let nextId = null;
+                if (
+                    bond.a === currentId
+                ) {
 
+                    nextId =
+                        bond.b;
 
-            if (bond.a === currentId) {
+                }
+                else if (
+                    bond.b === currentId
+                ) {
 
-                nextId = bond.b;
+                    nextId =
+                        bond.a;
+
+                }
+
+                if (
+                    nextId !== null &&
+                    !connected.has(nextId)
+                ) {
+
+                    connected.add(
+                        nextId
+                    );
+
+                    queue.push(
+                        nextId
+                    );
+
+                }
 
             }
-            else if (bond.b === currentId) {
-
-                nextId = bond.a;
-
-            }
-
-
-            if (
-                nextId !== null &&
-                !connected.has(nextId)
-            ) {
-
-                connected.add(nextId);
-
-                queue.push(nextId);
-
-            }
-
-        });
+        );
 
     }
-
 
     return connected;
 
@@ -3759,7 +3102,7 @@ function getConnectedMolecule(startAtom) {
 
 
 /* ============================================================
-   PREPARE MOLECULE DRAG
+   MOLECULE DRAG
 ============================================================ */
 
 function prepareMoleculeDrag() {
@@ -3769,10 +3112,8 @@ function prepareMoleculeDrag() {
             selectedAtom
         );
 
-
     originalMoleculePositions =
         new Map();
-
 
     selectedMolecule.forEach(
         atomId => {
@@ -3780,9 +3121,8 @@ function prepareMoleculeDrag() {
             const atom =
                 getAtom(atomId);
 
-
-            if (!atom) return;
-
+            if (!atom)
+                return;
 
             originalMoleculePositions.set(
                 atomId,
@@ -3798,10 +3138,6 @@ function prepareMoleculeDrag() {
 }
 
 
-/* ============================================================
-   UPDATE WHOLE MOLECULE
-============================================================ */
-
 function updateMoleculeAndItsBonds() {
 
     selectedMolecule.forEach(
@@ -3810,19 +3146,16 @@ function updateMoleculeAndItsBonds() {
             const atom =
                 getAtom(atomId);
 
-
-            if (!atom) return;
-
+            if (!atom)
+                return;
 
             updateAtomElement(atom);
 
         }
     );
 
-
     const affectedBonds =
         new Set();
-
 
     bonds.forEach(
         bond => {
@@ -3841,7 +3174,6 @@ function updateMoleculeAndItsBonds() {
         }
     );
 
-
     affectedBonds.forEach(
         bondId => {
 
@@ -3851,15 +3183,13 @@ function updateMoleculeAndItsBonds() {
                         item.id === bondId
                 );
 
-
-            if (!bond) return;
-
+            if (!bond)
+                return;
 
             const group =
                 bondElements.get(
                     bond.id
                 );
-
 
             if (group) {
 
@@ -3877,12 +3207,10 @@ function updateMoleculeAndItsBonds() {
 
 
 /* ============================================================
-   MOLECULE CLIPBOARD
+   COPY
 ============================================================ */
 
-function copyMolecule(
-    startAtom
-) {
+function copyMolecule(startAtom) {
 
     if (
         !startAtom ||
@@ -3893,19 +3221,13 @@ function copyMolecule(
 
     }
 
-
     const moleculeIds =
         getConnectedMolecule(
             startAtom
         );
 
-
-    if (!moleculeIds.size) {
-
+    if (!moleculeIds.size)
         return false;
-
-    }
-
 
     const moleculeAtoms =
         atoms.filter(
@@ -3915,7 +3237,6 @@ function copyMolecule(
                 )
         );
 
-
     const moleculeBonds =
         bonds.filter(
             bond =>
@@ -3923,13 +3244,8 @@ function copyMolecule(
                 moleculeIds.has(bond.b)
         );
 
-
-    if (!moleculeAtoms.length) {
-
+    if (!moleculeAtoms.length)
         return false;
-
-    }
-
 
     const center =
         moleculeAtoms.reduce(
@@ -3947,13 +3263,11 @@ function copyMolecule(
             }
         );
 
-
     center.x /=
         moleculeAtoms.length;
 
     center.y /=
         moleculeAtoms.length;
-
 
     moleculeClipboard = {
 
@@ -3965,12 +3279,10 @@ function copyMolecule(
                         atom.id,
 
                     x:
-                        atom.x -
-                        center.x,
+                        atom.x-center.x,
 
                     y:
-                        atom.y -
-                        center.y,
+                        atom.y-center.y,
 
                     element:
                         atom.element
@@ -3996,7 +3308,6 @@ function copyMolecule(
 
     };
 
-
     status.textContent =
         "Molecule copied";
 
@@ -4006,33 +3317,40 @@ function copyMolecule(
 
 
 /* ============================================================
-   PASTE MOLECULE
+   CLIPBOARD VALIDATION
 ============================================================ */
 
-function pasteMolecule(
-    x,
-    y
-) {
+function hasMoleculeClipboard() {
 
-    if (
-        !moleculeClipboard ||
-        !moleculeClipboard.atoms.length
-    ) {
+    return !!(
+        moleculeClipboard &&
+        Array.isArray(
+            moleculeClipboard.atoms
+        ) &&
+        moleculeClipboard.atoms.length > 0
+    );
+
+}
+
+
+/* ============================================================
+   PASTE
+============================================================ */
+
+function pasteMolecule(x,y) {
+
+    if (!hasMoleculeClipboard()) {
 
         return false;
 
     }
 
-
     saveHistory();
-
 
     const idMap =
         new Map();
 
-
     const newAtoms = [];
-
 
     moleculeClipboard.atoms.forEach(
         sourceAtom => {
@@ -4040,12 +3358,10 @@ function pasteMolecule(
             const newId =
                 nextAtomId++;
 
-
             idMap.set(
                 sourceAtom.sourceId,
                 newId
             );
-
 
             newAtoms.push({
 
@@ -4071,9 +3387,7 @@ function pasteMolecule(
         }
     );
 
-
     const newBonds = [];
-
 
     moleculeClipboard.bonds.forEach(
         sourceBond => {
@@ -4088,7 +3402,6 @@ function pasteMolecule(
                     sourceBond.b
                 );
 
-
             if (
                 newA === undefined ||
                 newB === undefined
@@ -4097,7 +3410,6 @@ function pasteMolecule(
                 return;
 
             }
-
 
             newBonds.push({
 
@@ -4118,22 +3430,17 @@ function pasteMolecule(
         }
     );
 
-
     atoms.push(
         ...newAtoms
     );
-
 
     bonds.push(
         ...newBonds
     );
 
-
     pendingAtom = null;
 
-
     render();
-
 
     status.textContent =
         "Molecule pasted";
@@ -4144,37 +3451,25 @@ function pasteMolecule(
 
 
 /* ============================================================
-   MOLECULE MENU POSITION
+   MENU
 ============================================================ */
 
-function positionMoleculeMenu(
-    x,
-    y
-) {
+function positionMoleculeMenu(x,y) {
 
     const workspaceRect =
         document
             .getElementById("workspace")
             .getBoundingClientRect();
 
+    const menuWidth = 180;
+    const menuHeight = 150;
 
-    const menuWidth =
-        180;
-
-    const menuHeight =
-        150;
-
-
-    let left =
-        x;
-
-    let top =
-        y;
-
+    let left = x;
+    let top = y;
 
     if (
         left + menuWidth >
-        workspaceRect.width - 10
+        workspaceRect.width-10
     ) {
 
         left =
@@ -4184,36 +3479,21 @@ function positionMoleculeMenu(
 
     }
 
-
-    if (
-        left < 10
-    ) {
-
+    if (left < 10)
         left = 10;
-
-    }
-
 
     if (
         top + menuHeight >
-        workspaceRect.height - 10
+        workspaceRect.height-10
     ) {
 
         top =
-            y -
-            menuHeight;
+            y-menuHeight;
 
     }
 
-
-    if (
-        top < 10
-    ) {
-
+    if (top < 10)
         top = 10;
-
-    }
-
 
     moleculeMenu.style.left =
         `${left}px`;
@@ -4224,9 +3504,25 @@ function positionMoleculeMenu(
 }
 
 
-/* ============================================================
-   OPEN MOLECULE MENU
-============================================================ */
+/*
+    IMPORTANTE:
+
+    Il menu ora non usa più lo stato "disabled"
+    per decidere se l'incolla può funzionare.
+
+    Copy:
+        attivo solo quando abbiamo selezionato
+        una molecola valida.
+
+    Paste:
+        SEMPRE cliccabile.
+
+    Se non c'è clipboard, il click semplicemente
+    non fa nulla.
+
+    Questo evita che il pulsante rimanga bloccato
+    per uno stato grafico non aggiornato.
+*/
 
 function openMoleculeMenu(
     atom,
@@ -4234,69 +3530,54 @@ function openMoleculeMenu(
     y
 ) {
 
-    /*
-        atom può essere null.
-
-        null = menu aperto sul vuoto:
-        - Copy disabilitato
-        - Paste disponibile se esiste clipboard
-    */
-
     selectedAtom =
         atom || null;
-
 
     selectedMolecule =
         atom
             ? getConnectedMolecule(atom)
             : new Set();
 
-
     moleculeMenuAnchor = {
-
         x,
         y
-
     };
-
 
     positionMoleculeMenu(
         x,
         y
     );
 
-
     moleculeMenu.classList.add(
         "visible"
     );
 
-
     const canCopy =
         !!atom &&
         atom.pending !== true;
-
 
     copyMoleculeBtn.classList.toggle(
         "disabled",
         !canCopy
     );
 
+    /*
+        NON disabilitiamo più il pulsante
+        Incolla tramite CSS.
 
-    pasteMoleculeBtn.classList.toggle(
-        "disabled",
-        !moleculeClipboard
+        La disponibilità viene controllata
+        direttamente al click.
+    */
+
+    pasteMoleculeBtn.classList.remove(
+        "disabled"
     );
-
 
     status.textContent =
         "Molecule menu";
 
 }
 
-
-/* ============================================================
-   CLOSE MOLECULE MENU
-============================================================ */
 
 function closeMoleculeMenu() {
 
@@ -4321,46 +3602,54 @@ copyMoleculeBtn.onclick = () => {
     ) {
 
         closeMoleculeMenu();
-
         return;
 
     }
 
+    const copied =
+        copyMolecule(
+            selectedAtom
+        );
 
-    copyMolecule(
-        selectedAtom
-    );
+    if (copied) {
 
+        closeMoleculeMenu();
 
-    closeMoleculeMenu();
+    }
 
 };
 
 
 pasteMoleculeBtn.onclick = () => {
 
-    if (
-        !moleculeClipboard
-    ) {
+    /*
+        Controlliamo il clipboard SOLO qui.
+
+        Quindi il bottone non può diventare
+        inutilmente "morto" perché una classe
+        CSS è rimasta indietro.
+    */
+
+    if (!hasMoleculeClipboard()) {
+
+        status.textContent =
+            "Nothing to paste";
 
         return;
 
     }
-
 
     if (!moleculeMenuAnchor) {
 
         closeMoleculeMenu();
-
         return;
 
     }
 
-
     /*
-        Quando si incolla dal menu,
-        spostiamo leggermente la molecola
-        rispetto al punto premuto.
+        Paste dal menu:
+        offset di +80,+80 per evitare
+        di sovrapporre la copia all'originale.
     */
 
     const pasteX =
@@ -4369,12 +3658,10 @@ pasteMoleculeBtn.onclick = () => {
     const pasteY =
         moleculeMenuAnchor.y + 80;
 
-
     pasteMolecule(
         pasteX,
         pasteY
     );
-
 
     closeMoleculeMenu();
 
@@ -4389,7 +3676,7 @@ closeMenuBtn.onclick = () => {
 
 
 /* ============================================================
-   CLOSE MENU WHEN TAPPING OUTSIDE
+   OUTSIDE MENU
 ============================================================ */
 
 document.addEventListener(
@@ -4406,7 +3693,6 @@ document.addEventListener(
 
         }
 
-
         if (
             moleculeMenu.contains(
                 event.target
@@ -4416,7 +3702,6 @@ document.addEventListener(
             return;
 
         }
-
 
         closeMoleculeMenu();
 
@@ -4432,13 +3717,15 @@ let activePointer = null;
 
 let selectedAtom = null;
 
-let selectedMolecule = new Set();
+let selectedMolecule =
+    new Set();
 
 let dragStart = null;
 
 let originalAtomPosition = null;
 
-let originalMoleculePositions = new Map();
+let originalMoleculePositions =
+    new Map();
 
 let longPressTimer = null;
 
@@ -4459,7 +3746,7 @@ let pencilMenuPoint = null;
 
 
 /* ============================================================
-   LONG PRESS SETTINGS
+   LONG PRESS
 ============================================================ */
 
 const LONG_PRESS_DURATION = 550;
@@ -4467,13 +3754,7 @@ const LONG_PRESS_DURATION = 550;
 const LONG_PRESS_MOVE_THRESHOLD = 10;
 
 
-/* ============================================================
-   INTERACTION TYPE
-============================================================ */
-
-function getInteractionType(
-    event
-) {
+function getInteractionType(event) {
 
     if (
         event.pointerType === "pen"
@@ -4483,7 +3764,6 @@ function getInteractionType(
 
     }
 
-
     if (
         event.pointerType === "touch"
     ) {
@@ -4492,23 +3772,15 @@ function getInteractionType(
 
     }
 
-
     return manualMode;
 
 }
 
 
-/* ============================================================
-   CANVAS COORDINATES
-============================================================ */
-
-function getCanvasPoint(
-    event
-) {
+function getCanvasPoint(event) {
 
     const rect =
         canvas.getBoundingClientRect();
-
 
     return {
 
@@ -4524,10 +3796,6 @@ function getCanvasPoint(
 
 }
 
-
-/* ============================================================
-   CANCEL LONG PRESS
-============================================================ */
 
 function cancelLongPress() {
 
@@ -4547,20 +3815,18 @@ function cancelLongPress() {
 
 
 /* ============================================================
-   START FINGER LONG PRESS
+   FINGER LONG PRESS
 ============================================================ */
 
 function startLongPress() {
 
     cancelLongPress();
 
-
     longPressTimer =
         setTimeout(
             () => {
 
                 longPressTimer = null;
-
 
                 if (
                     movementStarted ||
@@ -4571,13 +3837,10 @@ function startLongPress() {
 
                 }
 
-
                 longPressTriggered =
                     true;
 
-
                 prepareMoleculeDrag();
-
 
                 status.textContent =
                     "Molecule selected · Drag to move";
@@ -4590,7 +3853,7 @@ function startLongPress() {
 
 
 /* ============================================================
-   START PENCIL MENU LONG PRESS
+   PENCIL LONG PRESS
 ============================================================ */
 
 function startPencilMenuLongPress(
@@ -4600,42 +3863,27 @@ function startPencilMenuLongPress(
 
     cancelLongPress();
 
-
     longPressTimer =
         setTimeout(
             () => {
 
                 longPressTimer = null;
 
-
-                if (
-                    movementStarted
-                ) {
-
+                if (movementStarted) {
                     return;
-
                 }
-
 
                 pencilMenuTriggered =
                     true;
 
-
                 pencilMenuPoint = {
-
-                    x:
-                        point.x,
-
-                    y:
-                        point.y
-
+                    x: point.x,
+                    y: point.y
                 };
-
 
                 currentStroke = [];
 
                 strokeLayer.innerHTML = "";
-
 
                 openMoleculeMenu(
                     atom || null,
@@ -4660,18 +3908,15 @@ canvas.addEventListener(
 
         event.preventDefault();
 
-
         const point =
             getCanvasPoint(
                 event
             );
 
-
         const interaction =
             getInteractionType(
                 event
             );
-
 
         activePointer = {
 
@@ -4685,7 +3930,6 @@ canvas.addEventListener(
                 event.pointerType
 
         };
-
 
         selectedAtom = null;
 
@@ -4714,15 +3958,12 @@ canvas.addEventListener(
         pencilMenuPoint =
             null;
 
-
         cancelLongPress();
 
 
-        /*
-            ====================================================
-            ERASE
-            ====================================================
-        */
+        /* ================================
+           ERASE
+        ================================= */
 
         if (
             manualMode === "erase"
@@ -4734,7 +3975,6 @@ canvas.addEventListener(
                     point.y
                 );
 
-
             if (atom) {
 
                 removeAtom(atom);
@@ -4745,13 +3985,11 @@ canvas.addEventListener(
 
             }
 
-
             const bond =
                 findBondAt(
                     point.x,
                     point.y
                 );
-
 
             if (bond) {
 
@@ -4763,7 +4001,6 @@ canvas.addEventListener(
 
             }
 
-
             activePointer = null;
 
             return;
@@ -4771,11 +4008,9 @@ canvas.addEventListener(
         }
 
 
-        /*
-            ====================================================
-            FINGER = MOVE / SELECT / DIRECT PASTE
-            ====================================================
-        */
+        /* ================================
+           FINGER
+        ================================= */
 
         if (
             interaction === "move"
@@ -4789,18 +4024,17 @@ canvas.addEventListener(
 
 
             /*
-                Tap sul vuoto:
+                FINGER + VUOTO
 
-                se esiste una molecola copiata,
-                viene incollata direttamente.
+                Incolla direttamente.
 
-                Nessun menu.
+                NON apre il menu.
             */
 
             if (!atom) {
 
                 if (
-                    moleculeClipboard
+                    hasMoleculeClipboard()
                 ) {
 
                     pasteMolecule(
@@ -4820,7 +4054,6 @@ canvas.addEventListener(
             selectedAtom =
                 atom;
 
-
             dragStart = {
 
                 x:
@@ -4830,7 +4063,6 @@ canvas.addEventListener(
                     point.y
 
             };
-
 
             originalAtomPosition = {
 
@@ -4842,48 +4074,26 @@ canvas.addEventListener(
 
             };
 
-
             prepareMoleculeDrag();
-
 
             canvas.setPointerCapture(
                 event.pointerId
             );
 
-
             startLongPress();
-
 
             return;
 
         }
 
 
-        /*
-            ====================================================
-            PENCIL = CREATE
-            ====================================================
-        */
+        /* ================================
+           PENCIL
+        ================================= */
 
         if (
             interaction === "create"
         ) {
-
-            /*
-                Ogni pressione della Pencil
-                inizia come possibile long press.
-
-                Se la Pencil resta ferma per 550 ms:
-                    → apre il molecule menu.
-
-                Se la Pencil si muove prima:
-                    → il long press viene annullato
-                    → parte immediatamente lo stroke normale.
-
-                Questo vale sia:
-                    - sopra un atomo
-                    - sul vuoto
-            */
 
             const atom =
                 findAtomAt(
@@ -4891,14 +4101,12 @@ canvas.addEventListener(
                     point.y
                 );
 
-
             if (atom) {
 
                 selectedAtom =
                     atom;
 
             }
-
 
             dragStart = {
 
@@ -4910,23 +4118,14 @@ canvas.addEventListener(
 
             };
 
-
             canvas.setPointerCapture(
                 event.pointerId
             );
-
 
             startPencilMenuLongPress(
                 point,
                 atom
             );
-
-
-            /*
-                Non iniziamo ancora lo stroke.
-                Il pointermove deciderà se si tratta
-                di scrittura oppure long press.
-            */
 
             return;
 
@@ -4957,9 +4156,7 @@ canvas.addEventListener(
 
         }
 
-
         event.preventDefault();
-
 
         const point =
             getCanvasPoint(
@@ -4967,11 +4164,9 @@ canvas.addEventListener(
             );
 
 
-        /*
-            ====================================================
-            FINGER
-            ====================================================
-        */
+        /* ================================
+           FINGER
+        ================================= */
 
         if (
             activePointer.type ===
@@ -4983,18 +4178,15 @@ canvas.addEventListener(
                 point.x -
                 dragStart.x;
 
-
             const dy =
                 point.y -
                 dragStart.y;
-
 
             const movementDistance =
                 Math.hypot(
                     dx,
                     dy
                 );
-
 
             if (
                 !longPressTriggered &&
@@ -5005,7 +4197,6 @@ canvas.addEventListener(
                 cancelLongPress();
 
             }
-
 
             if (
                 !longPressTriggered
@@ -5023,25 +4214,20 @@ canvas.addEventListener(
 
                 }
 
-
                 selectedAtom.x =
                     originalAtomPosition.x +
                     dx;
-
 
                 selectedAtom.y =
                     originalAtomPosition.y +
                     dy;
 
-
                 movementStarted =
                     movementDistance > 0;
-
 
                 updateAtomAndItsBonds(
                     selectedAtom
                 );
-
 
                 return;
 
@@ -5064,19 +4250,16 @@ canvas.addEventListener(
 
                 }
 
-
                 selectedMolecule.forEach(
                     atomId => {
 
                         const atom =
                             getAtom(atomId);
 
-
                         const original =
                             originalMoleculePositions.get(
                                 atomId
                             );
-
 
                         if (
                             !atom ||
@@ -5087,26 +4270,19 @@ canvas.addEventListener(
 
                         }
 
-
                         atom.x =
-                            original.x +
-                            dx;
-
+                            original.x + dx;
 
                         atom.y =
-                            original.y +
-                            dy;
+                            original.y + dy;
 
                     }
                 );
 
-
                 movementStarted =
                     movementDistance > 0;
 
-
                 updateMoleculeAndItsBonds();
-
 
                 return;
 
@@ -5115,11 +4291,9 @@ canvas.addEventListener(
         }
 
 
-        /*
-            ====================================================
-            PENCIL
-            ====================================================
-        */
+        /* ================================
+           PENCIL
+        ================================= */
 
         if (
             activePointer.type ===
@@ -5127,12 +4301,9 @@ canvas.addEventListener(
         ) {
 
             /*
-                Stiamo ancora aspettando di capire
-                se la Pencil sta facendo long press.
-
-                currentStroke è vuoto sia:
-                - sopra un atomo
-                - sul vuoto
+                Prima dei 550 ms:
+                stiamo ancora distinguendo
+                long press da disegno.
             */
 
             if (
@@ -5145,11 +4316,9 @@ canvas.addEventListener(
                     point.x -
                     dragStart.x;
 
-
                 const dy =
                     point.y -
                     dragStart.y;
-
 
                 const movementDistance =
                     Math.hypot(
@@ -5157,48 +4326,41 @@ canvas.addEventListener(
                         dy
                     );
 
-
                 if (
                     movementDistance >
                     LONG_PRESS_MOVE_THRESHOLD
                 ) {
 
-                    /*
-                        Il movimento annulla il long press.
-
-                        Da questo momento la Pencil
-                        torna ad essere una penna normale.
-                    */
-
                     cancelLongPress();
+
+                    const startPoint = {
+
+                        x:
+                            dragStart.x,
+
+                        y:
+                            dragStart.y
+
+                    };
 
                     selectedAtom = null;
 
-
                     currentStroke = [
 
-                        {
-                            x:
-                                dragStart.x,
-
-                            y:
-                                dragStart.y
-
-                        },
+                        startPoint,
 
                         point
 
                     ];
 
+                    dragStart = null;
 
                     movementStarted =
                         true;
 
-
                     drawLiveStroke();
 
                 }
-
 
                 return;
 
@@ -5213,11 +4375,9 @@ canvas.addEventListener(
 
             }
 
-
             currentStroke.push(
                 point
             );
-
 
             drawLiveStroke();
 
@@ -5234,9 +4394,7 @@ canvas.addEventListener(
    POINTER FINISH
 ============================================================ */
 
-function finishPointer(
-    event
-) {
+function finishPointer(event) {
 
     if (
         !activePointer ||
@@ -5248,18 +4406,14 @@ function finishPointer(
 
     }
 
-
     event.preventDefault();
-
 
     cancelLongPress();
 
 
-    /*
-        ========================================================
-        FINGER
-        ========================================================
-    */
+    /* ================================
+       FINGER
+    ================================= */
 
     if (
         activePointer.type ===
@@ -5273,7 +4427,8 @@ function finishPointer(
 
         dragStart = null;
 
-        originalAtomPosition = null;
+        originalAtomPosition =
+            null;
 
         originalMoleculePositions =
             new Map();
@@ -5293,22 +4448,14 @@ function finishPointer(
     }
 
 
-    /*
-        ========================================================
-        PENCIL
-        ========================================================
-    */
+    /* ================================
+       PENCIL
+    ================================= */
 
     if (
         activePointer.type ===
         "create"
     ) {
-
-        /*
-            Se il long press ha aperto il menu,
-            non dobbiamo interpretare nulla
-            come stroke.
-        */
 
         if (
             pencilMenuTriggered
@@ -5320,11 +4467,6 @@ function finishPointer(
 
         }
         else {
-
-            /*
-                Se la Pencil si è mossa,
-                currentStroke contiene lo stroke.
-            */
 
             if (
                 currentStroke.length
@@ -5351,7 +4493,6 @@ function finishPointer(
 
     }
 
-
     selectedAtom = null;
 
     dragStart = null;
@@ -5359,8 +4500,8 @@ function finishPointer(
     pencilMenuTriggered =
         false;
 
-    pencilMenuPoint = null;
-
+    pencilMenuPoint =
+        null;
 
     activePointer =
         null;
@@ -5369,7 +4510,7 @@ function finishPointer(
 
 
 /* ============================================================
-   POINTER UP
+   POINTER UP / CANCEL
 ============================================================ */
 
 canvas.addEventListener(
@@ -5379,11 +4520,6 @@ canvas.addEventListener(
         passive:false
     }
 );
-
-
-/* ============================================================
-   POINTER CANCEL
-============================================================ */
 
 canvas.addEventListener(
     "pointercancel",
@@ -5399,7 +4535,6 @@ canvas.addEventListener(
 ============================================================ */
 
 render();
-
 
 status.textContent =
     "Pencil creates · Finger moves";
