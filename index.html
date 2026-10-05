@@ -722,16 +722,248 @@ let moleculeClipboard = null;
 
 let moleculeMenuAnchor = null;
 
-/*
-    Riferimento persistente alla molecola aperta
-    nel menu.
+let moleculeMenuAtom = null;
 
-    NON viene azzerato quando la Pencil viene
-    sollevata. Viene azzerato solo quando
-    il menu viene chiuso.
+
+/* ============================================================
+   PASTE PROTECTION
+============================================================ */
+
+/*
+    BONDraw usa il touch per il finger input.
+
+    Su iPad, però, il dorso della mano può generare
+    uno o più pointer di tipo "touch".
+
+    Questi stati servono a distinguere:
+
+    - Pencil attiva
+    - finger singolo
+    - multi-touch / palm touch
+    - paste troppo ravvicinati
 */
 
-let moleculeMenuAtom = null;
+const activePenPointers =
+    new Set();
+
+const activeTouchPointers =
+    new Set();
+
+
+/*
+    Tempo dell'ultimo paste.
+
+    Serve a impedire che due pointerdown
+    quasi simultanei generino due molecole.
+*/
+
+let lastPasteTime = 0;
+
+
+/*
+    Finestra anti-double-paste.
+
+    350 ms è abbastanza corta da non percepirsi
+    come ritardo nel normale utilizzo, ma impedisce
+    doppio tap / doppio evento involontario.
+*/
+
+const PASTE_DEBOUNCE_MS = 350;
+
+
+/*
+    Dimensione massima del contatto considerata
+    compatibile con un dito.
+
+    Un contatto molto grande viene trattato
+    come probabile palmo e ignorato.
+
+    Il valore viene usato solo quando il browser
+    fornisce width/height significativi.
+*/
+
+const PALM_CONTACT_SIZE = 30;
+
+
+/*
+    Verifica se il pointer ha caratteristiche
+    compatibili con un contatto palmare.
+
+    Se width/height non sono disponibili,
+    lasciamo passare il touch per non rompere
+    dispositivi/browser che non espongono
+    correttamente la geometria del contatto.
+*/
+
+function isLikelyPalmTouch(event) {
+
+    if (
+        event.pointerType !== "touch"
+    ) {
+
+        return false;
+
+    }
+
+    const width =
+        Number.isFinite(event.width)
+            ? event.width
+            : 0;
+
+    const height =
+        Number.isFinite(event.height)
+            ? event.height
+            : 0;
+
+    if (
+        width <= 0 &&
+        height <= 0
+    ) {
+
+        return false;
+
+    }
+
+    return (
+        width >= PALM_CONTACT_SIZE ||
+        height >= PALM_CONTACT_SIZE
+    );
+
+}
+
+
+/*
+    Registra il pointer come attivo.
+
+    È importante farlo anche per i pointer
+    che vengono successivamente ignorati,
+    così il sistema sa quanti contatti esistono.
+*/
+
+function registerPointer(event) {
+
+    if (
+        event.pointerType === "pen"
+    ) {
+
+        activePenPointers.add(
+            event.pointerId
+        );
+
+    }
+    else if (
+        event.pointerType === "touch"
+    ) {
+
+        activeTouchPointers.add(
+            event.pointerId
+        );
+
+    }
+
+}
+
+
+function unregisterPointer(event) {
+
+    if (
+        event.pointerType === "pen"
+    ) {
+
+        activePenPointers.delete(
+            event.pointerId
+        );
+
+    }
+    else if (
+        event.pointerType === "touch"
+    ) {
+
+        activeTouchPointers.delete(
+            event.pointerId
+        );
+
+    }
+
+}
+
+
+/*
+    Determina se un touch deve essere ignorato.
+
+    Regole:
+
+    1. Pencil già attiva → touch ignorato.
+    2. Altro touch già attivo → touch ignorato.
+    3. Contatto molto grande → probabile palmo.
+*/
+
+function shouldIgnoreTouch(event) {
+
+    if (
+        event.pointerType !== "touch"
+    ) {
+
+        return false;
+
+    }
+
+    if (
+        activePenPointers.size > 0
+    ) {
+
+        return true;
+
+    }
+
+    if (
+        activeTouchPointers.size > 1
+    ) {
+
+        return true;
+
+    }
+
+    if (
+        isLikelyPalmTouch(event)
+    ) {
+
+        return true;
+
+    }
+
+    return false;
+
+}
+
+
+/*
+    Protezione finale specifica del paste.
+
+    Anche se un touch passa i filtri precedenti,
+    non può generare due paste entro la finestra
+    di sicurezza.
+*/
+
+function canPasteNow() {
+
+    const now =
+        performance.now();
+
+    if (
+        now-lastPasteTime <
+        PASTE_DEBOUNCE_MS
+    ) {
+
+        return false;
+
+    }
+
+    lastPasteTime = now;
+
+    return true;
+
+}
 
 
 /* ============================================================
@@ -3521,15 +3753,6 @@ function openMoleculeMenu(
     y
 ) {
 
-    /*
-        selectedAtom continua a essere usato
-        per lo stato temporaneo del puntatore.
-
-        moleculeMenuAtom invece conserva
-        la molecola associata al menu anche
-        dopo che la Pencil viene sollevata.
-    */
-
     selectedAtom =
         atom || null;
 
@@ -3564,12 +3787,6 @@ function openMoleculeMenu(
         !canCopy
     );
 
-    /*
-        Paste resta sempre cliccabile.
-        La disponibilità viene controllata
-        direttamente al click.
-    */
-
     pasteMoleculeBtn.classList.remove(
         "disabled"
     );
@@ -3588,11 +3805,6 @@ function closeMoleculeMenu() {
 
     moleculeMenuAnchor = null;
 
-    /*
-        Ora possiamo eliminare il riferimento
-        persistente alla molecola del menu.
-    */
-
     moleculeMenuAtom = null;
 
 }
@@ -3603,20 +3815,6 @@ function closeMoleculeMenu() {
 ============================================================ */
 
 copyMoleculeBtn.onclick = () => {
-
-    /*
-        IMPORTANTE:
-
-        Non usiamo selectedAtom qui.
-
-        selectedAtom viene azzerato da
-        finishPointer() quando la Pencil
-        viene sollevata.
-
-        Usiamo invece moleculeMenuAtom,
-        che rimane valido finché il menu
-        resta aperto.
-    */
 
     if (
         !moleculeMenuAtom ||
@@ -3644,14 +3842,6 @@ copyMoleculeBtn.onclick = () => {
 
 pasteMoleculeBtn.onclick = () => {
 
-    /*
-        Controlliamo il clipboard SOLO qui.
-
-        Quindi il bottone non può diventare
-        inutilmente "morto" perché una classe
-        CSS è rimasta indietro.
-    */
-
     if (!hasMoleculeClipboard()) {
 
         status.textContent =
@@ -3669,10 +3859,15 @@ pasteMoleculeBtn.onclick = () => {
     }
 
     /*
-        Paste dal menu:
-        offset di +80,+80 per evitare
-        di sovrapporre la copia all'originale.
+        Anche il paste dal menu viene protetto
+        dal debounce per evitare doppi eventi.
     */
+
+    if (!canPasteNow()) {
+
+        return;
+
+    }
 
     const pasteX =
         moleculeMenuAnchor.x + 80;
@@ -3930,6 +4125,38 @@ canvas.addEventListener(
 
         event.preventDefault();
 
+        /*
+            Registriamo subito il pointer.
+
+            Questo permette al sistema di sapere
+            se la Pencil o un altro touch sono già
+            presenti.
+        */
+
+        registerPointer(event);
+
+
+        /*
+            PALM REJECTION / MULTI-TOUCH
+
+            Se il touch è sospetto, NON deve diventare
+            activePointer e quindi non può generare
+            un paste, un movimento o altro input.
+
+            Il pointer viene comunque registrato
+            nell'apposito Set e verrà rimosso al
+            pointerup/pointercancel.
+        */
+
+        if (
+            shouldIgnoreTouch(event)
+        ) {
+
+            return;
+
+        }
+
+
         const point =
             getCanvasPoint(
                 event
@@ -4051,12 +4278,17 @@ canvas.addEventListener(
                 Incolla direttamente.
 
                 NON apre il menu.
+
+                Il paste viene protetto sia
+                dal palm rejection precedente
+                sia dal debounce.
             */
 
             if (!atom) {
 
                 if (
-                    hasMoleculeClipboard()
+                    hasMoleculeClipboard() &&
+                    canPasteNow()
                 ) {
 
                     pasteMolecule(
@@ -4418,11 +4650,25 @@ canvas.addEventListener(
 
 function finishPointer(event) {
 
+    /*
+        Se questo pointer era un touch palmare
+        o un secondo touch, activePointer non
+        appartiene a lui.
+
+        Dobbiamo comunque deregistrarlo.
+    */
+
+    const isCurrentPointer =
+        !!activePointer &&
+        activePointer.id ===
+        event.pointerId;
+
+
     if (
-        !activePointer ||
-        activePointer.id !==
-        event.pointerId
+        !isCurrentPointer
     ) {
+
+        unregisterPointer(event);
 
         return;
 
@@ -4515,14 +4761,6 @@ function finishPointer(event) {
 
     }
 
-    /*
-        Questo reset rimane intenzionalmente.
-
-        NON tocchiamo moleculeMenuAtom:
-        quello deve sopravvivere al rilascio
-        della Pencil finché il menu è aperto.
-    */
-
     selectedAtom = null;
 
     dragStart = null;
@@ -4535,6 +4773,8 @@ function finishPointer(event) {
 
     activePointer =
         null;
+
+    unregisterPointer(event);
 
 }
 
