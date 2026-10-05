@@ -10,7 +10,7 @@ maximum-scale=1.0,
 user-scalable=no,
 viewport-fit=cover">
 
-<title>BONDraw 0.5.2</title>
+<title>BONDraw 0.7.0</title>
 
 <style>
 
@@ -274,6 +274,114 @@ button.danger {
 
 
 /* ================================
+   MOLECULE MENU
+================================ */
+
+#moleculeMenu {
+    position: absolute;
+
+    display: none;
+
+    min-width: 180px;
+
+    padding: 7px;
+
+    background:
+        rgba(255,255,255,.94);
+
+    backdrop-filter:
+        blur(20px);
+
+    -webkit-backdrop-filter:
+        blur(20px);
+
+    border:
+        1px solid rgba(0,0,0,.08);
+
+    border-radius: 16px;
+
+    box-shadow:
+        0 14px 40px rgba(0,0,0,.16);
+
+    z-index: 40;
+}
+
+#moleculeMenu.visible {
+    display: block;
+}
+
+.menu-title {
+    padding:
+        8px 10px 6px;
+
+    font-size: 11px;
+
+    color: #969aa2;
+
+    font-weight: 650;
+
+    text-transform: uppercase;
+
+    letter-spacing: .5px;
+}
+
+.menu-button {
+    width: 100%;
+
+    height: 42px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: flex-start;
+
+    gap: 9px;
+
+    padding:
+        0 11px;
+
+    border-radius: 11px;
+
+    color: #25272d;
+
+    font-size: 14px;
+
+    font-weight: 650;
+
+    background: transparent;
+}
+
+.menu-button:active {
+    background:
+        rgba(0,0,0,.07);
+}
+
+.menu-button.disabled {
+    color: #b5b8bf;
+    pointer-events: none;
+}
+
+.menu-icon {
+    width: 20px;
+
+    text-align: center;
+
+    font-size: 16px;
+}
+
+.menu-divider {
+    height: 1px;
+
+    background:
+        rgba(0,0,0,.07);
+
+    margin:
+        5px 4px;
+}
+
+
+/* ================================
    CHEMISTRY
 ================================ */
 
@@ -399,6 +507,11 @@ button.danger {
     #interactionHint {
         display: none;
     }
+
+    #moleculeMenu {
+        min-width: 170px;
+    }
+
 }
 
 </style>
@@ -418,7 +531,7 @@ button.danger {
         </div>
 
         <div class="version">
-            0.5.2
+            0.7.0
         </div>
 
     </div>
@@ -468,6 +581,69 @@ button.danger {
 </div>
 
 
+<!-- ================================
+     MOLECULE MENU
+================================ -->
+
+<div id="moleculeMenu">
+
+    <div class="menu-title">
+        Molecule
+    </div>
+
+    <button
+        type="button"
+        class="menu-button"
+        id="copyMoleculeBtn">
+
+        <span class="menu-icon">
+            📋
+        </span>
+
+        <span>
+            Copia molecola
+        </span>
+
+    </button>
+
+
+    <button
+        type="button"
+        class="menu-button"
+        id="pasteMoleculeBtn">
+
+        <span class="menu-icon">
+            📌
+        </span>
+
+        <span>
+            Incolla molecola
+        </span>
+
+    </button>
+
+
+    <div class="menu-divider"></div>
+
+
+    <button
+        type="button"
+        class="menu-button"
+        id="closeMenuBtn">
+
+        <span class="menu-icon">
+            ✕
+        </span>
+
+        <span>
+            Chiudi
+        </span>
+
+    </button>
+
+</div>
+
+
 <div id="toolbar">
 
     <button
@@ -508,13 +684,16 @@ button.danger {
 <script>
 
 /* ============================================================
-   BONDraw 0.5.2
+   BONDraw 0.7.0
 
    Pencil = CREATE
+   Pencil long press = MOLECULE MENU
    Finger = MOVE SINGLE ATOM
+   Finger long press = SELECT / MOVE MOLECULE
 
-   Long press:
-   SELECT MOLECULE
+   Molecule menu:
+   - Copy molecule
+   - Paste molecule
 
    Recognition:
    - strict circle detection
@@ -562,6 +741,27 @@ const clearBtn =
     document.getElementById("clearBtn");
 
 
+const moleculeMenu =
+    document.getElementById(
+        "moleculeMenu"
+    );
+
+const copyMoleculeBtn =
+    document.getElementById(
+        "copyMoleculeBtn"
+    );
+
+const pasteMoleculeBtn =
+    document.getElementById(
+        "pasteMoleculeBtn"
+    );
+
+const closeMenuBtn =
+    document.getElementById(
+        "closeMenuBtn"
+    );
+
+
 /* ============================================================
    CHEMICAL MODEL
 ============================================================ */
@@ -591,6 +791,28 @@ const VALENCE = {
     H: 1
 
 };
+
+
+/* ============================================================
+   MOLECULE CLIPBOARD
+============================================================ */
+
+/*
+    Clipboard interno di BONDraw.
+
+    Non utilizza il clipboard di sistema:
+    memorizza una copia strutturale della molecola.
+
+    Questo permette di:
+    - creare nuovi ID
+    - mantenere i legami
+    - mantenere gli ordini dei legami
+    - mantenere le posizioni relative
+*/
+
+let moleculeClipboard = null;
+
+let moleculeMenuAnchor = null;
 
 
 /* ============================================================
@@ -677,6 +899,8 @@ let pendingAtom = null;
 
 undoBtn.onclick = () => {
 
+    closeMoleculeMenu();
+
     if (!history.length) return;
 
     const previous =
@@ -702,6 +926,8 @@ undoBtn.onclick = () => {
 
 
 clearBtn.onclick = () => {
+
+    closeMoleculeMenu();
 
     if (
         !atoms.length &&
@@ -1937,6 +2163,7 @@ function isCircle(points) {
                 );
 
         }
+
     );
 
 
@@ -2003,13 +2230,6 @@ function isCircle(points) {
    RECOGNITION HELPERS
 ============================================================ */
 
-/*
-    Restituisce un valore compreso tra 0 e 1.
-
-    0 = caratteristica praticamente assente
-    1 = caratteristica molto forte
-*/
-
 function clamp01(value) {
 
     return Math.max(
@@ -2067,24 +2287,6 @@ function rangeScore(
 /* ============================================================
    H SCORE
 ============================================================ */
-
-/*
-    La H non viene più riconosciuta con una singola
-    condizione.
-
-    Costruiamo invece un punteggio sulla base di:
-
-    - due lati verticali
-    - altezza dei due lati
-    - barra orizzontale centrale
-    - presenza a sinistra/destra
-    - rapporto larghezza/altezza
-    - bassa presenza di diagonali
-    - bassa curvatura
-
-    Questo rende il riconoscimento molto più tollerante
-    rispetto alla velocità e allo stile della scrittura.
-*/
 
 function recognizeHScore(points) {
 
@@ -2330,10 +2532,6 @@ function recognizeHScore(points) {
             ) / 2;
 
 
-        /*
-            Segmento verticale.
-        */
-
         if (
             absDy >
             absDx * 1.55
@@ -2369,10 +2567,6 @@ function recognizeHScore(points) {
         }
 
 
-        /*
-            Segmento orizzontale.
-        */
-
         if (
             absDx >
             absDy * 1.70
@@ -2397,10 +2591,6 @@ function recognizeHScore(points) {
 
         }
 
-
-        /*
-            Segmento diagonale.
-        */
 
         if (
             absDx >
@@ -2474,11 +2664,6 @@ function recognizeHScore(points) {
         );
 
 
-    /*
-        Una H deve avere una quantità significativa
-        di struttura verticale.
-    */
-
     const verticalDominance =
         totalLength > 0
             ? verticalLength /
@@ -2493,12 +2678,6 @@ function recognizeHScore(points) {
         );
 
 
-    /*
-        Una H normalmente non è molto curva.
-        Qui misuriamo indirettamente la presenza
-        di segmenti fortemente orientati.
-    */
-
     const directionalStructure =
         clamp01(
             (
@@ -2509,13 +2688,6 @@ function recognizeHScore(points) {
             .72
         );
 
-
-    /*
-        Punteggio finale.
-
-        La struttura verticale e la barra centrale
-        hanno il peso maggiore.
-    */
 
     const score =
 
@@ -2561,20 +2733,6 @@ function recognizeHScore(points) {
 /* ============================================================
    C SCORE
 ============================================================ */
-
-/*
-    La C viene valutata cercando:
-
-    - estremità separate verticalmente
-    - estremità non troppo lontane orizzontalmente
-    - traiettoria molto più lunga della corda diretta
-    - forte presenza sul lato sinistro
-    - bassa quantità di segmenti orizzontali
-    - struttura curva
-
-    Questo permette di distinguerla meglio
-    dalla H.
-*/
 
 function recognizeCScore(points) {
 
@@ -2800,12 +2958,6 @@ function recognizeCScore(points) {
         );
 
 
-    /*
-        Una C può naturalmente avere alcuni punti
-        sul lato destro, ma non deve essere simmetrica
-        come una H.
-    */
-
     const rightPenalty =
         clamp01(
             rightRatio /
@@ -2909,11 +3061,6 @@ function recognizeCScore(points) {
         );
 
 
-    /*
-        La C deve avere più struttura curva che struttura
-        verticale/orizzontale rigida.
-    */
-
     const curvatureDominance =
         clamp01(
             curvatureScore *
@@ -2924,12 +3071,6 @@ function recognizeCScore(points) {
         );
 
 
-    /*
-        La C deve avere una forte "apertura":
-        gli estremi devono essere separati soprattutto
-        verticalmente.
-    */
-
     const openingScore =
         (
             endpointYScore * .65
@@ -2937,11 +3078,6 @@ function recognizeCScore(points) {
             endpointXScore * .35
         );
 
-
-    /*
-        Penalizzazione forte se la forma mostra
-        una struttura molto simmetrica sinistra/destra.
-    */
 
     const asymmetryScore =
         clamp01(
@@ -2988,11 +3124,6 @@ function recognizeCScore(points) {
             asymmetryScore
         ) * .07;
 
-
-    /*
-        Una forma estremamente verticale con due lati
-        paralleli è molto più probabilmente H che C.
-    */
 
     const hLike =
         verticalLikeRatio(points);
@@ -3125,22 +3256,6 @@ function verticalLikeRatio(points) {
    LETTER RECOGNITION
 ============================================================ */
 
-/*
-    Ora C e H competono tra loro.
-
-    Non basta più che una forma soddisfi una lista
-    di condizioni.
-
-    Ogni lettera produce un punteggio.
-
-    La lettera viene accettata solo se:
-
-    1. supera una soglia minima;
-    2. è sufficientemente migliore dell'altra.
-
-    Questo evita molte classificazioni casuali.
-*/
-
 function recognizeElement(points) {
 
     if (
@@ -3164,11 +3279,6 @@ function recognizeElement(points) {
         );
 
 
-    /*
-        Se entrambe sono deboli,
-        non indoviniamo.
-    */
-
     if (
         hScore < .48 &&
         cScore < .48
@@ -3178,10 +3288,6 @@ function recognizeElement(points) {
 
     }
 
-
-    /*
-        H nettamente migliore della C.
-    */
 
     if (
         hScore >= .52 &&
@@ -3193,10 +3299,6 @@ function recognizeElement(points) {
     }
 
 
-    /*
-        C nettamente migliore della H.
-    */
-
     if (
         cScore >= .52 &&
         cScore > hScore + .08
@@ -3206,11 +3308,6 @@ function recognizeElement(points) {
 
     }
 
-
-    /*
-        Caso in cui una delle due è chiaramente
-        molto forte anche se la differenza è piccola.
-    */
 
     if (
         hScore >= .70 &&
@@ -3232,12 +3329,6 @@ function recognizeElement(points) {
     }
 
 
-    /*
-        Ambiguità:
-        meglio lasciare ? che creare
-        un elemento sbagliato.
-    */
-
     return null;
 
 }
@@ -3246,14 +3337,6 @@ function recognizeElement(points) {
 /* ============================================================
    REMOVE PENDING ATOM
 ============================================================ */
-
-/*
-    Rimuove esclusivamente il pending atom.
-
-    NON chiama render() da solo:
-    la funzione viene usata come parte
-    di un'operazione più grande.
-*/
 
 function removePendingAtom() {
 
@@ -3489,12 +3572,6 @@ function finalizeCreateStroke() {
     strokeLayer.innerHTML = "";
 
 
-    /*
-        ========================================================
-        1. CIRCLE
-        ========================================================
-    */
-
     if (
         isCircle(points)
     ) {
@@ -3527,12 +3604,6 @@ function finalizeCreateStroke() {
     }
 
 
-    /*
-        ========================================================
-        2. LETTER INSIDE PENDING ATOM
-        ========================================================
-    */
-
     if (
         pendingAtom
     ) {
@@ -3553,12 +3624,6 @@ function finalizeCreateStroke() {
 
     }
 
-
-    /*
-        ========================================================
-        3. BOND
-        ========================================================
-    */
 
     const start =
         points[0];
@@ -3599,11 +3664,6 @@ function finalizeCreateStroke() {
     }
 
 
-    /*
-        Fallback per estremi
-        leggermente imperfetti.
-    */
-
     const nearStart =
         findAtomAt(
             start.x,
@@ -3632,40 +3692,6 @@ function finalizeCreateStroke() {
     }
 
 }
-
-
-/* ============================================================
-   POINTER STATE — BONDraw 0.6
-============================================================ */
-
-let activePointer = null;
-
-let selectedAtom = null;
-
-let selectedMolecule = new Set();
-
-let dragStart = null;
-
-let originalAtomPosition = null;
-
-let originalMoleculePositions = new Map();
-
-let longPressTimer = null;
-
-let longPressTriggered = false;
-
-let movementStarted = false;
-
-let historySavedForDrag = false;
-
-
-/* ============================================================
-   LONG PRESS SETTINGS
-============================================================ */
-
-const LONG_PRESS_DURATION = 550;
-
-const LONG_PRESS_MOVE_THRESHOLD = 10;
 
 
 /* ============================================================
@@ -3849,6 +3875,580 @@ function updateMoleculeAndItsBonds() {
 
 
 /* ============================================================
+   MOLECULE CLIPBOARD
+============================================================ */
+
+function copyMolecule(
+    startAtom
+) {
+
+    if (!startAtom) {
+
+        return false;
+
+    }
+
+
+    const moleculeIds =
+        getConnectedMolecule(
+            startAtom
+        );
+
+
+    if (!moleculeIds.size) {
+
+        return false;
+
+    }
+
+
+    const moleculeAtoms =
+        atoms.filter(
+            atom =>
+                moleculeIds.has(
+                    atom.id
+                )
+        );
+
+
+    const moleculeBonds =
+        bonds.filter(
+            bond =>
+                moleculeIds.has(bond.a) &&
+                moleculeIds.has(bond.b)
+        );
+
+
+    if (!moleculeAtoms.length) {
+
+        return false;
+
+    }
+
+
+    const center =
+        moleculeAtoms.reduce(
+            (acc,atom) => {
+
+                acc.x += atom.x;
+                acc.y += atom.y;
+
+                return acc;
+
+            },
+            {
+                x: 0,
+                y: 0
+            }
+        );
+
+
+    center.x /=
+        moleculeAtoms.length;
+
+    center.y /=
+        moleculeAtoms.length;
+
+
+    moleculeClipboard = {
+
+        atoms:
+            moleculeAtoms.map(
+                atom => ({
+
+                    sourceId:
+                        atom.id,
+
+                    x:
+                        atom.x -
+                        center.x,
+
+                    y:
+                        atom.y -
+                        center.y,
+
+                    element:
+                        atom.element
+
+                })
+            ),
+
+        bonds:
+            moleculeBonds.map(
+                bond => ({
+
+                    a:
+                        bond.a,
+
+                    b:
+                        bond.b,
+
+                    order:
+                        bond.order
+
+                })
+            )
+
+    };
+
+
+    status.textContent =
+        "Molecule copied";
+
+    return true;
+
+}
+
+
+/* ============================================================
+   PASTE MOLECULE
+============================================================ */
+
+function pasteMolecule(
+    x,
+    y
+) {
+
+    if (
+        !moleculeClipboard ||
+        !moleculeClipboard.atoms.length
+    ) {
+
+        return false;
+
+    }
+
+
+    saveHistory();
+
+
+    const idMap =
+        new Map();
+
+
+    const newAtoms = [];
+
+
+    moleculeClipboard.atoms.forEach(
+        sourceAtom => {
+
+            const newId =
+                nextAtomId++;
+
+
+            idMap.set(
+                sourceAtom.sourceId,
+                newId
+            );
+
+
+            newAtoms.push({
+
+                id:
+                    newId,
+
+                x:
+                    x +
+                    sourceAtom.x,
+
+                y:
+                    y +
+                    sourceAtom.y,
+
+                element:
+                    sourceAtom.element,
+
+                pending:
+                    false
+
+            });
+
+        }
+    );
+
+
+    const newBonds = [];
+
+
+    moleculeClipboard.bonds.forEach(
+        sourceBond => {
+
+            const newA =
+                idMap.get(
+                    sourceBond.a
+                );
+
+            const newB =
+                idMap.get(
+                    sourceBond.b
+                );
+
+
+            if (
+                newA === undefined ||
+                newB === undefined
+            ) {
+
+                return;
+
+            }
+
+
+            newBonds.push({
+
+                id:
+                    nextBondId++,
+
+                a:
+                    newA,
+
+                b:
+                    newB,
+
+                order:
+                    sourceBond.order
+
+            });
+
+        }
+    );
+
+
+    atoms.push(
+        ...newAtoms
+    );
+
+
+    bonds.push(
+        ...newBonds
+    );
+
+
+    pendingAtom = null;
+
+
+    render();
+
+
+    status.textContent =
+        "Molecule pasted";
+
+    return true;
+
+}
+
+
+/* ============================================================
+   MOLECULE MENU POSITION
+============================================================ */
+
+function positionMoleculeMenu(
+    x,
+    y
+) {
+
+    const workspaceRect =
+        document
+            .getElementById("workspace")
+            .getBoundingClientRect();
+
+
+    const menuWidth =
+        180;
+
+    const menuHeight =
+        150;
+
+
+    let left =
+        x;
+
+    let top =
+        y;
+
+
+    if (
+        left + menuWidth >
+        workspaceRect.width - 10
+    ) {
+
+        left =
+            workspaceRect.width -
+            menuWidth -
+            10;
+
+    }
+
+
+    if (
+        left < 10
+    ) {
+
+        left = 10;
+
+    }
+
+
+    if (
+        top + menuHeight >
+        workspaceRect.height - 10
+    ) {
+
+        top =
+            y -
+            menuHeight;
+
+    }
+
+
+    if (
+        top < 10
+    ) {
+
+        top = 10;
+
+    }
+
+
+    moleculeMenu.style.left =
+        `${left}px`;
+
+    moleculeMenu.style.top =
+        `${top}px`;
+
+}
+
+
+/* ============================================================
+   OPEN MOLECULE MENU
+============================================================ */
+
+function openMoleculeMenu(
+    atom,
+    x,
+    y
+) {
+
+    if (!atom) {
+
+        return;
+
+    }
+
+
+    selectedAtom =
+        atom;
+
+
+    selectedMolecule =
+        getConnectedMolecule(
+            atom
+        );
+
+
+    moleculeMenuAnchor = {
+
+        x,
+        y
+
+    };
+
+
+    positionMoleculeMenu(
+        x,
+        y
+    );
+
+
+    moleculeMenu.classList.add(
+        "visible"
+    );
+
+
+    pasteMoleculeBtn.classList.toggle(
+        "disabled",
+        !moleculeClipboard
+    );
+
+
+    status.textContent =
+        "Molecule menu";
+
+}
+
+
+/* ============================================================
+   CLOSE MOLECULE MENU
+============================================================ */
+
+function closeMoleculeMenu() {
+
+    moleculeMenu.classList.remove(
+        "visible"
+    );
+
+    moleculeMenuAnchor = null;
+
+}
+
+
+/* ============================================================
+   MENU ACTIONS
+============================================================ */
+
+copyMoleculeBtn.onclick = () => {
+
+    if (!selectedAtom) {
+
+        closeMoleculeMenu();
+
+        return;
+
+    }
+
+
+    copyMolecule(
+        selectedAtom
+    );
+
+
+    closeMoleculeMenu();
+
+};
+
+
+pasteMoleculeBtn.onclick = () => {
+
+    if (
+        !moleculeClipboard
+    ) {
+
+        return;
+
+    }
+
+
+    if (!moleculeMenuAnchor) {
+
+        closeMoleculeMenu();
+
+        return;
+
+    }
+
+
+    /*
+        La molecola viene incollata leggermente
+        spostata rispetto al punto premuto,
+        così non si sovrappone esattamente
+        a quella originale.
+    */
+
+    const pasteX =
+        moleculeMenuAnchor.x + 80;
+
+    const pasteY =
+        moleculeMenuAnchor.y + 80;
+
+
+    pasteMolecule(
+        pasteX,
+        pasteY
+    );
+
+
+    closeMoleculeMenu();
+
+};
+
+
+closeMenuBtn.onclick = () => {
+
+    closeMoleculeMenu();
+
+};
+
+
+/* ============================================================
+   CLOSE MENU WHEN TAPPING OUTSIDE
+============================================================ */
+
+document.addEventListener(
+    "pointerdown",
+    event => {
+
+        if (
+            !moleculeMenu.classList.contains(
+                "visible"
+            )
+        ) {
+
+            return;
+
+        }
+
+
+        if (
+            moleculeMenu.contains(
+                event.target
+            )
+        ) {
+
+            return;
+
+        }
+
+
+        closeMoleculeMenu();
+
+    }
+);
+
+
+/* ============================================================
+   POINTER STATE
+============================================================ */
+
+let activePointer = null;
+
+let selectedAtom = null;
+
+let selectedMolecule = new Set();
+
+let dragStart = null;
+
+let originalAtomPosition = null;
+
+let originalMoleculePositions = new Map();
+
+let longPressTimer = null;
+
+let longPressTriggered = false;
+
+let movementStarted = false;
+
+let historySavedForDrag = false;
+
+
+/* ============================================================
+   PENCIL MENU STATE
+============================================================ */
+
+let pencilMenuTriggered = false;
+
+let pencilMenuPoint = null;
+
+
+/* ============================================================
+   LONG PRESS SETTINGS
+============================================================ */
+
+const LONG_PRESS_DURATION = 550;
+
+const LONG_PRESS_MOVE_THRESHOLD = 10;
+
+
+/* ============================================================
    INTERACTION TYPE
 ============================================================ */
 
@@ -3928,7 +4528,7 @@ function cancelLongPress() {
 
 
 /* ============================================================
-   START LONG PRESS
+   START FINGER LONG PRESS
 ============================================================ */
 
 function startLongPress() {
@@ -3962,6 +4562,68 @@ function startLongPress() {
 
                 status.textContent =
                     "Molecule selected · Drag to move";
+
+            },
+            LONG_PRESS_DURATION
+        );
+
+}
+
+
+/* ============================================================
+   START PENCIL MENU LONG PRESS
+============================================================ */
+
+function startPencilMenuLongPress(
+    point,
+    atom
+) {
+
+    cancelLongPress();
+
+
+    longPressTimer =
+        setTimeout(
+            () => {
+
+                longPressTimer = null;
+
+
+                if (
+                    movementStarted ||
+                    !atom
+                ) {
+
+                    return;
+
+                }
+
+
+                pencilMenuTriggered =
+                    true;
+
+
+                pencilMenuPoint = {
+
+                    x:
+                        point.x,
+
+                    y:
+                        point.y
+
+                };
+
+
+                currentStroke = [];
+
+                strokeLayer.innerHTML = "";
+
+
+                openMoleculeMenu(
+                    atom,
+                    point.x,
+                    point.y
+                );
 
             },
             LONG_PRESS_DURATION
@@ -4027,6 +4689,12 @@ canvas.addEventListener(
 
         historySavedForDrag =
             false;
+
+        pencilMenuTriggered =
+            false;
+
+        pencilMenuPoint =
+            null;
 
 
         cancelLongPress();
@@ -4157,6 +4825,61 @@ canvas.addEventListener(
             interaction === "create"
         ) {
 
+            /*
+                Se la Pencil parte sopra un atomo,
+                aspettiamo il long press prima di
+                decidere se si tratta di una scrittura.
+
+                Se la penna si muove prima dei 550 ms,
+                il menu viene annullato e si torna
+                immediatamente alla normale creazione.
+            */
+
+            const atom =
+                findAtomAt(
+                    point.x,
+                    point.y
+                );
+
+
+            if (atom) {
+
+                selectedAtom =
+                    atom;
+
+
+                dragStart = {
+
+                    x:
+                        point.x,
+
+                    y:
+                        point.y
+
+                };
+
+
+                canvas.setPointerCapture(
+                    event.pointerId
+                );
+
+
+                startPencilMenuLongPress(
+                    point,
+                    atom
+                );
+
+
+                /*
+                    Non iniziamo subito uno stroke:
+                    aspettiamo di capire se è long press.
+                */
+
+                return;
+
+            }
+
+
             currentStroke = [
                 point
             ];
@@ -4246,10 +4969,6 @@ canvas.addEventListener(
             }
 
 
-            /*
-                MOVIMENTO SINGOLO ATOMO
-            */
-
             if (
                 !longPressTriggered
             ) {
@@ -4290,10 +5009,6 @@ canvas.addEventListener(
 
             }
 
-
-            /*
-                MOVIMENTO INTERA MOLECOLA
-            */
 
             if (
                 longPressTriggered
@@ -4372,6 +5087,89 @@ canvas.addEventListener(
             activePointer.type ===
             "create"
         ) {
+
+            /*
+                Se stiamo aspettando il long press
+                su un atomo, controlliamo il movimento.
+            */
+
+            if (
+                selectedAtom &&
+                !pencilMenuTriggered &&
+                currentStroke.length === 0
+            ) {
+
+                const dx =
+                    point.x -
+                    dragStart.x;
+
+
+                const dy =
+                    point.y -
+                    dragStart.y;
+
+
+                const movementDistance =
+                    Math.hypot(
+                        dx,
+                        dy
+                    );
+
+
+                if (
+                    movementDistance >
+                    LONG_PRESS_MOVE_THRESHOLD
+                ) {
+
+                    /*
+                        Il movimento annulla il menu:
+                        da questo momento la Pencil
+                        torna ad essere una penna normale.
+                    */
+
+                    cancelLongPress();
+
+                    selectedAtom = null;
+
+                    dragStart = null;
+
+
+                    currentStroke = [
+
+                        {
+                            x:
+                                point.x -
+                                dx,
+
+                            y:
+                                point.y -
+                                dy
+
+                        },
+
+                        point
+
+                    ];
+
+
+                    drawLiveStroke();
+
+                }
+
+
+                return;
+
+            }
+
+
+            if (
+                pencilMenuTriggered
+            ) {
+
+                return;
+
+            }
+
 
             currentStroke.push(
                 point
@@ -4463,14 +5261,41 @@ function finishPointer(
         "create"
     ) {
 
-        finalizeCreateStroke();
+        /*
+            Se il long press ha aperto il menu,
+            non dobbiamo interpretare nulla
+            come stroke.
+        */
+
+        if (
+            pencilMenuTriggered
+        ) {
+
+            currentStroke = [];
+
+            strokeLayer.innerHTML = "";
+
+        }
+        else {
+
+            /*
+                Se siamo partiti da un atomo e abbiamo
+                mosso la Pencil, currentStroke contiene
+                il movimento iniziato dall'atomo.
+            */
+
+            if (
+                currentStroke.length
+            ) {
+
+                finalizeCreateStroke();
+
+            }
+
+        }
 
     }
 
-
-    /*
-        RILASCIO POINTER CAPTURE
-    */
 
     if (
         canvas.hasPointerCapture(
@@ -4483,6 +5308,16 @@ function finishPointer(
         );
 
     }
+
+
+    selectedAtom = null;
+
+    dragStart = null;
+
+    pencilMenuTriggered =
+        false;
+
+    pencilMenuPoint = null;
 
 
     activePointer =
