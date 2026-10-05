@@ -694,6 +694,8 @@ button.danger {
    Molecule menu:
    - Copy molecule
    - Paste molecule
+   - Pencil long press on empty space = menu
+   - Finger tap on empty space = direct paste
 
    Recognition:
    - strict circle detection
@@ -3882,7 +3884,10 @@ function copyMolecule(
     startAtom
 ) {
 
-    if (!startAtom) {
+    if (
+        !startAtom ||
+        startAtom.pending === true
+    ) {
 
         return false;
 
@@ -4229,21 +4234,22 @@ function openMoleculeMenu(
     y
 ) {
 
-    if (!atom) {
+    /*
+        atom può essere null.
 
-        return;
-
-    }
-
+        null = menu aperto sul vuoto:
+        - Copy disabilitato
+        - Paste disponibile se esiste clipboard
+    */
 
     selectedAtom =
-        atom;
+        atom || null;
 
 
     selectedMolecule =
-        getConnectedMolecule(
-            atom
-        );
+        atom
+            ? getConnectedMolecule(atom)
+            : new Set();
 
 
     moleculeMenuAnchor = {
@@ -4262,6 +4268,17 @@ function openMoleculeMenu(
 
     moleculeMenu.classList.add(
         "visible"
+    );
+
+
+    const canCopy =
+        !!atom &&
+        atom.pending !== true;
+
+
+    copyMoleculeBtn.classList.toggle(
+        "disabled",
+        !canCopy
     );
 
 
@@ -4298,7 +4315,10 @@ function closeMoleculeMenu() {
 
 copyMoleculeBtn.onclick = () => {
 
-    if (!selectedAtom) {
+    if (
+        !selectedAtom ||
+        selectedAtom.pending === true
+    ) {
 
         closeMoleculeMenu();
 
@@ -4338,10 +4358,9 @@ pasteMoleculeBtn.onclick = () => {
 
 
     /*
-        La molecola viene incollata leggermente
-        spostata rispetto al punto premuto,
-        così non si sovrappone esattamente
-        a quella originale.
+        Quando si incolla dal menu,
+        spostiamo leggermente la molecola
+        rispetto al punto premuto.
     */
 
     const pasteX =
@@ -4590,8 +4609,7 @@ function startPencilMenuLongPress(
 
 
                 if (
-                    movementStarted ||
-                    !atom
+                    movementStarted
                 ) {
 
                     return;
@@ -4620,7 +4638,7 @@ function startPencilMenuLongPress(
 
 
                 openMoleculeMenu(
-                    atom,
+                    atom || null,
                     point.x,
                     point.y
                 );
@@ -4701,7 +4719,9 @@ canvas.addEventListener(
 
 
         /*
+            ====================================================
             ERASE
+            ====================================================
         */
 
         if (
@@ -4752,7 +4772,9 @@ canvas.addEventListener(
 
 
         /*
-            FINGER = MOVE / SELECT
+            ====================================================
+            FINGER = MOVE / SELECT / DIRECT PASTE
+            ====================================================
         */
 
         if (
@@ -4766,7 +4788,27 @@ canvas.addEventListener(
                 );
 
 
+            /*
+                Tap sul vuoto:
+
+                se esiste una molecola copiata,
+                viene incollata direttamente.
+
+                Nessun menu.
+            */
+
             if (!atom) {
+
+                if (
+                    moleculeClipboard
+                ) {
+
+                    pasteMolecule(
+                        point.x,
+                        point.y
+                    );
+
+                }
 
                 activePointer = null;
 
@@ -4818,7 +4860,9 @@ canvas.addEventListener(
 
 
         /*
+            ====================================================
             PENCIL = CREATE
+            ====================================================
         */
 
         if (
@@ -4826,13 +4870,19 @@ canvas.addEventListener(
         ) {
 
             /*
-                Se la Pencil parte sopra un atomo,
-                aspettiamo il long press prima di
-                decidere se si tratta di una scrittura.
+                Ogni pressione della Pencil
+                inizia come possibile long press.
 
-                Se la penna si muove prima dei 550 ms,
-                il menu viene annullato e si torna
-                immediatamente alla normale creazione.
+                Se la Pencil resta ferma per 550 ms:
+                    → apre il molecule menu.
+
+                Se la Pencil si muove prima:
+                    → il long press viene annullato
+                    → parte immediatamente lo stroke normale.
+
+                Questo vale sia:
+                    - sopra un atomo
+                    - sul vuoto
             */
 
             const atom =
@@ -4847,42 +4897,18 @@ canvas.addEventListener(
                 selectedAtom =
                     atom;
 
-
-                dragStart = {
-
-                    x:
-                        point.x,
-
-                    y:
-                        point.y
-
-                };
-
-
-                canvas.setPointerCapture(
-                    event.pointerId
-                );
-
-
-                startPencilMenuLongPress(
-                    point,
-                    atom
-                );
-
-
-                /*
-                    Non iniziamo subito uno stroke:
-                    aspettiamo di capire se è long press.
-                */
-
-                return;
-
             }
 
 
-            currentStroke = [
-                point
-            ];
+            dragStart = {
+
+                x:
+                    point.x,
+
+                y:
+                    point.y
+
+            };
 
 
             canvas.setPointerCapture(
@@ -4890,7 +4916,19 @@ canvas.addEventListener(
             );
 
 
-            drawLiveStroke();
+            startPencilMenuLongPress(
+                point,
+                atom
+            );
+
+
+            /*
+                Non iniziamo ancora lo stroke.
+                Il pointermove deciderà se si tratta
+                di scrittura oppure long press.
+            */
+
+            return;
 
         }
 
@@ -5089,14 +5127,18 @@ canvas.addEventListener(
         ) {
 
             /*
-                Se stiamo aspettando il long press
-                su un atomo, controlliamo il movimento.
+                Stiamo ancora aspettando di capire
+                se la Pencil sta facendo long press.
+
+                currentStroke è vuoto sia:
+                - sopra un atomo
+                - sul vuoto
             */
 
             if (
-                selectedAtom &&
                 !pencilMenuTriggered &&
-                currentStroke.length === 0
+                currentStroke.length === 0 &&
+                dragStart
             ) {
 
                 const dx =
@@ -5122,8 +5164,9 @@ canvas.addEventListener(
                 ) {
 
                     /*
-                        Il movimento annulla il menu:
-                        da questo momento la Pencil
+                        Il movimento annulla il long press.
+
+                        Da questo momento la Pencil
                         torna ad essere una penna normale.
                     */
 
@@ -5131,25 +5174,25 @@ canvas.addEventListener(
 
                     selectedAtom = null;
 
-                    dragStart = null;
-
 
                     currentStroke = [
 
                         {
                             x:
-                                point.x -
-                                dx,
+                                dragStart.x,
 
                             y:
-                                point.y -
-                                dy
+                                dragStart.y
 
                         },
 
                         point
 
                     ];
+
+
+                    movementStarted =
+                        true;
 
 
                     drawLiveStroke();
@@ -5279,9 +5322,8 @@ function finishPointer(
         else {
 
             /*
-                Se siamo partiti da un atomo e abbiamo
-                mosso la Pencil, currentStroke contiene
-                il movimento iniziato dall'atomo.
+                Se la Pencil si è mossa,
+                currentStroke contiene lo stroke.
             */
 
             if (
