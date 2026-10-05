@@ -726,22 +726,25 @@ let moleculeMenuAtom = null;
 
 
 /* ============================================================
-   PASTE PROTECTION
+   TOUCH PROTECTION
 ============================================================ */
 
 /*
-    BONDraw usa il touch per il finger input.
+    IMPORTANTE:
 
-    Su iPad, però, il dorso della mano può generare
-    uno o più pointer di tipo "touch".
+    Il touch normale non viene modificato.
 
-    Questi stati servono a distinguere:
+    Queste protezioni intervengono solo in tre casi:
 
-    - Pencil attiva
-    - finger singolo
-    - multi-touch / palm touch
-    - paste troppo ravvicinati
+    1. un secondo touch arriva mentre un altro touch
+       è già attivo;
+    2. un contatto touch è molto grande e quindi
+       probabilmente è il palmo;
+    3. due paste avvengono troppo ravvicinati.
+
+    Non viene usato un blocco generale del touch.
 */
+
 
 const activePenPointers =
     new Set();
@@ -749,51 +752,25 @@ const activePenPointers =
 const activeTouchPointers =
     new Set();
 
-
-/*
-    Tempo dell'ultimo paste.
-
-    Serve a impedire che due pointerdown
-    quasi simultanei generino due molecole.
-*/
+const PASTE_DEBOUNCE_MS = 350;
 
 let lastPasteTime = 0;
 
 
 /*
-    Finestra anti-double-paste.
+    Soglia volutamente alta.
 
-    350 ms è abbastanza corta da non percepirsi
-    come ritardo nel normale utilizzo, ma impedisce
-    doppio tap / doppio evento involontario.
+    Non usiamo 30 px perché su iPad alcuni
+    normali contatti del dito possono avere
+    dimensioni superiori.
+
+    Il controllo viene applicato solo quando
+    il browser fornisce effettivamente
+    width/height.
 */
 
-const PASTE_DEBOUNCE_MS = 350;
+const PALM_CONTACT_SIZE = 45;
 
-
-/*
-    Dimensione massima del contatto considerata
-    compatibile con un dito.
-
-    Un contatto molto grande viene trattato
-    come probabile palmo e ignorato.
-
-    Il valore viene usato solo quando il browser
-    fornisce width/height significativi.
-*/
-
-const PALM_CONTACT_SIZE = 30;
-
-
-/*
-    Verifica se il pointer ha caratteristiche
-    compatibili con un contatto palmare.
-
-    Se width/height non sono disponibili,
-    lasciamo passare il touch per non rompere
-    dispositivi/browser che non espongono
-    correttamente la geometria del contatto.
-*/
 
 function isLikelyPalmTouch(event) {
 
@@ -806,14 +783,16 @@ function isLikelyPalmTouch(event) {
     }
 
     const width =
-        Number.isFinite(event.width)
-            ? event.width
-            : 0;
+        Number(event.width) || 0;
 
     const height =
-        Number.isFinite(event.height)
-            ? event.height
-            : 0;
+        Number(event.height) || 0;
+
+
+    /*
+        Se il browser non fornisce la dimensione
+        del contatto, NON blocchiamo il touch.
+    */
 
     if (
         width <= 0 &&
@@ -824,21 +803,21 @@ function isLikelyPalmTouch(event) {
 
     }
 
+
+    /*
+        Usiamo entrambe le dimensioni grandi.
+
+        Questo evita di scambiare un dito
+        leggermente schiacciato per un palmo.
+    */
+
     return (
-        width >= PALM_CONTACT_SIZE ||
+        width >= PALM_CONTACT_SIZE &&
         height >= PALM_CONTACT_SIZE
     );
 
 }
 
-
-/*
-    Registra il pointer come attivo.
-
-    È importante farlo anche per i pointer
-    che vengono successivamente ignorati,
-    così il sistema sa quanti contatti esistono.
-*/
 
 function registerPointer(event) {
 
@@ -851,7 +830,8 @@ function registerPointer(event) {
         );
 
     }
-    else if (
+
+    if (
         event.pointerType === "touch"
     ) {
 
@@ -875,7 +855,8 @@ function unregisterPointer(event) {
         );
 
     }
-    else if (
+
+    if (
         event.pointerType === "touch"
     ) {
 
@@ -889,13 +870,17 @@ function unregisterPointer(event) {
 
 
 /*
-    Determina se un touch deve essere ignorato.
+    Controllo volutamente minimale.
 
-    Regole:
+    Il primo touch passa normalmente.
 
-    1. Pencil già attiva → touch ignorato.
-    2. Altro touch già attivo → touch ignorato.
-    3. Contatto molto grande → probabile palmo.
+    Un touch successivo viene ignorato solo
+    mentre il primo è ancora attivo.
+
+    Un contatto molto grande viene ignorato
+    indipendentemente dagli altri touch.
+
+    La Pencil NON viene mai bloccata da questa funzione.
 */
 
 function shouldIgnoreTouch(event) {
@@ -909,23 +894,23 @@ function shouldIgnoreTouch(event) {
     }
 
     if (
-        activePenPointers.size > 0
+        isLikelyPalmTouch(event)
     ) {
 
         return true;
 
     }
+
+    /*
+        Quando questa funzione viene chiamata,
+        il pointer corrente è già stato registrato.
+
+        Quindi size > 1 significa che esiste
+        già almeno un altro touch.
+    */
 
     if (
         activeTouchPointers.size > 1
-    ) {
-
-        return true;
-
-    }
-
-    if (
-        isLikelyPalmTouch(event)
     ) {
 
         return true;
@@ -937,21 +922,13 @@ function shouldIgnoreTouch(event) {
 }
 
 
-/*
-    Protezione finale specifica del paste.
-
-    Anche se un touch passa i filtri precedenti,
-    non può generare due paste entro la finestra
-    di sicurezza.
-*/
-
 function canPasteNow() {
 
     const now =
         performance.now();
 
     if (
-        now-lastPasteTime <
+        now - lastPasteTime <
         PASTE_DEBOUNCE_MS
     ) {
 
@@ -959,7 +936,8 @@ function canPasteNow() {
 
     }
 
-    lastPasteTime = now;
+    lastPasteTime =
+        now;
 
     return true;
 
@@ -3858,11 +3836,6 @@ pasteMoleculeBtn.onclick = () => {
 
     }
 
-    /*
-        Anche il paste dal menu viene protetto
-        dal debounce per evitare doppi eventi.
-    */
-
     if (!canPasteNow()) {
 
         return;
@@ -3904,6 +3877,20 @@ document.addEventListener(
             !moleculeMenu.classList.contains(
                 "visible"
             )
+        ) {
+
+            return;
+
+        }
+
+        /*
+            Un contatto palmare non deve chiudere
+            accidentalmente il menu.
+        */
+
+        if (
+            event.pointerType === "touch" &&
+            isLikelyPalmTouch(event)
         ) {
 
             return;
@@ -4125,27 +4112,28 @@ canvas.addEventListener(
 
         event.preventDefault();
 
-        /*
-            Registriamo subito il pointer.
 
-            Questo permette al sistema di sapere
-            se la Pencil o un altro touch sono già
-            presenti.
+        /*
+            Prima registriamo il pointer.
+
+            Questo NON blocca il primo touch:
+            activeTouchPointers.size sarà 1.
+
+            Un eventuale secondo touch arriverà
+            con size 2 e verrà ignorato.
         */
 
         registerPointer(event);
 
 
         /*
-            PALM REJECTION / MULTI-TOUCH
+            TOUCH PROTECTION
 
-            Se il touch è sospetto, NON deve diventare
-            activePointer e quindi non può generare
-            un paste, un movimento o altro input.
+            Il touch normale passa invariato.
 
-            Il pointer viene comunque registrato
-            nell'apposito Set e verrà rimosso al
-            pointerup/pointercancel.
+            Vengono bloccati soltanto:
+            - palmo evidente
+            - secondo touch simultaneo
         */
 
         if (
@@ -4277,11 +4265,8 @@ canvas.addEventListener(
 
                 Incolla direttamente.
 
-                NON apre il menu.
-
-                Il paste viene protetto sia
-                dal palm rejection precedente
-                sia dal debounce.
+                Il debounce viene applicato
+                SOLO a questo paste.
             */
 
             if (!atom) {
@@ -4309,23 +4294,13 @@ canvas.addEventListener(
                 atom;
 
             dragStart = {
-
-                x:
-                    point.x,
-
-                y:
-                    point.y
-
+                x: point.x,
+                y: point.y
             };
 
             originalAtomPosition = {
-
-                x:
-                    atom.x,
-
-                y:
-                    atom.y
-
+                x: atom.x,
+                y: atom.y
             };
 
             prepareMoleculeDrag();
@@ -4363,13 +4338,8 @@ canvas.addEventListener(
             }
 
             dragStart = {
-
-                x:
-                    point.x,
-
-                y:
-                    point.y
-
+                x: point.x,
+                y: point.y
             };
 
             canvas.setPointerCapture(
@@ -4554,12 +4524,6 @@ canvas.addEventListener(
             "create"
         ) {
 
-            /*
-                Prima dei 550 ms:
-                stiamo ancora distinguendo
-                long press da disegno.
-            */
-
             if (
                 !pencilMenuTriggered &&
                 currentStroke.length === 0 &&
@@ -4588,23 +4552,15 @@ canvas.addEventListener(
                     cancelLongPress();
 
                     const startPoint = {
-
-                        x:
-                            dragStart.x,
-
-                        y:
-                            dragStart.y
-
+                        x: dragStart.x,
+                        y: dragStart.y
                     };
 
                     selectedAtom = null;
 
                     currentStroke = [
-
                         startPoint,
-
                         point
-
                     ];
 
                     dragStart = null;
@@ -4651,11 +4607,11 @@ canvas.addEventListener(
 function finishPointer(event) {
 
     /*
-        Se questo pointer era un touch palmare
-        o un secondo touch, activePointer non
-        appartiene a lui.
+        Se questo pointer non è quello attualmente
+        gestito dal canvas, significa che potrebbe
+        essere un secondo touch ignorato.
 
-        Dobbiamo comunque deregistrarlo.
+        Lo deregistriamo semplicemente.
     */
 
     const isCurrentPointer =
@@ -4796,6 +4752,38 @@ canvas.addEventListener(
     finishPointer,
     {
         passive:false
+    }
+);
+
+
+/*
+    IMPORTANTE:
+
+    Un touch ignorato può non avere pointer capture,
+    quindi il canvas potrebbe non ricevere il suo
+    pointerup.
+
+    Questi listener globali servono esclusivamente
+    a ripulire i Set di tracking.
+
+    Non modificano l'interazione normale.
+*/
+
+document.addEventListener(
+    "pointerup",
+    event => {
+
+        unregisterPointer(event);
+
+    }
+);
+
+document.addEventListener(
+    "pointercancel",
+    event => {
+
+        unregisterPointer(event);
+
     }
 );
 
