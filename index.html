@@ -722,6 +722,17 @@ let moleculeClipboard = null;
 
 let moleculeMenuAnchor = null;
 
+/*
+    Riferimento persistente alla molecola aperta
+    nel menu.
+
+    NON viene azzerato quando la Pencil viene
+    sollevata. Viene azzerato solo quando
+    il menu viene chiuso.
+*/
+
+let moleculeMenuAtom = null;
+
 
 /* ============================================================
    HISTORY
@@ -3504,33 +3515,25 @@ function positionMoleculeMenu(x,y) {
 }
 
 
-/*
-    IMPORTANTE:
-
-    Il menu ora non usa più lo stato "disabled"
-    per decidere se l'incolla può funzionare.
-
-    Copy:
-        attivo solo quando abbiamo selezionato
-        una molecola valida.
-
-    Paste:
-        SEMPRE cliccabile.
-
-    Se non c'è clipboard, il click semplicemente
-    non fa nulla.
-
-    Questo evita che il pulsante rimanga bloccato
-    per uno stato grafico non aggiornato.
-*/
-
 function openMoleculeMenu(
     atom,
     x,
     y
 ) {
 
+    /*
+        selectedAtom continua a essere usato
+        per lo stato temporaneo del puntatore.
+
+        moleculeMenuAtom invece conserva
+        la molecola associata al menu anche
+        dopo che la Pencil viene sollevata.
+    */
+
     selectedAtom =
+        atom || null;
+
+    moleculeMenuAtom =
         atom || null;
 
     selectedMolecule =
@@ -3562,9 +3565,7 @@ function openMoleculeMenu(
     );
 
     /*
-        NON disabilitiamo più il pulsante
-        Incolla tramite CSS.
-
+        Paste resta sempre cliccabile.
         La disponibilità viene controllata
         direttamente al click.
     */
@@ -3587,6 +3588,13 @@ function closeMoleculeMenu() {
 
     moleculeMenuAnchor = null;
 
+    /*
+        Ora possiamo eliminare il riferimento
+        persistente alla molecola del menu.
+    */
+
+    moleculeMenuAtom = null;
+
 }
 
 
@@ -3596,9 +3604,23 @@ function closeMoleculeMenu() {
 
 copyMoleculeBtn.onclick = () => {
 
+    /*
+        IMPORTANTE:
+
+        Non usiamo selectedAtom qui.
+
+        selectedAtom viene azzerato da
+        finishPointer() quando la Pencil
+        viene sollevata.
+
+        Usiamo invece moleculeMenuAtom,
+        che rimane valido finché il menu
+        resta aperto.
+    */
+
     if (
-        !selectedAtom ||
-        selectedAtom.pending === true
+        !moleculeMenuAtom ||
+        moleculeMenuAtom.pending === true
     ) {
 
         closeMoleculeMenu();
@@ -3608,7 +3630,7 @@ copyMoleculeBtn.onclick = () => {
 
     const copied =
         copyMolecule(
-            selectedAtom
+            moleculeMenuAtom
         );
 
     if (copied) {
@@ -4492,6 +4514,14 @@ function finishPointer(event) {
         );
 
     }
+
+    /*
+        Questo reset rimane intenzionalmente.
+
+        NON tocchiamo moleculeMenuAtom:
+        quello deve sopravvivere al rilascio
+        della Pencil finché il menu è aperto.
+    */
 
     selectedAtom = null;
 
