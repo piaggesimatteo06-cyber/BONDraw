@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -409,7 +410,7 @@ button.danger {
 <script>
 /* ============================================================
    BONDraw 0.7.1
-   INPUT ENGINE + TERMINAL BOND BREAK
+   INPUT ENGINE + ROBUST TERMINAL BOND BREAK
 ============================================================ */
 
 /* DOM */
@@ -453,23 +454,21 @@ const VALENCE = {
 /*
  * DISTACCO DEL LEGAME TERMINALE
  *
- * Il distacco è indipendente dalla direzione del gesto.
- * Non importa se l'atomo viene trascinato verso l'alto,
- * verso il basso, a destra o a sinistra.
+ * Il distacco richiede ora un movimento più breve e meno rapido.
  *
- * Il gesto deve rispettare TUTTE queste condizioni:
- * 1. L'atomo deve avere esattamente un legame.
- * 2. Il dito deve allontanarsi di almeno 65 px.
- * 3. Il gesto deve essere completato entro 250 ms.
- * 4. La velocità media deve essere almeno 0,45 px/ms.
+ * Condizioni:
+ * 1. l'atomo ha esattamente un legame;
+ * 2. il dito si è spostato almeno 18 px dalla partenza;
+ * 3. il gesto è sufficientemente rapido nel suo complesso.
  *
- * Questi valori sono una prima taratura: se il gesto risultasse
- * troppo difficile o troppo facile, si potranno regolare.
+ * Entro 650 ms basta raggiungere la distanza minima.
+ * Se il gesto dura di più, serve una velocità media
+ * minima di 0,08 px/ms.
  */
 
-const BOND_BREAK_MIN_DISTANCE = 65;
-const BOND_BREAK_MAX_TIME = 250;
-const BOND_BREAK_MIN_AVERAGE_SPEED = 0.45;
+const BOND_BREAK_MIN_DISTANCE = 18;
+const BOND_BREAK_MAX_TIME = 650;
+const BOND_BREAK_MIN_AVERAGE_SPEED = 0.08;
 
 let moleculeClipboard = null;
 let moleculeMenuAnchor = null;
@@ -692,14 +691,15 @@ function breakTerminalBond(atom) {
 
     const attachedBonds = getBondsForAtom(atom);
 
-    // Si staccano solo atomi collegati a un unico legame.
+    // Solo un atomo collegato a un unico legame può staccarsi.
     if (attachedBonds.length !== 1) return false;
 
     const bondToBreak = attachedBonds[0];
 
     /*
-     * La cronologia viene salvata prima di modificare il legame,
-     * così Undo può ripristinare la struttura precedente.
+     * Lo stato precedente è già stato salvato all'inizio
+     * del trascinamento, prima di rimuovere il legame.
+     * Undo può quindi ripristinare atomo, posizione e legame.
      */
 
     bonds = bonds.filter(bond => bond.id !== bondToBreak.id);
@@ -1532,7 +1532,7 @@ function drawLiveStroke() {
     let d = `M ${currentStroke[0].x} ${currentStroke[0].y}`;
 
     for (let i = 1; i < currentStroke.length; i++) {
-        d += ` L ${currentStroke[i].x} ${currentStroke[i].y`;
+        d += ` L ${currentStroke[i].x} ${currentStroke[i].y}`;
     }
 
     path.setAttribute("d", d);
@@ -2094,7 +2094,11 @@ canvas.addEventListener("pointerdown", event => {
             y: atom.y
         };
 
-        // Usa un unico riferimento temporale per misurare il gesto.
+        /*
+         * Registra il tempo iniziale usando performance.now().
+         * Lo stesso orologio verrà usato durante il trascinamento.
+         */
+
         dragStartTime = performance.now();
 
         prepareMoleculeDrag();
@@ -2159,8 +2163,8 @@ canvas.addEventListener("pointermove", event => {
 
         if (!longPressTriggered) {
             /*
-             * Salva lo stato iniziale una sola volta, prima
-             * di spostare l'atomo o rimuovere il legame.
+             * Salva la posizione iniziale prima di qualsiasi modifica.
+             * Questo permette a Undo di ripristinare il legame spezzato.
              */
 
             if (!historySavedForDrag && movementDistance > 0) {
@@ -2171,20 +2175,15 @@ canvas.addEventListener("pointermove", event => {
             /*
              * DISTACCO DEL LEGAME TERMINALE
              *
-             * La direzione non viene controllata: il gesto può
-             * andare verso l'alto, in basso, a destra, a sinistra
-             * o in diagonale.
+             * Il controllo usa lo spostamento totale rispetto
+             * al punto iniziale, NON la velocità di un singolo
+             * evento pointermove.
              *
-             * Devono essere soddisfatte tutte le condizioni:
-             * - distanza minima;
-             * - durata massima;
-             * - velocità media minima;
-             * - un solo legame collegato all'atomo.
+             * La soglia ridotta rende il gesto più permissivo.
              */
 
             const isDecisiveGesture =
-                gestureElapsed > 0 &&
-                gestureElapsed <= BOND_BREAK_MAX_TIME &&
+                gestureElapsed <= BOND_BREAK_MAX_TIME ||
                 averageFingerSpeed >= BOND_BREAK_MIN_AVERAGE_SPEED;
 
             if (
@@ -2202,7 +2201,8 @@ canvas.addEventListener("pointermove", event => {
 
             /*
              * L'atomo continua a seguire il dito.
-             * Dopo il distacco, gli altri atomi restano fermi.
+             * Se il suo legame è stato rimosso, gli altri atomi
+             * non vengono spostati.
              */
 
             selectedAtom.x = originalAtomPosition.x + dx;
