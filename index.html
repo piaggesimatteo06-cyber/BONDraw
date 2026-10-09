@@ -13,7 +13,6 @@ viewport-fit=cover">
 <title>BONDraw 0.7.1</title>
 
 <style>
-
 * {
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
@@ -25,23 +24,12 @@ body {
     width: 100%;
     height: 100%;
     overflow: hidden;
-
     background: #f4f5f7;
-
-    font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "SF Pro Display",
-        "SF Pro Text",
-        sans-serif;
-
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
     color: #181a1f;
-
     touch-action: none;
-
     user-select: none;
     -webkit-user-select: none;
-
     overscroll-behavior: none;
 }
 
@@ -50,30 +38,18 @@ body {
     flex-direction: column;
 }
 
-/* ================================
-   HEADER
-================================ */
-
 header {
     height: 72px;
     flex-shrink: 0;
-
     display: flex;
     align-items: center;
     justify-content: space-between;
-
     padding: 0 20px;
-
     background: rgba(255,255,255,.88);
-
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
-
-    border-bottom:
-        1px solid rgba(0,0,0,.07);
-
+    border-bottom: 1px solid rgba(0,0,0,.07);
     z-index: 10;
-
     touch-action: none;
 }
 
@@ -108,58 +84,33 @@ header {
     font-weight: 500;
 }
 
-/* ================================
-   WORKSPACE
-================================ */
-
 #workspace {
     position: relative;
     flex: 1;
     min-height: 0;
     overflow: hidden;
-
     touch-action: none;
 }
 
 #canvas {
     position: absolute;
     inset: 0;
-
     width: 100%;
     height: 100%;
-
     display: block;
-
-    background:
-        radial-gradient(
-            circle at 50% 45%,
-            rgba(255,255,255,.9),
-            rgba(244,245,247,.95)
-        );
-
+    background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.9), rgba(244,245,247,.95));
     touch-action: none;
-
     -webkit-user-select: none;
     user-select: none;
 }
 
-/* ================================
-   EMPTY STATE
-================================ */
-
 #emptyState {
     position: absolute;
-
     left: 50%;
     top: 50%;
-
-    transform:
-        translate(-50%, -50%);
-
+    transform: translate(-50%, -50%);
     text-align: center;
-
     pointer-events: none;
-
     transition: opacity .2s ease;
 }
 
@@ -180,67 +131,37 @@ header {
     line-height: 1.45;
 }
 
-/* ================================
-   TOOLBAR
-================================ */
-
 #toolbar {
     position: absolute;
-
     left: 50%;
     bottom: 22px;
-
-    transform:
-        translateX(-50%);
-
+    transform: translateX(-50%);
     display: flex;
     align-items: center;
     gap: 6px;
-
     padding: 7px;
-
-    background:
-        rgba(255,255,255,.9);
-
-    backdrop-filter:
-        blur(18px);
-
-    -webkit-backdrop-filter:
-        blur(18px);
-
-    border:
-        1px solid rgba(0,0,0,.08);
-
+    background: rgba(255,255,255,.9);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(0,0,0,.08);
     border-radius: 18px;
-
-    box-shadow:
-        0 10px 35px rgba(0,0,0,.10);
-
+    box-shadow: 0 10px 35px rgba(0,0,0,.10);
     z-index: 20;
-
     touch-action: manipulation;
 }
 
 button {
     border: 0;
     outline: 0;
-
     height: 40px;
     padding: 0 15px;
-
     border-radius: 12px;
-
     background: transparent;
-
     color: #686c74;
-
     font-family: inherit;
-
     font-size: 14px;
     font-weight: 650;
-
     cursor: pointer;
-
     touch-action: manipulation;
 }
 
@@ -260,45 +181,22 @@ button.danger {
 .divider {
     width: 1px;
     height: 25px;
-
-    background:
-        rgba(0,0,0,.09);
-
+    background: rgba(0,0,0,.09);
     margin: 0 2px;
 }
 
-/* ================================
-   MOLECULE MENU
-================================ */
-
 #moleculeMenu {
     position: absolute;
-
     display: none;
-
     min-width: 180px;
-
     padding: 7px;
-
-    background:
-        rgba(255,255,255,.94);
-
-    backdrop-filter:
-        blur(20px);
-
-    -webkit-backdrop-filter:
-        blur(20px);
-
-    border:
-        1px solid rgba(0,0,0,.08);
-
+    background: rgba(255,255,255,.94);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(0,0,0,.08);
     border-radius: 16px;
-
-    box-shadow:
-        0 14px 40px rgba(0,0,0,.16);
-
+    box-shadow: 0 14px 40px rgba(0,0,0,.16);
     z-index: 40;
-
     touch-action: manipulation;
 }
 
@@ -307,47 +205,31 @@ button.danger {
 }
 
 .menu-title {
-    padding:
-        8px 10px 6px;
-
+    padding: 8px 10px 6px;
     font-size: 11px;
-
     color: #969aa2;
-
     font-weight: 650;
-
     text-transform: uppercase;
-
     letter-spacing: .5px;
 }
 
 .menu-button {
     width: 100%;
-
     height: 42px;
-
     display: flex;
     align-items: center;
     justify-content: flex-start;
-
     gap: 9px;
-
-    padding:
-        0 11px;
-
+    padding: 0 11px;
     border-radius: 11px;
-
     color: #25272d;
-
     font-size: 14px;
     font-weight: 650;
-
     background: transparent;
 }
 
 .menu-button:active {
-    background:
-        rgba(0,0,0,.07);
+    background: rgba(0,0,0,.07);
 }
 
 .menu-button.disabled {
@@ -363,17 +245,9 @@ button.danger {
 
 .menu-divider {
     height: 1px;
-
-    background:
-        rgba(0,0,0,.07);
-
-    margin:
-        5px 4px;
+    background: rgba(0,0,0,.07);
+    margin: 5px 4px;
 }
-
-/* ================================
-   CHEMISTRY
-================================ */
 
 .bond {
     stroke: #202228;
@@ -384,29 +258,22 @@ button.danger {
 }
 
 .atom-circle {
-    fill:
-        rgba(255,255,255,.96);
-
+    fill: rgba(255,255,255,.96);
     stroke: #202228;
     stroke-width: 2.4;
 }
 
 .atom-label {
     fill: #202228;
-
     font-size: 17px;
     font-weight: 700;
-
     text-anchor: middle;
     dominant-baseline: central;
-
     pointer-events: none;
 }
 
 .atom.pending .atom-circle {
-    fill:
-        rgba(255,255,255,.72);
-
+    fill: rgba(255,255,255,.72);
     stroke: #999da6;
     stroke-width: 2;
     stroke-dasharray: 5 5;
@@ -418,50 +285,29 @@ button.danger {
 
 .rough-stroke {
     fill: none;
-
     stroke: #8e929b;
-
     stroke-width: 2;
-
     stroke-linecap: round;
     stroke-linejoin: round;
-
     opacity: .8;
-
     pointer-events: none;
 }
 
-/* ================================
-   HINT
-================================ */
-
 #interactionHint {
     position: absolute;
-
     right: 18px;
     bottom: 25px;
-
-    padding:
-        8px 11px;
-
+    padding: 8px 11px;
     border-radius: 11px;
-
-    background:
-        rgba(255,255,255,.78);
-
-    border:
-        1px solid rgba(0,0,0,.06);
-
+    background: rgba(255,255,255,.78);
+    border: 1px solid rgba(0,0,0,.06);
     color: #888c94;
-
     font-size: 12px;
     font-weight: 550;
-
     pointer-events: none;
 }
 
 @media (max-width: 650px) {
-
     header {
         height: 64px;
         padding: 0 15px;
@@ -480,8 +326,7 @@ button.danger {
     }
 
     button {
-        padding:
-            0 12px;
+        padding: 0 12px;
     }
 
     #interactionHint {
@@ -491,63 +336,38 @@ button.danger {
     #moleculeMenu {
         min-width: 170px;
     }
-
 }
-
 </style>
 </head>
 
 <body>
 
 <header>
-
     <div class="brand">
-
         <div class="logo-dot"></div>
-
-        <div class="brand-name">
-            BONDraw
-        </div>
-
-        <div class="version">
-            0.7.1
-        </div>
-
+        <div class="brand-name">BONDraw</div>
+        <div class="version">0.7.1</div>
     </div>
 
-    <div
-        class="status"
-        id="status">
-
+    <div class="status" id="status">
         Pencil creates · Finger moves
-
     </div>
-
 </header>
 
 <div id="workspace">
 
-<svg
-    id="canvas"
-    xmlns="http://www.w3.org/2000/svg">
-
+<svg id="canvas" xmlns="http://www.w3.org/2000/svg">
     <g id="bondLayer"></g>
     <g id="atomLayer"></g>
     <g id="strokeLayer"></g>
-
 </svg>
 
 <div id="emptyState">
-
-    <div class="empty-title">
-        Draw chemistry naturally.
-    </div>
-
+    <div class="empty-title">Draw chemistry naturally.</div>
     <div class="empty-subtitle">
         Use Apple Pencil to create atoms and bonds.<br>
         Use your finger to move atoms.
     </div>
-
 </div>
 
 <div id="interactionHint">
@@ -555,145 +375,64 @@ button.danger {
 </div>
 
 <div id="moleculeMenu">
+    <div class="menu-title">Molecule</div>
 
-    <div class="menu-title">
-        Molecule
-    </div>
-
-    <button
-        type="button"
-        class="menu-button"
-        id="copyMoleculeBtn">
-
+    <button type="button" class="menu-button" id="copyMoleculeBtn">
         <span class="menu-icon">📋</span>
-
-        <span>
-            Copia molecola
-        </span>
-
+        <span>Copia molecola</span>
     </button>
 
-    <button
-        type="button"
-        class="menu-button"
-        id="pasteMoleculeBtn">
-
+    <button type="button" class="menu-button" id="pasteMoleculeBtn">
         <span class="menu-icon">📌</span>
-
-        <span>
-            Incolla molecola
-        </span>
-
+        <span>Incolla molecola</span>
     </button>
 
     <div class="menu-divider"></div>
 
-    <button
-        type="button"
-        class="menu-button"
-        id="closeMenuBtn">
-
+    <button type="button" class="menu-button" id="closeMenuBtn">
         <span class="menu-icon">✕</span>
-
-        <span>
-            Chiudi
-        </span>
-
+        <span>Chiudi</span>
     </button>
-
 </div>
 
 <div id="toolbar">
-
-    <button
-        id="createBtn"
-        class="active">
-        Create
-    </button>
-
-    <button id="moveBtn">
-        Move
-    </button>
-
-    <button id="eraseBtn">
-        Erase
-    </button>
-
+    <button id="createBtn" class="active">Create</button>
+    <button id="moveBtn">Move</button>
+    <button id="eraseBtn">Erase</button>
     <div class="divider"></div>
-
-    <button id="undoBtn">
-        Undo
-    </button>
-
-    <button
-        id="clearBtn"
-        class="danger">
-        Clear
-    </button>
-
+    <button id="undoBtn">Undo</button>
+    <button id="clearBtn" class="danger">Clear</button>
 </div>
 
 </div>
 
 <script>
-
 /* ============================================================
    BONDraw 0.7.1
-   INPUT ENGINE RISCRITTO PER iPad / Safari
+   INPUT ENGINE + ROBUST TERMINAL BOND BREAK
 ============================================================ */
 
-/* ============================================================
-   DOM
-============================================================ */
+/* DOM */
 
-const canvas =
-    document.getElementById("canvas");
+const canvas = document.getElementById("canvas");
+const atomLayer = document.getElementById("atomLayer");
+const bondLayer = document.getElementById("bondLayer");
+const strokeLayer = document.getElementById("strokeLayer");
+const emptyState = document.getElementById("emptyState");
+const status = document.getElementById("status");
 
-const atomLayer =
-    document.getElementById("atomLayer");
+const createBtn = document.getElementById("createBtn");
+const moveBtn = document.getElementById("moveBtn");
+const eraseBtn = document.getElementById("eraseBtn");
+const undoBtn = document.getElementById("undoBtn");
+const clearBtn = document.getElementById("clearBtn");
 
-const bondLayer =
-    document.getElementById("bondLayer");
+const moleculeMenu = document.getElementById("moleculeMenu");
+const copyMoleculeBtn = document.getElementById("copyMoleculeBtn");
+const pasteMoleculeBtn = document.getElementById("pasteMoleculeBtn");
+const closeMenuBtn = document.getElementById("closeMenuBtn");
 
-const strokeLayer =
-    document.getElementById("strokeLayer");
-
-const emptyState =
-    document.getElementById("emptyState");
-
-const status =
-    document.getElementById("status");
-
-const createBtn =
-    document.getElementById("createBtn");
-
-const moveBtn =
-    document.getElementById("moveBtn");
-
-const eraseBtn =
-    document.getElementById("eraseBtn");
-
-const undoBtn =
-    document.getElementById("undoBtn");
-
-const clearBtn =
-    document.getElementById("clearBtn");
-
-const moleculeMenu =
-    document.getElementById("moleculeMenu");
-
-const copyMoleculeBtn =
-    document.getElementById("copyMoleculeBtn");
-
-const pasteMoleculeBtn =
-    document.getElementById("pasteMoleculeBtn");
-
-const closeMenuBtn =
-    document.getElementById("closeMenuBtn");
-
-/* ============================================================
-   CHEMICAL MODEL
-============================================================ */
+/* CHEMICAL MODEL */
 
 let atoms = [];
 let bonds = [];
@@ -711,506 +450,310 @@ const VALENCE = {
     H: 1
 };
 
-/* ============================================================
-   CLIPBOARD
-============================================================ */
+/*
+ * DISTACCO DEL LEGAME TERMINALE
+ *
+ * Non usiamo più la velocità di un singolo evento pointermove:
+ * su iPad il browser può suddividere il gesto in molti eventi
+ * piccoli, facendo fallire il vecchio controllo.
+ *
+ * Ora il distacco avviene quando:
+ * 1. l'atomo ha esattamente un legame;
+ * 2. il dito si è spostato almeno 24 px dalla partenza;
+ * 3. il gesto è sufficientemente rapido nel suo complesso.
+ *
+ * Entro 600 ms basta raggiungere la distanza minima.
+ * Se il gesto dura di più, serve comunque una velocità media
+ * minima di 0,12 px/ms.
+ */
+
+const BOND_BREAK_MIN_DISTANCE = 24;
+const BOND_BREAK_MAX_TIME = 600;
+const BOND_BREAK_MIN_AVERAGE_SPEED = 0.12;
 
 let moleculeClipboard = null;
-
 let moleculeMenuAnchor = null;
 let moleculeMenuAtom = null;
 
-/* ============================================================
-   INPUT STATE
-============================================================ */
+/* INPUT STATE */
 
-const activePenPointers =
-    new Set();
-
-const activeTouchPointers =
-    new Set();
+const activePenPointers = new Set();
+const activeTouchPointers = new Set();
 
 let lastPasteTime = 0;
-
 const PASTE_DEBOUNCE_MS = 350;
 
 function registerPointer(event) {
-
     if (event.pointerType === "pen") {
-
-        activePenPointers.add(
-            event.pointerId
-        );
-
+        activePenPointers.add(event.pointerId);
         return;
     }
 
     if (event.pointerType === "touch") {
-
-        activeTouchPointers.add(
-            event.pointerId
-        );
-
+        activeTouchPointers.add(event.pointerId);
     }
-
 }
 
 function unregisterPointer(event) {
-
     if (event.pointerType === "pen") {
-
-        activePenPointers.delete(
-            event.pointerId
-        );
-
+        activePenPointers.delete(event.pointerId);
         return;
     }
 
     if (event.pointerType === "touch") {
-
-        activeTouchPointers.delete(
-            event.pointerId
-        );
-
+        activeTouchPointers.delete(event.pointerId);
     }
-
 }
 
 function shouldIgnoreTouch(event) {
-
-    if (
-        event.pointerType !== "touch"
-    ) {
-
-        return false;
-
-    }
-
-    if (
-        activePenPointers.size > 0
-    ) {
-
-        return true;
-
-    }
-
-    if (
-        activeTouchPointers.size > 1
-    ) {
-
-        return true;
-
-    }
-
+    if (event.pointerType !== "touch") return false;
+    if (activePenPointers.size > 0) return true;
+    if (activeTouchPointers.size > 1) return true;
     return false;
-
 }
 
 function canPasteNow() {
+    const now = performance.now();
 
-    const now =
-        performance.now();
-
-    if (
-        now - lastPasteTime <
-        PASTE_DEBOUNCE_MS
-    ) {
-
+    if (now - lastPasteTime < PASTE_DEBOUNCE_MS) {
         return false;
-
     }
 
     lastPasteTime = now;
-
     return true;
-
 }
 
-/* ============================================================
-   HISTORY
-============================================================ */
+/* HISTORY */
 
 const history = [];
 
 function saveHistory() {
-
     history.push({
-
-        atoms:
-            JSON.parse(
-                JSON.stringify(atoms)
-            ),
-
-        bonds:
-            JSON.parse(
-                JSON.stringify(bonds)
-            )
-
+        atoms: JSON.parse(JSON.stringify(atoms)),
+        bonds: JSON.parse(JSON.stringify(bonds))
     });
 
     if (history.length > 50) {
         history.shift();
     }
-
 }
 
-/* ============================================================
-   MODE
-============================================================ */
+/* MODE */
 
 let manualMode = "create";
 
 function setManualMode(mode) {
-
     manualMode = mode;
 
-    createBtn.classList.toggle(
-        "active",
-        mode === "create"
-    );
-
-    moveBtn.classList.toggle(
-        "active",
-        mode === "move"
-    );
-
-    eraseBtn.classList.toggle(
-        "active",
-        mode === "erase"
-    );
-
+    createBtn.classList.toggle("active", mode === "create");
+    moveBtn.classList.toggle("active", mode === "move");
+    eraseBtn.classList.toggle("active", mode === "erase");
 }
 
-createBtn.onclick = () =>
-    setManualMode("create");
+createBtn.onclick = () => setManualMode("create");
+moveBtn.onclick = () => setManualMode("move");
+eraseBtn.onclick = () => setManualMode("erase");
 
-moveBtn.onclick = () =>
-    setManualMode("move");
-
-eraseBtn.onclick = () =>
-    setManualMode("erase");
-
-/* ============================================================
-   PENDING ATOM
-============================================================ */
+/* PENDING ATOM */
 
 let pendingAtom = null;
 
-/* ============================================================
-   UNDO / CLEAR
-============================================================ */
+/* UNDO / CLEAR */
 
 undoBtn.onclick = () => {
-
     closeMoleculeMenu();
 
     if (!history.length) return;
 
-    const previous =
-        history.pop();
+    const previous = history.pop();
 
-    atoms =
-        previous.atoms;
-
-    bonds =
-        previous.bonds;
+    atoms = previous.atoms;
+    bonds = previous.bonds;
 
     pendingAtom =
-        atoms.find(
-            atom =>
-                atom.pending === true
-        ) || null;
+        atoms.find(atom => atom.pending === true) || null;
 
     render();
-
 };
 
 clearBtn.onclick = () => {
-
     closeMoleculeMenu();
 
-    if (
-        !atoms.length &&
-        !bonds.length
-    ) return;
+    if (!atoms.length && !bonds.length) return;
 
     saveHistory();
 
     atoms = [];
     bonds = [];
-
     pendingAtom = null;
 
     render();
-
 };
 
-/* ============================================================
-   HELPERS
-============================================================ */
+/* HELPERS */
 
 function getAtom(id) {
-
-    return atoms.find(
-        atom =>
-            atom.id === id
-    );
-
+    return atoms.find(atom => atom.id === id);
 }
 
 function getRadius(atom) {
-
-    return (
-        ATOM_RADIUS[
-            atom.element
-        ] || 27
-    );
-
+    return ATOM_RADIUS[atom.element] || 27;
 }
 
 function getValence(atom) {
-
-    return bonds.reduce(
-        (sum,bond) => {
-
-            if (
-                bond.a === atom.id ||
-                bond.b === atom.id
-            ) {
-
-                return sum + bond.order;
-
-            }
-
-            return sum;
-
-        },
-        0
-    );
-
+    return bonds.reduce((sum, bond) => {
+        if (bond.a === atom.id || bond.b === atom.id) {
+            return sum + bond.order;
+        }
+        return sum;
+    }, 0);
 }
 
-function canAddBond(
-    atomA,
-    atomB,
-    order
-) {
+function canAddBond(atomA, atomB, order) {
+    if (!atomA || !atomB) return false;
 
-    if (
-        !atomA ||
-        !atomB
-    ) return false;
-
-    const maxA =
-        VALENCE[
-            atomA.element
-        ] || 4;
-
-    const maxB =
-        VALENCE[
-            atomB.element
-        ] || 4;
+    const maxA = VALENCE[atomA.element] || 4;
+    const maxB = VALENCE[atomB.element] || 4;
 
     return (
         getValence(atomA) + order <= maxA &&
         getValence(atomB) + order <= maxB
     );
-
 }
 
-/* ============================================================
-   HIT TESTS
-============================================================ */
+/* HIT TESTS */
 
-function findAtomAt(x,y) {
+function findAtomAt(x, y) {
+    for (let i = atoms.length - 1; i >= 0; i--) {
+        const atom = atoms[i];
+        const radius = getRadius(atom) + 8;
 
-    for (
-        let i = atoms.length - 1;
-        i >= 0;
-        i--
-    ) {
-
-        const atom =
-            atoms[i];
-
-        const radius =
-            getRadius(atom) + 8;
-
-        if (
-            Math.hypot(
-                atom.x-x,
-                atom.y-y
-            ) <= radius
-        ) {
-
+        if (Math.hypot(atom.x - x, atom.y - y) <= radius) {
             return atom;
-
         }
-
     }
 
     return null;
-
 }
 
-function pointToSegmentDistance(
-    px,
-    py,
-    x1,
-    y1,
-    x2,
-    y2
-) {
+function pointToSegmentDistance(px, py, x1, y1, x2, y2) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
 
-    const dx = x2-x1;
-    const dy = y2-y1;
-
-    if (
-        dx === 0 &&
-        dy === 0
-    ) {
-
-        return Math.hypot(
-            px-x1,
-            py-y1
-        );
-
+    if (dx === 0 && dy === 0) {
+        return Math.hypot(px - x1, py - y1);
     }
 
-    const t =
-        Math.max(
-            0,
-            Math.min(
-                1,
-                (
-                    (px-x1)*dx +
-                    (py-y1)*dy
-                ) /
-                (dx*dx + dy*dy)
-            )
-        );
-
-    const cx = x1+t*dx;
-    const cy = y1+t*dy;
-
-    return Math.hypot(
-        px-cx,
-        py-cy
+    const t = Math.max(
+        0,
+        Math.min(
+            1,
+            ((px - x1) * dx + (py - y1) * dy) /
+            (dx * dx + dy * dy)
+        )
     );
 
+    const cx = x1 + t * dx;
+    const cy = y1 + t * dy;
+
+    return Math.hypot(px - cx, py - cy);
 }
 
-function findBondAt(x,y) {
-
-    for (
-        let i = bonds.length-1;
-        i >= 0;
-        i--
-    ) {
-
-        const bond =
-            bonds[i];
-
-        const a =
-            getAtom(bond.a);
-
-        const b =
-            getAtom(bond.b);
+function findBondAt(x, y) {
+    for (let i = bonds.length - 1; i >= 0; i--) {
+        const bond = bonds[i];
+        const a = getAtom(bond.a);
+        const b = getAtom(bond.b);
 
         if (!a || !b) continue;
 
-        const distance =
-            pointToSegmentDistance(
-                x,
-                y,
-                a.x,
-                a.y,
-                b.x,
-                b.y
-            );
+        const distance = pointToSegmentDistance(
+            x, y, a.x, a.y, b.x, b.y
+        );
 
-        if (distance < 12) {
-            return bond;
-        }
-
+        if (distance < 12) return bond;
     }
 
     return null;
-
 }
 
-/* ============================================================
-   SVG RENDERING
-============================================================ */
+/* TERMINAL ATOM HELPERS */
 
-const atomElements =
-    new Map();
+function getBondsForAtom(atom) {
+    if (!atom) return [];
 
-const bondElements =
-    new Map();
+    return bonds.filter(
+        bond => bond.a === atom.id || bond.b === atom.id
+    );
+}
+
+function breakTerminalBond(atom) {
+    if (!atom || atom.pending === true) return false;
+
+    const attachedBonds = getBondsForAtom(atom);
+
+    // Solo un atomo collegato a un unico legame può staccarsi.
+    if (attachedBonds.length !== 1) return false;
+
+    const bondToBreak = attachedBonds[0];
+
+    /*
+     * Lo stato precedente è già stato salvato all'inizio
+     * del trascinamento, prima di rimuovere il legame.
+     * Undo può quindi ripristinare atomo, posizione e legame.
+     */
+
+    bonds = bonds.filter(bond => bond.id !== bondToBreak.id);
+
+    render();
+
+    status.textContent = "Bond broken · Atom detached";
+
+    return true;
+}
+
+/* SVG RENDERING */
+
+const atomElements = new Map();
+const bondElements = new Map();
 
 function createAtomElement(atom) {
-
-    const group =
-        document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "g"
-        );
-
-    group.setAttribute(
-        "class",
-        "atom"
+    const group = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "g"
     );
 
-    group.dataset.atomId =
-        atom.id;
+    group.setAttribute("class", "atom");
+    group.dataset.atomId = atom.id;
 
-    const circle =
-        document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "circle"
-        );
-
-    circle.setAttribute(
-        "class",
-        "atom-circle"
+    const circle = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "circle"
     );
 
-    const label =
-        document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "text"
-        );
+    circle.setAttribute("class", "atom-circle");
 
-    label.setAttribute(
-        "class",
-        "atom-label"
+    const label = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "text"
     );
+
+    label.setAttribute("class", "atom-label");
 
     group.appendChild(circle);
     group.appendChild(label);
-
     atomLayer.appendChild(group);
 
-    atomElements.set(
-        atom.id,
-        group
-    );
+    atomElements.set(atom.id, group);
 
     return group;
-
 }
 
 function updateAtomElement(atom) {
-
-    let group =
-        atomElements.get(
-            atom.id
-        );
+    let group = atomElements.get(atom.id);
 
     if (!group) {
-        group =
-            createAtomElement(atom);
+        group = createAtomElement(atom);
     }
 
     group.setAttribute(
@@ -1218,1012 +761,435 @@ function updateAtomElement(atom) {
         `translate(${atom.x} ${atom.y})`
     );
 
-    const circle =
-        group.querySelector(
-            ".atom-circle"
-        );
+    const circle = group.querySelector(".atom-circle");
+    const label = group.querySelector(".atom-label");
 
-    const label =
-        group.querySelector(
-            ".atom-label"
-        );
+    circle.setAttribute("r", getRadius(atom));
+    label.textContent = atom.element || "?";
 
-    circle.setAttribute(
-        "r",
-        getRadius(atom)
-    );
-
-    label.textContent =
-        atom.element || "?";
-
-    group.classList.toggle(
-        "pending",
-        atom.pending === true
-    );
-
+    group.classList.toggle("pending", atom.pending === true);
 }
 
 function createBondElement(bond) {
-
-    const group =
-        document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "g"
-        );
-
-    group.dataset.bondId =
-        bond.id;
-
-    bondLayer.appendChild(group);
-
-    bondElements.set(
-        bond.id,
-        group
+    const group = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "g"
     );
 
-    return group;
+    group.dataset.bondId = bond.id;
+    bondLayer.appendChild(group);
 
+    bondElements.set(bond.id, group);
+
+    return group;
 }
 
-function updateBondElement(
-    bond,
-    group
-) {
-
-    const a =
-        getAtom(bond.a);
-
-    const b =
-        getAtom(bond.b);
+function updateBondElement(bond, group) {
+    const a = getAtom(bond.a);
+    const b = getAtom(bond.b);
 
     if (!a || !b) return;
 
     group.innerHTML = "";
 
-    const dx =
-        b.x-a.x;
-
-    const dy =
-        b.y-a.y;
-
-    const length =
-        Math.hypot(dx,dy);
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const length = Math.hypot(dx, dy);
 
     if (length === 0) return;
 
-    const ux = dx/length;
-    const uy = dy/length;
-
+    const ux = dx / length;
+    const uy = dy / length;
     const nx = -uy;
     const ny = ux;
 
-    const startRadius =
-        getRadius(a);
+    const startRadius = getRadius(a);
+    const endRadius = getRadius(b);
 
-    const endRadius =
-        getRadius(b);
-
-    const startX =
-        a.x + ux*startRadius;
-
-    const startY =
-        a.y + uy*startRadius;
-
-    const endX =
-        b.x - ux*endRadius;
-
-    const endY =
-        b.y - uy*endRadius;
+    const startX = a.x + ux * startRadius;
+    const startY = a.y + uy * startRadius;
+    const endX = b.x - ux * endRadius;
+    const endY = b.y - uy * endRadius;
 
     const spacing = 6;
 
     let offsets;
 
     if (bond.order === 1) {
-
         offsets = [0];
-
-    }
-    else if (bond.order === 2) {
-
-        offsets = [
-            -spacing/2,
-            spacing/2
-        ];
-
-    }
-    else {
-
-        offsets = [
-            -spacing,
-            0,
-            spacing
-        ];
-
+    } else if (bond.order === 2) {
+        offsets = [-spacing / 2, spacing / 2];
+    } else {
+        offsets = [-spacing, 0, spacing];
     }
 
-    offsets.forEach(
-        offset => {
+    offsets.forEach(offset => {
+        const line = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "line"
+        );
 
-            const line =
-                document.createElementNS(
-                    "http://www.w3.org/2000/svg",
-                    "line"
-                );
+        line.setAttribute("class", "bond");
+        line.setAttribute("x1", startX + nx * offset);
+        line.setAttribute("y1", startY + ny * offset);
+        line.setAttribute("x2", endX + nx * offset);
+        line.setAttribute("y2", endY + ny * offset);
 
-            line.setAttribute(
-                "class",
-                "bond"
-            );
-
-            line.setAttribute(
-                "x1",
-                startX + nx*offset
-            );
-
-            line.setAttribute(
-                "y1",
-                startY + ny*offset
-            );
-
-            line.setAttribute(
-                "x2",
-                endX + nx*offset
-            );
-
-            line.setAttribute(
-                "y2",
-                endY + ny*offset
-            );
-
-            group.appendChild(line);
-
-        }
-    );
-
+        group.appendChild(line);
+    });
 }
 
 function render() {
-
-    atomElements.forEach(
-        element =>
-            element.remove()
-    );
-
-    bondElements.forEach(
-        element =>
-            element.remove()
-    );
+    atomElements.forEach(element => element.remove());
+    bondElements.forEach(element => element.remove());
 
     atomElements.clear();
     bondElements.clear();
 
-    bonds.forEach(
-        bond => {
+    bonds.forEach(bond => {
+        const group = createBondElement(bond);
+        updateBondElement(bond, group);
+    });
 
-            const group =
-                createBondElement(
-                    bond
-                );
+    atoms.forEach(atom => {
+        createAtomElement(atom);
+        updateAtomElement(atom);
+    });
 
-            updateBondElement(
-                bond,
-                group
-            );
-
-        }
-    );
-
-    atoms.forEach(
-        atom => {
-
-            createAtomElement(
-                atom
-            );
-
-            updateAtomElement(
-                atom
-            );
-
-        }
-    );
-
-    emptyState.classList.toggle(
-        "hidden",
-        atoms.length > 0
-    );
-
+    emptyState.classList.toggle("hidden", atoms.length > 0);
 }
 
 function updateAtomAndItsBonds(atom) {
-
     updateAtomElement(atom);
 
-    bonds.forEach(
-        bond => {
+    bonds.forEach(bond => {
+        if (bond.a === atom.id || bond.b === atom.id) {
+            const group = bondElements.get(bond.id);
 
-            if (
-                bond.a === atom.id ||
-                bond.b === atom.id
-            ) {
-
-                const group =
-                    bondElements.get(
-                        bond.id
-                    );
-
-                if (group) {
-
-                    updateBondElement(
-                        bond,
-                        group
-                    );
-
-                }
-
+            if (group) {
+                updateBondElement(bond, group);
             }
-
         }
-    );
-
+    });
 }
 
-/* ============================================================
-   BONDS
-============================================================ */
+/* BONDS */
 
-function findBondBetween(
-    atomA,
-    atomB
-) {
-
-    return bonds.find(
-        bond =>
-
-            (
-                bond.a === atomA.id &&
-                bond.b === atomB.id
-            )
-
-            ||
-
-            (
-                bond.a === atomB.id &&
-                bond.b === atomA.id
-            )
+function findBondBetween(atomA, atomB) {
+    return bonds.find(bond =>
+        (bond.a === atomA.id && bond.b === atomB.id) ||
+        (bond.a === atomB.id && bond.b === atomA.id)
     );
-
 }
 
-function connectAtoms(
-    atomA,
-    atomB
-) {
+function connectAtoms(atomA, atomB) {
+    if (!atomA || !atomB || atomA.id === atomB.id) return;
 
-    if (
-        !atomA ||
-        !atomB ||
-        atomA.id === atomB.id
-    ) return;
-
-    const existing =
-        findBondBetween(
-            atomA,
-            atomB
-        );
+    const existing = findBondBetween(atomA, atomB);
 
     saveHistory();
 
     if (!existing) {
-
-        if (
-            !canAddBond(
-                atomA,
-                atomB,
-                1
-            )
-        ) {
-
+        if (!canAddBond(atomA, atomB, 1)) {
             history.pop();
             return;
-
         }
 
         bonds.push({
-
-            id:
-                nextBondId++,
-
-            a:
-                atomA.id,
-
-            b:
-                atomB.id,
-
-            order:
-                1
-
+            id: nextBondId++,
+            a: atomA.id,
+            b: atomB.id,
+            order: 1
         });
+    } else {
+        const nextOrder = existing.order === 3 ? 1 : existing.order + 1;
 
-    }
-    else {
+        const maxA = VALENCE[atomA.element] || 4;
+        const maxB = VALENCE[atomB.element] || 4;
 
-        const nextOrder =
-            existing.order === 3
-                ? 1
-                : existing.order + 1;
-
-        const maxA =
-            VALENCE[
-                atomA.element
-            ] || 4;
-
-        const maxB =
-            VALENCE[
-                atomB.element
-            ] || 4;
-
-        const valenceA =
-            getValence(atomA)
-            - existing.order;
-
-        const valenceB =
-            getValence(atomB)
-            - existing.order;
+        const valenceA = getValence(atomA) - existing.order;
+        const valenceB = getValence(atomB) - existing.order;
 
         if (
             valenceA + nextOrder > maxA ||
             valenceB + nextOrder > maxB
         ) {
-
             history.pop();
             return;
-
         }
 
-        existing.order =
-            nextOrder;
-
+        existing.order = nextOrder;
     }
 
     render();
-
 }
 
-/* ============================================================
-   DELETE
-============================================================ */
+/* DELETE */
 
 function removeAtom(atom) {
-
     if (!atom) return;
 
     saveHistory();
 
-    if (
-        pendingAtom &&
-        pendingAtom.id === atom.id
-    ) {
-
+    if (pendingAtom && pendingAtom.id === atom.id) {
         pendingAtom = null;
-
     }
 
-    bonds =
-        bonds.filter(
-            bond =>
-                bond.a !== atom.id &&
-                bond.b !== atom.id
-        );
+    bonds = bonds.filter(
+        bond => bond.a !== atom.id && bond.b !== atom.id
+    );
 
-    atoms =
-        atoms.filter(
-            item =>
-                item.id !== atom.id
-        );
+    atoms = atoms.filter(item => item.id !== atom.id);
 
     render();
-
 }
 
 function removeBond(bond) {
-
     if (!bond) return;
 
     saveHistory();
 
-    bonds =
-        bonds.filter(
-            item =>
-                item.id !== bond.id
-        );
+    bonds = bonds.filter(item => item.id !== bond.id);
 
     render();
-
 }
 
-/* ============================================================
-   STROKE
-============================================================ */
+/* STROKE */
 
 function strokeBounds(points) {
-
-    if (!points.length)
-        return null;
+    if (!points.length) return null;
 
     let minX = Infinity;
     let maxX = -Infinity;
-
     let minY = Infinity;
     let maxY = -Infinity;
 
-    points.forEach(
-        point => {
-
-            minX =
-                Math.min(
-                    minX,
-                    point.x
-                );
-
-            maxX =
-                Math.max(
-                    maxX,
-                    point.x
-                );
-
-            minY =
-                Math.min(
-                    minY,
-                    point.y
-                );
-
-            maxY =
-                Math.max(
-                    maxY,
-                    point.y
-                );
-
-        }
-    );
+    points.forEach(point => {
+        minX = Math.min(minX, point.x);
+        maxX = Math.max(maxX, point.x);
+        minY = Math.min(minY, point.y);
+        maxY = Math.max(maxY, point.y);
+    });
 
     return {
-
         minX,
         maxX,
         minY,
         maxY,
-
-        width:
-            maxX-minX,
-
-        height:
-            maxY-minY
-
+        width: maxX - minX,
+        height: maxY - minY
     };
-
 }
 
-function resampleStroke(
-    points,
-    count = 32
-) {
-
-    if (
-        points.length < 2
-    ) {
-
-        return points.slice();
-
-    }
+function resampleStroke(points, count = 32) {
+    if (points.length < 2) return points.slice();
 
     const lengths = [0];
-
     let total = 0;
 
-    for (
-        let i=1;
-        i<points.length;
-        i++
-    ) {
-
-        total +=
-            Math.hypot(
-                points[i].x -
-                points[i-1].x,
-
-                points[i].y -
-                points[i-1].y
-            );
+    for (let i = 1; i < points.length; i++) {
+        total += Math.hypot(
+            points[i].x - points[i - 1].x,
+            points[i].y - points[i - 1].y
+        );
 
         lengths.push(total);
-
     }
 
-    if (total === 0)
-        return points.slice();
+    if (total === 0) return points.slice();
 
     const result = [];
 
-    for (
-        let i=0;
-        i<count;
-        i++
-    ) {
-
-        const target =
-            total *
-            i /
-            (count-1);
-
+    for (let i = 0; i < count; i++) {
+        const target = total * i / (count - 1);
         let index = 1;
 
         while (
             index < lengths.length &&
             lengths[index] < target
         ) {
-
             index++;
-
         }
 
-        if (
-            index >= lengths.length
-        ) {
-
-            result.push(
-                points[
-                    points.length-1
-                ]
-            );
-
+        if (index >= lengths.length) {
+            result.push(points[points.length - 1]);
             continue;
-
         }
 
-        const l1 =
-            lengths[index-1];
+        const l1 = lengths[index - 1];
+        const l2 = lengths[index];
+        const ratio = (target - l1) / (l2 - l1 || 1);
 
-        const l2 =
-            lengths[index];
-
-        const ratio =
-            (target-l1) /
-            (l2-l1 || 1);
-
-        const p1 =
-            points[index-1];
-
-        const p2 =
-            points[index];
+        const p1 = points[index - 1];
+        const p2 = points[index];
 
         result.push({
-
-            x:
-                p1.x +
-                (p2.x-p1.x)*ratio,
-
-            y:
-                p1.y +
-                (p2.y-p1.y)*ratio
-
+            x: p1.x + (p2.x - p1.x) * ratio,
+            y: p1.y + (p2.y - p1.y) * ratio
         });
-
     }
 
     return result;
-
 }
 
 function normalizeStroke(points) {
+    const sampled = resampleStroke(points, 32);
 
-    const sampled =
-        resampleStroke(
-            points,
-            32
-        );
-
-    if (!sampled.length)
-        return [];
+    if (!sampled.length) return [];
 
     let minX = Infinity;
     let maxX = -Infinity;
-
     let minY = Infinity;
     let maxY = -Infinity;
 
-    sampled.forEach(
-        p => {
+    sampled.forEach(p => {
+        minX = Math.min(minX, p.x);
+        maxX = Math.max(maxX, p.x);
+        minY = Math.min(minY, p.y);
+        maxY = Math.max(maxY, p.y);
+    });
 
-            minX =
-                Math.min(
-                    minX,
-                    p.x
-                );
+    const width = Math.max(maxX - minX, 1);
+    const height = Math.max(maxY - minY, 1);
+    const size = Math.max(width, height);
 
-            maxX =
-                Math.max(
-                    maxX,
-                    p.x
-                );
-
-            minY =
-                Math.min(
-                    minY,
-                    p.y
-                );
-
-            maxY =
-                Math.max(
-                    maxY,
-                    p.y
-                );
-
-        }
-    );
-
-    const width =
-        Math.max(
-            maxX-minX,
-            1
-        );
-
-    const height =
-        Math.max(
-            maxY-minY,
-            1
-        );
-
-    const size =
-        Math.max(
-            width,
-            height
-        );
-
-    return sampled.map(
-        p => ({
-
-            x:
-                (
-                    p.x -
-                    (minX+maxX)/2
-                ) / size,
-
-            y:
-                (
-                    p.y -
-                    (minY+maxY)/2
-                ) / size
-
-        })
-    );
-
+    return sampled.map(p => ({
+        x: (p.x - (minX + maxX) / 2) / size,
+        y: (p.y - (minY + maxY) / 2) / size
+    }));
 }
 
-/* ============================================================
-   CIRCLE
-============================================================ */
+/* CIRCLE */
 
 function isCircle(points) {
+    if (points.length < 18) return false;
 
-    if (
-        points.length < 18
-    ) return false;
-
-    const box =
-        strokeBounds(points);
-
+    const box = strokeBounds(points);
     if (!box) return false;
 
     const width = box.width;
     const height = box.height;
 
-    if (
-        width < 28 ||
-        height < 28
-    ) return false;
+    if (width < 28 || height < 28) return false;
 
-    const ratio =
-        Math.min(
-            width,
-            height
-        ) /
-        Math.max(
-            width,
-            height
-        );
-
-    if (ratio < .72)
-        return false;
+    const ratio = Math.min(width, height) / Math.max(width, height);
+    if (ratio < .72) return false;
 
     const first = points[0];
+    const last = points[points.length - 1];
 
-    const last =
-        points[
-            points.length-1
-        ];
+    const closure = Math.hypot(
+        first.x - last.x,
+        first.y - last.y
+    );
 
-    const closure =
-        Math.hypot(
-            first.x-last.x,
-            first.y-last.y
-        );
+    const diameter = Math.max(width, height);
+    if (closure > diameter * .28) return false;
 
-    const diameter =
-        Math.max(
-            width,
-            height
-        );
-
-    if (
-        closure >
-        diameter*.28
-    ) return false;
-
-    const centerX =
-        (
-            box.minX +
-            box.maxX
-        ) / 2;
-
-    const centerY =
-        (
-            box.minY +
-            box.maxY
-        ) / 2;
-
-    const expectedRadius =
-        (
-            width +
-            height
-        ) / 4;
+    const centerX = (box.minX + box.maxX) / 2;
+    const centerY = (box.minY + box.maxY) / 2;
+    const expectedRadius = (width + height) / 4;
 
     let radialError = 0;
 
-    points.forEach(
-        point => {
+    points.forEach(point => {
+        const radius = Math.hypot(
+            point.x - centerX,
+            point.y - centerY
+        );
 
-            const radius =
-                Math.hypot(
-                    point.x-centerX,
-                    point.y-centerY
-                );
+        radialError += Math.abs(radius - expectedRadius);
+    });
 
-            radialError +=
-                Math.abs(
-                    radius -
-                    expectedRadius
-                );
+    radialError /= points.length;
 
-        }
-    );
-
-    radialError /=
-        points.length;
-
-    if (
-        radialError >
-        expectedRadius*.24
-    ) return false;
+    if (radialError > expectedRadius * .24) return false;
 
     let pathLength = 0;
 
-    for (
-        let i=1;
-        i<points.length;
-        i++
-    ) {
-
-        pathLength +=
-            Math.hypot(
-                points[i].x -
-                points[i-1].x,
-
-                points[i].y -
-                points[i-1].y
-            );
-
+    for (let i = 1; i < points.length; i++) {
+        pathLength += Math.hypot(
+            points[i].x - points[i - 1].x,
+            points[i].y - points[i - 1].y
+        );
     }
 
-    const expectedCircumference =
-        Math.PI * diameter;
+    const expectedCircumference = Math.PI * diameter;
+    const circumferenceRatio = pathLength / expectedCircumference;
 
-    const circumferenceRatio =
-        pathLength /
-        expectedCircumference;
-
-    if (
-        circumferenceRatio < .65 ||
-        circumferenceRatio > 1.55
-    ) return false;
+    if (circumferenceRatio < .65 || circumferenceRatio > 1.55) {
+        return false;
+    }
 
     return true;
-
 }
 
-/* ============================================================
-   RECOGNITION
-============================================================ */
+/* RECOGNITION */
 
 function clamp01(value) {
-
-    return Math.max(
-        0,
-        Math.min(
-            1,
-            value
-        )
-    );
-
+    return Math.max(0, Math.min(1, value));
 }
 
-function rangeScore(
-    value,
-    idealMin,
-    idealMax,
-    tolerance
-) {
-
-    if (
-        value >= idealMin &&
-        value <= idealMax
-    ) return 1;
+function rangeScore(value, idealMin, idealMax, tolerance) {
+    if (value >= idealMin && value <= idealMax) return 1;
 
     if (value < idealMin) {
-
-        return clamp01(
-            1 -
-            (
-                idealMin-value
-            ) /
-            tolerance
-        );
-
+        return clamp01(1 - (idealMin - value) / tolerance);
     }
 
-    return clamp01(
-        1 -
-        (
-            value-idealMax
-        ) /
-        tolerance
-    );
-
+    return clamp01(1 - (value - idealMax) / tolerance);
 }
 
 function recognizeHScore(points) {
+    if (points.length < 8) return 0;
 
-    if (points.length < 8)
-        return 0;
-
-    const box =
-        strokeBounds(points);
-
-    if (!box)
-        return 0;
+    const box = strokeBounds(points);
+    if (!box) return 0;
 
     const width = box.width;
     const height = box.height;
 
-    if (
-        width < 10 ||
-        height < 14
-    ) return 0;
+    if (width < 10 || height < 14) return 0;
 
-    const aspect =
-        width / height;
+    const aspect = width / height;
+    const aspectScore = rangeScore(aspect, .25, 1.20, .70);
 
-    const aspectScore =
-        rangeScore(
-            aspect,
-            .25,
-            1.20,
-            .70
-        );
-
-    const centerX =
-        (
-            box.minX +
-            box.maxX
-        ) / 2;
-
-    const centerY =
-        (
-            box.minY +
-            box.maxY
-        ) / 2;
+    const centerX = (box.minX + box.maxX) / 2;
+    const centerY = (box.minY + box.maxY) / 2;
 
     let leftCount = 0;
     let rightCount = 0;
 
     let leftMinY = Infinity;
     let leftMaxY = -Infinity;
-
     let rightMinY = Infinity;
     let rightMaxY = -Infinity;
 
-    points.forEach(
-        p => {
-
-            if (p.x < centerX) {
-
-                leftCount++;
-
-                leftMinY =
-                    Math.min(
-                        leftMinY,
-                        p.y
-                    );
-
-                leftMaxY =
-                    Math.max(
-                        leftMaxY,
-                        p.y
-                    );
-
-            }
-            else {
-
-                rightCount++;
-
-                rightMinY =
-                    Math.min(
-                        rightMinY,
-                        p.y
-                    );
-
-                rightMaxY =
-                    Math.max(
-                        rightMaxY,
-                        p.y
-                    );
-
-            }
-
+    points.forEach(p => {
+        if (p.x < centerX) {
+            leftCount++;
+            leftMinY = Math.min(leftMinY, p.y);
+            leftMaxY = Math.max(leftMaxY, p.y);
+        } else {
+            rightCount++;
+            rightMinY = Math.min(rightMinY, p.y);
+            rightMaxY = Math.max(rightMaxY, p.y);
         }
+    });
+
+    const leftRatio = leftCount / points.length;
+    const rightRatio = rightCount / points.length;
+
+    const sideBalance = 1 - Math.min(
+        1,
+        Math.abs(leftRatio - rightRatio) * 2.5
     );
 
-    const leftRatio =
-        leftCount /
-        points.length;
+    const leftHeight = Math.max(0, leftMaxY - leftMinY);
+    const rightHeight = Math.max(0, rightMaxY - rightMinY);
 
-    const rightRatio =
-        rightCount /
-        points.length;
-
-    const sideBalance =
-        1 -
-        Math.min(
-            1,
-            Math.abs(
-                leftRatio -
-                rightRatio
-            ) * 2.5
-        );
-
-    const leftHeight =
-        Math.max(
-            0,
-            leftMaxY-leftMinY
-        );
-
-    const rightHeight =
-        Math.max(
-            0,
-            rightMaxY-rightMinY
-        );
-
-    const leftCoverage =
-        clamp01(
-            leftHeight /
-            (height*.72)
-        );
-
-    const rightCoverage =
-        clamp01(
-            rightHeight /
-            (height*.72)
-        );
+    const leftCoverage = clamp01(leftHeight / (height * .72));
+    const rightCoverage = clamp01(rightHeight / (height * .72));
 
     let totalLength = 0;
     let verticalLeftLength = 0;
@@ -2233,310 +1199,140 @@ function recognizeHScore(points) {
     let horizontalLength = 0;
     let verticalLength = 0;
 
-    for (
-        let i=1;
-        i<points.length;
-        i++
-    ) {
+    for (let i = 1; i < points.length; i++) {
+        const p1 = points[i - 1];
+        const p2 = points[i];
 
-        const p1 =
-            points[i-1];
+        const dx = p2.x - p1.x;
+        const dy = p2.y - p1.y;
 
-        const p2 =
-            points[i];
+        const absDx = Math.abs(dx);
+        const absDy = Math.abs(dy);
+        const length = Math.hypot(dx, dy);
 
-        const dx =
-            p2.x-p1.x;
-
-        const dy =
-            p2.y-p1.y;
-
-        const absDx =
-            Math.abs(dx);
-
-        const absDy =
-            Math.abs(dy);
-
-        const length =
-            Math.hypot(
-                dx,
-                dy
-            );
-
-        if (length < .5)
-            continue;
+        if (length < .5) continue;
 
         totalLength += length;
 
-        const midX =
-            (
-                p1.x+p2.x
-            ) / 2;
+        const midX = (p1.x + p2.x) / 2;
+        const midY = (p1.y + p2.y) / 2;
 
-        const midY =
-            (
-                p1.y+p2.y
-            ) / 2;
-
-        if (
-            absDy >
-            absDx*1.55
-        ) {
-
+        if (absDy > absDx * 1.55) {
             verticalLength += length;
 
-            if (
-                midX <
-                centerX-width*.18
-            ) {
-
-                verticalLeftLength +=
-                    length;
-
+            if (midX < centerX - width * .18) {
+                verticalLeftLength += length;
             }
 
-            if (
-                midX >
-                centerX+width*.18
-            ) {
-
-                verticalRightLength +=
-                    length;
-
+            if (midX > centerX + width * .18) {
+                verticalRightLength += length;
             }
-
         }
 
-        if (
-            absDx >
-            absDy*1.70
-        ) {
+        if (absDx > absDy * 1.70) {
+            horizontalLength += length;
 
-            horizontalLength +=
-                length;
-
-            if (
-                Math.abs(
-                    midY-centerY
-                ) <
-                height*.27
-            ) {
-
-                centralHorizontalLength +=
-                    length;
-
+            if (Math.abs(midY - centerY) < height * .27) {
+                centralHorizontalLength += length;
             }
-
         }
 
-        if (
-            absDx >
-            length*.30 &&
-            absDy >
-            length*.30
-        ) {
-
-            diagonalLength +=
-                length;
-
+        if (absDx > length * .30 && absDy > length * .30) {
+            diagonalLength += length;
         }
-
     }
 
-    if (totalLength <= 0)
-        return 0;
+    if (totalLength <= 0) return 0;
 
-    const verticalLeftRatio =
-        verticalLeftLength /
-        totalLength;
+    const verticalLeftRatio = verticalLeftLength / totalLength;
+    const verticalRightRatio = verticalRightLength / totalLength;
+    const diagonalRatio = diagonalLength / totalLength;
 
-    const verticalRightRatio =
-        verticalRightLength /
-        totalLength;
+    const verticalStructureScore = (
+        clamp01(verticalLeftRatio / .20) +
+        clamp01(verticalRightRatio / .20)
+    ) / 2;
 
-    const diagonalRatio =
-        diagonalLength /
-        totalLength;
+    const horizontalStructureScore = clamp01(
+        centralHorizontalLength / (width * .32)
+    );
 
-    const verticalStructureScore =
-        (
-            clamp01(
-                verticalLeftRatio/.20
-            ) +
-            clamp01(
-                verticalRightRatio/.20
-            )
-        ) / 2;
+    const diagonalScore = clamp01(1 - diagonalRatio / .45);
+    const verticalDominance = verticalLength / totalLength;
 
-    const horizontalStructureScore =
-        clamp01(
-            centralHorizontalLength /
-            (width*.32)
-        );
+    const verticalDominanceScore = clamp01(
+        verticalDominance / .38
+    );
 
-    const diagonalScore =
-        clamp01(
-            1 -
-            diagonalRatio/.45
-        );
-
-    const verticalDominance =
-        verticalLength /
-        totalLength;
-
-    const verticalDominanceScore =
-        clamp01(
-            verticalDominance/.38
-        );
-
-    const directionalStructure =
-        clamp01(
-            (
-                verticalLength +
-                horizontalLength
-            ) /
-            totalLength /
-            .72
-        );
+    const directionalStructure = clamp01(
+        (verticalLength + horizontalLength) / totalLength / .72
+    );
 
     const score =
-
-        verticalStructureScore*.28 +
-
-        horizontalStructureScore*.25 +
-
-        (
-            leftCoverage *
-            rightCoverage
-        )*.15 +
-
-        sideBalance*.08 +
-
-        aspectScore*.08 +
-
-        verticalDominanceScore*.07 +
-
-        directionalStructure*.05 +
-
-        diagonalScore*.04;
+        verticalStructureScore * .28 +
+        horizontalStructureScore * .25 +
+        (leftCoverage * rightCoverage) * .15 +
+        sideBalance * .08 +
+        aspectScore * .08 +
+        verticalDominanceScore * .07 +
+        directionalStructure * .05 +
+        diagonalScore * .04;
 
     return clamp01(score);
-
 }
 
 function recognizeCScore(points) {
+    if (points.length < 8) return 0;
 
-    if (points.length < 8)
-        return 0;
-
-    const box =
-        strokeBounds(points);
-
-    if (!box)
-        return 0;
+    const box = strokeBounds(points);
+    if (!box) return 0;
 
     const width = box.width;
     const height = box.height;
 
-    if (
-        width < 8 ||
-        height < 10
-    ) return 0;
+    if (width < 8 || height < 10) return 0;
 
-    const aspect =
-        width/height;
-
-    const aspectScore =
-        rangeScore(
-            aspect,
-            .35,
-            1.20,
-            .75
-        );
+    const aspect = width / height;
+    const aspectScore = rangeScore(aspect, .35, 1.20, .75);
 
     const first = points[0];
+    const last = points[points.length - 1];
 
-    const last =
-        points[
-            points.length-1
-        ];
+    const endpointYDifference = Math.abs(first.y - last.y);
 
-    const endpointYDifference =
-        Math.abs(
-            first.y-last.y
-        );
+    const endpointYScore = clamp01(
+        endpointYDifference / (height * .45)
+    );
 
-    const endpointYScore =
-        clamp01(
-            endpointYDifference /
-            (height*.45)
-        );
+    const endpointXDifference = Math.abs(first.x - last.x);
 
-    const endpointXDifference =
-        Math.abs(
-            first.x-last.x
-        );
-
-    const endpointXScore =
-        clamp01(
-            1 -
-            endpointXDifference /
-            (width*.75)
-        );
+    const endpointXScore = clamp01(
+        1 - endpointXDifference / (width * .75)
+    );
 
     let pathLength = 0;
 
-    for (
-        let i=1;
-        i<points.length;
-        i++
-    ) {
-
-        pathLength +=
-            Math.hypot(
-                points[i].x -
-                points[i-1].x,
-
-                points[i].y -
-                points[i-1].y
-            );
-
+    for (let i = 1; i < points.length; i++) {
+        pathLength += Math.hypot(
+            points[i].x - points[i - 1].x,
+            points[i].y - points[i - 1].y
+        );
     }
 
-    const directDistance =
-        Math.hypot(
-            last.x-first.x,
-            last.y-first.y
-        );
+    const directDistance = Math.hypot(
+        last.x - first.x,
+        last.y - first.y
+    );
 
     let curvatureScore = 0;
 
     if (directDistance > 0) {
-
-        const curvatureRatio =
-            pathLength /
-            directDistance;
-
-        curvatureScore =
-            clamp01(
-                (
-                    curvatureRatio-1.25
-                )/1.10
-            );
-
+        const curvatureRatio = pathLength / directDistance;
+        curvatureScore = clamp01((curvatureRatio - 1.25) / 1.10);
     }
 
-    const centerX =
-        (
-            box.minX +
-            box.maxX
-        )/2;
-
-    const centerY =
-        (
-            box.minY +
-            box.maxY
-        )/2;
+    const centerX = (box.minX + box.maxX) / 2;
+    const centerY = (box.minY + box.maxY) / 2;
 
     let leftCount = 0;
     let rightCount = 0;
@@ -2544,972 +1340,448 @@ function recognizeCScore(points) {
     let upper = false;
     let lower = false;
 
-    points.forEach(
-        p => {
+    points.forEach(p => {
+        if (p.x < centerX) leftCount++;
+        else rightCount++;
 
-            if (p.x < centerX)
-                leftCount++;
-            else
-                rightCount++;
+        if (p.y < centerY - height * .12) upper = true;
+        if (p.y > centerY + height * .12) lower = true;
+    });
 
-            if (
-                p.y <
-                centerY-height*.12
-            )
-                upper = true;
+    const leftRatio = leftCount / points.length;
+    const rightRatio = rightCount / points.length;
 
-            if (
-                p.y >
-                centerY+height*.12
-            )
-                lower = true;
-
-        }
-    );
-
-    const leftRatio =
-        leftCount/points.length;
-
-    const rightRatio =
-        rightCount/points.length;
-
-    const leftScore =
-        clamp01(
-            leftRatio/.50
-        );
-
-    const openShapeScore =
-        upper && lower
-            ? 1
-            : 0;
+    const leftScore = clamp01(leftRatio / .50);
+    const openShapeScore = upper && lower ? 1 : 0;
 
     let horizontalLength = 0;
     let diagonalLength = 0;
 
-    for (
-        let i=1;
-        i<points.length;
-        i++
-    ) {
+    for (let i = 1; i < points.length; i++) {
+        const dx = Math.abs(points[i].x - points[i - 1].x);
+        const dy = Math.abs(points[i].y - points[i - 1].y);
 
-        const dx =
-            Math.abs(
-                points[i].x -
-                points[i-1].x
-            );
+        const segmentLength = Math.hypot(dx, dy);
 
-        const dy =
-            Math.abs(
-                points[i].y -
-                points[i-1].y
-            );
-
-        const segmentLength =
-            Math.hypot(
-                dx,
-                dy
-            );
-
-        if (
-            dx >
-            dy*2.5
-        ) {
-
-            horizontalLength +=
-                segmentLength;
-
+        if (dx > dy * 2.5) {
+            horizontalLength += segmentLength;
         }
 
         if (
-            dx >
-            segmentLength*.30 &&
-            dy >
-            segmentLength*.30
+            dx > segmentLength * .30 &&
+            dy > segmentLength * .30
         ) {
-
-            diagonalLength +=
-                segmentLength;
-
+            diagonalLength += segmentLength;
         }
-
     }
 
-    const horizontalRatio =
-        totalSafeRatio(
-            horizontalLength,
-            pathLength
-        );
+    const horizontalRatio = totalSafeRatio(horizontalLength, pathLength);
+    const diagonalRatio = totalSafeRatio(diagonalLength, pathLength);
 
-    const diagonalRatio =
-        totalSafeRatio(
-            diagonalLength,
-            pathLength
-        );
+    const horizontalScore = clamp01(1 - horizontalRatio / .60);
+    const diagonalScore = clamp01(1 - diagonalRatio / .60);
 
-    const horizontalScore =
-        clamp01(
-            1-horizontalRatio/.60
-        );
-
-    const diagonalScore =
-        clamp01(
-            1-diagonalRatio/.60
-        );
-
-    const curvatureDominance =
-        clamp01(
-            curvatureScore *
-            (
-                1 -
-                verticalLikeRatio(points)
-            )
-        );
-
-    const openingScore =
-        endpointYScore*.65 +
-        endpointXScore*.35;
-
-    const asymmetryScore =
-        clamp01(
-            1 -
-            Math.abs(
-                leftRatio-rightRatio
-            )
-        );
-
-    const score =
-
-        openingScore*.19 +
-
-        curvatureScore*.25 +
-
-        leftScore*.16 +
-
-        openShapeScore*.08 +
-
-        horizontalScore*.10 +
-
-        diagonalScore*.05 +
-
-        curvatureDominance*.10 +
-
-        (
-            1-asymmetryScore
-        )*.07;
-
-    const hLike =
-        verticalLikeRatio(points);
-
-    const hPenalty =
-        clamp01(
-            (
-                hLike-.30
-            )/.35
-        );
-
-    return clamp01(
-        score *
-        (
-            1 -
-            hPenalty*.65
-        )
+    const curvatureDominance = clamp01(
+        curvatureScore * (1 - verticalLikeRatio(points))
     );
 
+    const openingScore = endpointYScore * .65 + endpointXScore * .35;
+
+    const asymmetryScore = clamp01(
+        1 - Math.abs(leftRatio - rightRatio)
+    );
+
+    const score =
+        openingScore * .19 +
+        curvatureScore * .25 +
+        leftScore * .16 +
+        openShapeScore * .08 +
+        horizontalScore * .10 +
+        diagonalScore * .05 +
+        curvatureDominance * .10 +
+        (1 - asymmetryScore) * .07;
+
+    const hLike = verticalLikeRatio(points);
+    const hPenalty = clamp01((hLike - .30) / .35);
+
+    return clamp01(score * (1 - hPenalty * .65));
 }
 
-function totalSafeRatio(
-    value,
-    total
-) {
-
-    if (total <= 0)
-        return 0;
-
-    return value/total;
-
+function totalSafeRatio(value, total) {
+    if (total <= 0) return 0;
+    return value / total;
 }
 
 function verticalLikeRatio(points) {
-
-    if (points.length < 2)
-        return 0;
+    if (points.length < 2) return 0;
 
     let total = 0;
     let vertical = 0;
 
-    for (
-        let i=1;
-        i<points.length;
-        i++
-    ) {
+    for (let i = 1; i < points.length; i++) {
+        const dx = points[i].x - points[i - 1].x;
+        const dy = points[i].y - points[i - 1].y;
 
-        const dx =
-            points[i].x -
-            points[i-1].x;
+        const length = Math.hypot(dx, dy);
 
-        const dy =
-            points[i].y -
-            points[i-1].y;
-
-        const length =
-            Math.hypot(
-                dx,
-                dy
-            );
-
-        if (length < .5)
-            continue;
+        if (length < .5) continue;
 
         total += length;
 
-        if (
-            Math.abs(dy) >
-            Math.abs(dx)*1.55
-        ) {
-
+        if (Math.abs(dy) > Math.abs(dx) * 1.55) {
             vertical += length;
-
         }
-
     }
 
-    if (total <= 0)
-        return 0;
-
-    return vertical/total;
-
+    if (total <= 0) return 0;
+    return vertical / total;
 }
 
 function recognizeElement(points) {
+    if (points.length < 8) return null;
 
-    if (points.length < 8)
-        return null;
+    const hScore = recognizeHScore(points);
+    const cScore = recognizeCScore(points);
 
-    const hScore =
-        recognizeHScore(points);
+    if (hScore < .48 && cScore < .48) return null;
 
-    const cScore =
-        recognizeCScore(points);
+    if (hScore >= .52 && hScore > cScore + .08) return "H";
+    if (cScore >= .52 && cScore > hScore + .08) return "C";
 
-    if (
-        hScore < .48 &&
-        cScore < .48
-    ) {
-
-        return null;
-
-    }
-
-    if (
-        hScore >= .52 &&
-        hScore > cScore+.08
-    ) {
-
-        return "H";
-
-    }
-
-    if (
-        cScore >= .52 &&
-        cScore > hScore+.08
-    ) {
-
-        return "C";
-
-    }
-
-    if (
-        hScore >= .70 &&
-        hScore >= cScore
-    ) {
-
-        return "H";
-
-    }
-
-    if (
-        cScore >= .70 &&
-        cScore >= hScore
-    ) {
-
-        return "C";
-
-    }
+    if (hScore >= .70 && hScore >= cScore) return "H";
+    if (cScore >= .70 && cScore >= hScore) return "C";
 
     return null;
-
 }
 
-/* ============================================================
-   PENDING ATOM
-============================================================ */
+/* PENDING ATOM */
 
 function removePendingAtom() {
+    if (!pendingAtom) return;
 
-    if (!pendingAtom)
-        return;
+    const pendingId = pendingAtom.id;
 
-    const pendingId =
-        pendingAtom.id;
+    bonds = bonds.filter(
+        bond => bond.a !== pendingId && bond.b !== pendingId
+    );
 
-    bonds =
-        bonds.filter(
-            bond =>
-                bond.a !== pendingId &&
-                bond.b !== pendingId
-        );
-
-    atoms =
-        atoms.filter(
-            atom =>
-                atom.id !== pendingId
-        );
+    atoms = atoms.filter(atom => atom.id !== pendingId);
 
     pendingAtom = null;
-
 }
 
-function createPendingAtom(x,y) {
+function createPendingAtom(x, y) {
+    const nearby = atoms.find(atom =>
+        !atom.pending &&
+        Math.hypot(atom.x - x, atom.y - y) < 30
+    );
 
-    const nearby =
-        atoms.find(
-            atom =>
-                !atom.pending &&
-                Math.hypot(
-                    atom.x-x,
-                    atom.y-y
-                ) < 30
-        );
-
-    if (nearby)
-        return null;
+    if (nearby) return null;
 
     saveHistory();
 
-    if (pendingAtom)
-        removePendingAtom();
+    if (pendingAtom) removePendingAtom();
 
     const atom = {
-
-        id:
-            nextAtomId++,
-
+        id: nextAtomId++,
         x,
         y,
-
-        element:
-            "?",
-
-        pending:
-            true
-
+        element: "?",
+        pending: true
     };
 
     atoms.push(atom);
-
-    pendingAtom =
-        atom;
+    pendingAtom = atom;
 
     render();
 
     return atom;
-
 }
 
-function finalizePendingAtom(
-    atom,
-    element
-) {
-
-    if (!atom)
-        return;
+function finalizePendingAtom(atom, element) {
+    if (!atom) return;
 
     if (!element) {
-
         atom.element = "?";
         atom.pending = true;
-
-        pendingAtom =
-            atom;
-
+        pendingAtom = atom;
         render();
-
         return;
-
     }
 
-    atom.element =
-        element;
-
-    atom.pending =
-        false;
-
+    atom.element = element;
+    atom.pending = false;
     pendingAtom = null;
 
     render();
-
 }
 
-/* ============================================================
-   LIVE STROKE
-============================================================ */
+/* LIVE STROKE */
 
 let currentStroke = [];
 
 function drawLiveStroke() {
-
     strokeLayer.innerHTML = "";
 
-    if (
-        currentStroke.length < 2
-    ) return;
+    if (currentStroke.length < 2) return;
 
-    const path =
-        document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "path"
-        );
+    const path = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "path"
+    );
 
-    let d =
-        `M ${currentStroke[0].x} ${currentStroke[0].y}`;
+    let d = `M ${currentStroke[0].x} ${currentStroke[0].y}`;
 
-    for (
-        let i=1;
-        i<currentStroke.length;
-        i++
-    ) {
-
-        d +=
-            ` L ${currentStroke[i].x} ${currentStroke[i].y}`;
-
+    for (let i = 1; i < currentStroke.length; i++) {
+        d += ` L ${currentStroke[i].x} ${currentStroke[i].y}`;
     }
 
-    path.setAttribute(
-        "d",
-        d
-    );
-
-    path.setAttribute(
-        "class",
-        "rough-stroke"
-    );
+    path.setAttribute("d", d);
+    path.setAttribute("class", "rough-stroke");
 
     strokeLayer.appendChild(path);
-
 }
 
-/* ============================================================
-   FINALIZE STROKE
-============================================================ */
+/* FINALIZE STROKE */
 
 function finalizeCreateStroke() {
+    if (!currentStroke.length) return;
 
-    if (!currentStroke.length)
-        return;
-
-    const points =
-        currentStroke.slice();
+    const points = currentStroke.slice();
 
     currentStroke = [];
-
     strokeLayer.innerHTML = "";
 
     if (isCircle(points)) {
-
-        const box =
-            strokeBounds(points);
+        const box = strokeBounds(points);
 
         if (box) {
-
             createPendingAtom(
-
-                (
-                    box.minX +
-                    box.maxX
-                )/2,
-
-                (
-                    box.minY +
-                    box.maxY
-                )/2
-
+                (box.minX + box.maxX) / 2,
+                (box.minY + box.maxY) / 2
             );
-
         }
 
         return;
-
     }
 
     if (pendingAtom) {
-
-        const element =
-            recognizeElement(points);
-
-        finalizePendingAtom(
-            pendingAtom,
-            element
-        );
-
+        const element = recognizeElement(points);
+        finalizePendingAtom(pendingAtom, element);
         return;
-
     }
 
-    const start =
-        points[0];
+    const start = points[0];
+    const end = points[points.length - 1];
 
-    const end =
-        points[
-            points.length-1
-        ];
+    const atomA = findAtomAt(start.x, start.y);
+    const atomB = findAtomAt(end.x, end.y);
 
-    const atomA =
-        findAtomAt(
-            start.x,
-            start.y
-        );
-
-    const atomB =
-        findAtomAt(
-            end.x,
-            end.y
-        );
-
-    if (
-        atomA &&
-        atomB &&
-        atomA.id !== atomB.id
-    ) {
-
-        connectAtoms(
-            atomA,
-            atomB
-        );
-
+    if (atomA && atomB && atomA.id !== atomB.id) {
+        connectAtoms(atomA, atomB);
     }
-
 }
 
-/* ============================================================
-   MOLECULE
-============================================================ */
+/* MOLECULE */
 
 function getConnectedMolecule(startAtom) {
+    const connected = new Set();
 
-    const connected =
-        new Set();
+    if (!startAtom) return connected;
 
-    if (!startAtom)
-        return connected;
-
-    const queue =
-        [startAtom.id];
-
-    connected.add(
-        startAtom.id
-    );
+    const queue = [startAtom.id];
+    connected.add(startAtom.id);
 
     while (queue.length) {
+        const currentId = queue.shift();
 
-        const currentId =
-            queue.shift();
+        bonds.forEach(bond => {
+            let nextId = null;
 
-        bonds.forEach(
-            bond => {
-
-                let nextId = null;
-
-                if (
-                    bond.a === currentId
-                ) {
-
-                    nextId =
-                        bond.b;
-
-                }
-                else if (
-                    bond.b === currentId
-                ) {
-
-                    nextId =
-                        bond.a;
-
-                }
-
-                if (
-                    nextId !== null &&
-                    !connected.has(nextId)
-                ) {
-
-                    connected.add(
-                        nextId
-                    );
-
-                    queue.push(
-                        nextId
-                    );
-
-                }
-
+            if (bond.a === currentId) {
+                nextId = bond.b;
+            } else if (bond.b === currentId) {
+                nextId = bond.a;
             }
-        );
 
+            if (nextId !== null && !connected.has(nextId)) {
+                connected.add(nextId);
+                queue.push(nextId);
+            }
+        });
     }
 
     return connected;
-
 }
 
-/* ============================================================
-   MOLECULE DRAG
-============================================================ */
+/* MOLECULE DRAG */
 
 function prepareMoleculeDrag() {
+    selectedMolecule = getConnectedMolecule(selectedAtom);
+    originalMoleculePositions = new Map();
 
-    selectedMolecule =
-        getConnectedMolecule(
-            selectedAtom
-        );
+    selectedMolecule.forEach(atomId => {
+        const atom = getAtom(atomId);
 
-    originalMoleculePositions =
-        new Map();
+        if (!atom) return;
 
-    selectedMolecule.forEach(
-        atomId => {
-
-            const atom =
-                getAtom(atomId);
-
-            if (!atom)
-                return;
-
-            originalMoleculePositions.set(
-                atomId,
-                {
-                    x: atom.x,
-                    y: atom.y
-                }
-            );
-
-        }
-    );
-
+        originalMoleculePositions.set(atomId, {
+            x: atom.x,
+            y: atom.y
+        });
+    });
 }
 
 function updateMoleculeAndItsBonds() {
+    selectedMolecule.forEach(atomId => {
+        const atom = getAtom(atomId);
 
-    selectedMolecule.forEach(
-        atomId => {
+        if (!atom) return;
 
-            const atom =
-                getAtom(atomId);
+        updateAtomElement(atom);
+    });
 
-            if (!atom)
-                return;
+    const affectedBonds = new Set();
 
-            updateAtomElement(atom);
-
+    bonds.forEach(bond => {
+        if (
+            selectedMolecule.has(bond.a) ||
+            selectedMolecule.has(bond.b)
+        ) {
+            affectedBonds.add(bond.id);
         }
-    );
+    });
 
-    const affectedBonds =
-        new Set();
+    affectedBonds.forEach(bondId => {
+        const bond = bonds.find(item => item.id === bondId);
 
-    bonds.forEach(
-        bond => {
+        if (!bond) return;
 
-            if (
-                selectedMolecule.has(bond.a) ||
-                selectedMolecule.has(bond.b)
-            ) {
+        const group = bondElements.get(bond.id);
 
-                affectedBonds.add(
-                    bond.id
-                );
-
-            }
-
+        if (group) {
+            updateBondElement(bond, group);
         }
-    );
-
-    affectedBonds.forEach(
-        bondId => {
-
-            const bond =
-                bonds.find(
-                    item =>
-                        item.id === bondId
-                );
-
-            if (!bond)
-                return;
-
-            const group =
-                bondElements.get(
-                    bond.id
-                );
-
-            if (group) {
-
-                updateBondElement(
-                    bond,
-                    group
-                );
-
-            }
-
-        }
-    );
-
+    });
 }
 
-/* ============================================================
-   COPY
-============================================================ */
+/* COPY */
 
 function copyMolecule(startAtom) {
+    if (!startAtom || startAtom.pending === true) return false;
 
-    if (
-        !startAtom ||
-        startAtom.pending === true
-    ) {
+    const moleculeIds = getConnectedMolecule(startAtom);
 
-        return false;
+    if (!moleculeIds.size) return false;
 
-    }
+    const moleculeAtoms = atoms.filter(
+        atom => moleculeIds.has(atom.id)
+    );
 
-    const moleculeIds =
-        getConnectedMolecule(
-            startAtom
-        );
+    const moleculeBonds = bonds.filter(
+        bond => moleculeIds.has(bond.a) && moleculeIds.has(bond.b)
+    );
 
-    if (!moleculeIds.size)
-        return false;
+    if (!moleculeAtoms.length) return false;
 
-    const moleculeAtoms =
-        atoms.filter(
-            atom =>
-                moleculeIds.has(
-                    atom.id
-                )
-        );
+    const center = moleculeAtoms.reduce(
+        (acc, atom) => {
+            acc.x += atom.x;
+            acc.y += atom.y;
+            return acc;
+        },
+        { x: 0, y: 0 }
+    );
 
-    const moleculeBonds =
-        bonds.filter(
-            bond =>
-                moleculeIds.has(bond.a) &&
-                moleculeIds.has(bond.b)
-        );
-
-    if (!moleculeAtoms.length)
-        return false;
-
-    const center =
-        moleculeAtoms.reduce(
-            (acc,atom) => {
-
-                acc.x += atom.x;
-                acc.y += atom.y;
-
-                return acc;
-
-            },
-            {
-                x: 0,
-                y: 0
-            }
-        );
-
-    center.x /=
-        moleculeAtoms.length;
-
-    center.y /=
-        moleculeAtoms.length;
+    center.x /= moleculeAtoms.length;
+    center.y /= moleculeAtoms.length;
 
     moleculeClipboard = {
+        atoms: moleculeAtoms.map(atom => ({
+            sourceId: atom.id,
+            x: atom.x - center.x,
+            y: atom.y - center.y,
+            element: atom.element
+        })),
 
-        atoms:
-            moleculeAtoms.map(
-                atom => ({
-
-                    sourceId:
-                        atom.id,
-
-                    x:
-                        atom.x-center.x,
-
-                    y:
-                        atom.y-center.y,
-
-                    element:
-                        atom.element
-
-                })
-            ),
-
-        bonds:
-            moleculeBonds.map(
-                bond => ({
-
-                    a:
-                        bond.a,
-
-                    b:
-                        bond.b,
-
-                    order:
-                        bond.order
-
-                })
-            )
-
+        bonds: moleculeBonds.map(bond => ({
+            a: bond.a,
+            b: bond.b,
+            order: bond.order
+        }))
     };
 
-    status.textContent =
-        "Molecule copied";
+    status.textContent = "Molecule copied";
 
     return true;
-
 }
 
 function hasMoleculeClipboard() {
-
     return !!(
         moleculeClipboard &&
-        Array.isArray(
-            moleculeClipboard.atoms
-        ) &&
+        Array.isArray(moleculeClipboard.atoms) &&
         moleculeClipboard.atoms.length > 0
     );
-
 }
 
-/* ============================================================
-   PASTE
-============================================================ */
+/* PASTE */
 
-function pasteMolecule(x,y) {
-
-    if (!hasMoleculeClipboard()) {
-
-        return false;
-
-    }
+function pasteMolecule(x, y) {
+    if (!hasMoleculeClipboard()) return false;
 
     saveHistory();
 
-    const idMap =
-        new Map();
-
+    const idMap = new Map();
     const newAtoms = [];
 
-    moleculeClipboard.atoms.forEach(
-        sourceAtom => {
+    moleculeClipboard.atoms.forEach(sourceAtom => {
+        const newId = nextAtomId++;
 
-            const newId =
-                nextAtomId++;
+        idMap.set(sourceAtom.sourceId, newId);
 
-            idMap.set(
-                sourceAtom.sourceId,
-                newId
-            );
-
-            newAtoms.push({
-
-                id:
-                    newId,
-
-                x:
-                    x +
-                    sourceAtom.x,
-
-                y:
-                    y +
-                    sourceAtom.y,
-
-                element:
-                    sourceAtom.element,
-
-                pending:
-                    false
-
-            });
-
-        }
-    );
+        newAtoms.push({
+            id: newId,
+            x: x + sourceAtom.x,
+            y: y + sourceAtom.y,
+            element: sourceAtom.element,
+            pending: false
+        });
+    });
 
     const newBonds = [];
 
-    moleculeClipboard.bonds.forEach(
-        sourceBond => {
+    moleculeClipboard.bonds.forEach(sourceBond => {
+        const newA = idMap.get(sourceBond.a);
+        const newB = idMap.get(sourceBond.b);
 
-            const newA =
-                idMap.get(
-                    sourceBond.a
-                );
+        if (newA === undefined || newB === undefined) return;
 
-            const newB =
-                idMap.get(
-                    sourceBond.b
-                );
+        newBonds.push({
+            id: nextBondId++,
+            a: newA,
+            b: newB,
+            order: sourceBond.order
+        });
+    });
 
-            if (
-                newA === undefined ||
-                newB === undefined
-            ) {
-
-                return;
-
-            }
-
-            newBonds.push({
-
-                id:
-                    nextBondId++,
-
-                a:
-                    newA,
-
-                b:
-                    newB,
-
-                order:
-                    sourceBond.order
-
-            });
-
-        }
-    );
-
-    atoms.push(
-        ...newAtoms
-    );
-
-    bonds.push(
-        ...newBonds
-    );
+    atoms.push(...newAtoms);
+    bonds.push(...newBonds);
 
     pendingAtom = null;
 
     render();
 
-    status.textContent =
-        "Molecule pasted";
+    status.textContent = "Molecule pasted";
 
     return true;
-
 }
 
-/* ============================================================
-   MENU
-============================================================ */
+/* MENU */
 
-function positionMoleculeMenu(x,y) {
-
-    const workspaceRect =
-        document
-            .getElementById("workspace")
-            .getBoundingClientRect();
+function positionMoleculeMenu(x, y) {
+    const workspaceRect = document
+        .getElementById("workspace")
+        .getBoundingClientRect();
 
     const menuWidth = 180;
     const menuHeight = 150;
@@ -3517,1166 +1789,636 @@ function positionMoleculeMenu(x,y) {
     let left = x;
     let top = y;
 
-    if (
-        left + menuWidth >
-        workspaceRect.width-10
-    ) {
-
-        left =
-            workspaceRect.width -
-            menuWidth -
-            10;
-
+    if (left + menuWidth > workspaceRect.width - 10) {
+        left = workspaceRect.width - menuWidth - 10;
     }
 
-    if (left < 10)
-        left = 10;
+    if (left < 10) left = 10;
 
-    if (
-        top + menuHeight >
-        workspaceRect.height-10
-    ) {
-
-        top =
-            y-menuHeight;
-
+    if (top + menuHeight > workspaceRect.height - 10) {
+        top = y - menuHeight;
     }
 
-    if (top < 10)
-        top = 10;
+    if (top < 10) top = 10;
 
-    moleculeMenu.style.left =
-        `${left}px`;
-
-    moleculeMenu.style.top =
-        `${top}px`;
-
+    moleculeMenu.style.left = `${left}px`;
+    moleculeMenu.style.top = `${top}px`;
 }
 
-function openMoleculeMenu(
-    atom,
-    x,
-    y
-) {
+function openMoleculeMenu(atom, x, y) {
+    selectedAtom = atom || null;
+    moleculeMenuAtom = atom || null;
 
-    selectedAtom =
-        atom || null;
+    selectedMolecule = atom
+        ? getConnectedMolecule(atom)
+        : new Set();
 
-    moleculeMenuAtom =
-        atom || null;
+    moleculeMenuAnchor = { x, y };
 
-    selectedMolecule =
-        atom
-            ? getConnectedMolecule(atom)
-            : new Set();
+    positionMoleculeMenu(x, y);
 
-    moleculeMenuAnchor = {
-        x,
-        y
-    };
+    moleculeMenu.classList.add("visible");
 
-    positionMoleculeMenu(
-        x,
-        y
-    );
+    const canCopy = !!atom && atom.pending !== true;
 
-    moleculeMenu.classList.add(
-        "visible"
-    );
+    copyMoleculeBtn.classList.toggle("disabled", !canCopy);
+    pasteMoleculeBtn.classList.remove("disabled");
 
-    const canCopy =
-        !!atom &&
-        atom.pending !== true;
-
-    copyMoleculeBtn.classList.toggle(
-        "disabled",
-        !canCopy
-    );
-
-    pasteMoleculeBtn.classList.remove(
-        "disabled"
-    );
-
-    status.textContent =
-        "Molecule menu";
-
+    status.textContent = "Molecule menu";
 }
 
 function closeMoleculeMenu() {
-
-    moleculeMenu.classList.remove(
-        "visible"
-    );
-
+    moleculeMenu.classList.remove("visible");
     moleculeMenuAnchor = null;
-
     moleculeMenuAtom = null;
-
 }
 
-/* ============================================================
-   MENU ACTIONS
-============================================================ */
+/* MENU ACTIONS */
 
 copyMoleculeBtn.onclick = () => {
-
-    if (
-        !moleculeMenuAtom ||
-        moleculeMenuAtom.pending === true
-    ) {
-
+    if (!moleculeMenuAtom || moleculeMenuAtom.pending === true) {
         closeMoleculeMenu();
         return;
-
     }
 
-    const copied =
-        copyMolecule(
-            moleculeMenuAtom
-        );
+    const copied = copyMolecule(moleculeMenuAtom);
 
-    if (copied) {
-
-        closeMoleculeMenu();
-
-    }
-
+    if (copied) closeMoleculeMenu();
 };
 
 pasteMoleculeBtn.onclick = () => {
-
     if (!hasMoleculeClipboard()) {
-
-        status.textContent =
-            "Nothing to paste";
-
+        status.textContent = "Nothing to paste";
         return;
-
     }
 
     if (!moleculeMenuAnchor) {
-
         closeMoleculeMenu();
         return;
-
     }
 
-    if (!canPasteNow()) {
+    if (!canPasteNow()) return;
 
-        return;
+    const pasteX = moleculeMenuAnchor.x + 80;
+    const pasteY = moleculeMenuAnchor.y + 80;
 
-    }
-
-    const pasteX =
-        moleculeMenuAnchor.x + 80;
-
-    const pasteY =
-        moleculeMenuAnchor.y + 80;
-
-    pasteMolecule(
-        pasteX,
-        pasteY
-    );
+    pasteMolecule(pasteX, pasteY);
 
     closeMoleculeMenu();
-
 };
 
-closeMenuBtn.onclick = () => {
+closeMenuBtn.onclick = () => closeMoleculeMenu();
+
+/* OUTSIDE MENU */
+
+document.addEventListener("pointerdown", event => {
+    if (!moleculeMenu.classList.contains("visible")) return;
+    if (moleculeMenu.contains(event.target)) return;
 
     closeMoleculeMenu();
+});
 
-};
-
-/* ============================================================
-   OUTSIDE MENU
-============================================================ */
-
-document.addEventListener(
-    "pointerdown",
-    event => {
-
-        if (
-            !moleculeMenu.classList.contains(
-                "visible"
-            )
-        ) {
-
-            return;
-
-        }
-
-        if (
-            moleculeMenu.contains(
-                event.target
-            )
-        ) {
-
-            return;
-
-        }
-
-        closeMoleculeMenu();
-
-    }
-);
-
-/* ============================================================
-   POINTER STATE
-============================================================ */
+/* POINTER STATE */
 
 let activePointer = null;
-
 let selectedAtom = null;
-
-let selectedMolecule =
-    new Set();
-
+let selectedMolecule = new Set();
 let dragStart = null;
-
 let originalAtomPosition = null;
-
-let originalMoleculePositions =
-    new Map();
+let originalMoleculePositions = new Map();
 
 let longPressTimer = null;
-
 let longPressTriggered = false;
-
 let movementStarted = false;
-
 let historySavedForDrag = false;
 
-/* ============================================================
-   PENCIL MENU STATE
-============================================================ */
+/* Stato per il distacco del legame */
+
+let dragStartTime = 0;
+let bondBreakTriggered = false;
+
+/* PENCIL MENU STATE */
 
 let pencilMenuTriggered = false;
-
 let pencilMenuPoint = null;
 
-/* ============================================================
-   LONG PRESS
-============================================================ */
+/* LONG PRESS */
 
 const LONG_PRESS_DURATION = 550;
 const LONG_PRESS_MOVE_THRESHOLD = 10;
 
 function getInteractionType(event) {
-
-    if (
-        event.pointerType === "pen"
-    ) {
-
-        return "create";
-
-    }
-
-    if (
-        event.pointerType === "touch"
-    ) {
-
-        return "move";
-
-    }
+    if (event.pointerType === "pen") return "create";
+    if (event.pointerType === "touch") return "move";
 
     return manualMode;
-
 }
 
 function getCanvasPoint(event) {
-
-    const rect =
-        canvas.getBoundingClientRect();
+    const rect = canvas.getBoundingClientRect();
 
     return {
-
-        x:
-            event.clientX -
-            rect.left,
-
-        y:
-            event.clientY -
-            rect.top
-
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top
     };
-
 }
 
 function cancelLongPress() {
-
-    if (
-        longPressTimer !== null
-    ) {
-
-        clearTimeout(
-            longPressTimer
-        );
-
+    if (longPressTimer !== null) {
+        clearTimeout(longPressTimer);
         longPressTimer = null;
-
     }
-
 }
 
-/* ============================================================
-   FINGER LONG PRESS
-============================================================ */
+/* FINGER LONG PRESS */
 
 function startLongPress() {
-
     cancelLongPress();
 
-    longPressTimer =
-        setTimeout(
-            () => {
+    longPressTimer = setTimeout(() => {
+        longPressTimer = null;
 
-                longPressTimer = null;
+        if (movementStarted || !selectedAtom) return;
 
-                if (
-                    movementStarted ||
-                    !selectedAtom
-                ) {
+        longPressTriggered = true;
 
-                    return;
+        prepareMoleculeDrag();
 
-                }
-
-                longPressTriggered =
-                    true;
-
-                prepareMoleculeDrag();
-
-                status.textContent =
-                    "Molecule selected · Drag to move";
-
-            },
-            LONG_PRESS_DURATION
-        );
-
+        status.textContent = "Molecule selected · Drag to move";
+    }, LONG_PRESS_DURATION);
 }
 
-/* ============================================================
-   PENCIL LONG PRESS
-============================================================ */
+/* PENCIL LONG PRESS */
 
-function startPencilMenuLongPress(
-    point,
-    atom
-) {
-
+function startPencilMenuLongPress(point, atom) {
     cancelLongPress();
 
-    longPressTimer =
-        setTimeout(
-            () => {
+    longPressTimer = setTimeout(() => {
+        longPressTimer = null;
 
-                longPressTimer = null;
+        if (movementStarted) return;
 
-                if (movementStarted) {
-                    return;
-                }
+        pencilMenuTriggered = true;
 
-                pencilMenuTriggered =
-                    true;
+        pencilMenuPoint = {
+            x: point.x,
+            y: point.y
+        };
 
-                pencilMenuPoint = {
-                    x: point.x,
-                    y: point.y
-                };
+        currentStroke = [];
+        strokeLayer.innerHTML = "";
 
-                currentStroke = [];
-
-                strokeLayer.innerHTML = "";
-
-                openMoleculeMenu(
-                    atom || null,
-                    point.x,
-                    point.y
-                );
-
-            },
-            LONG_PRESS_DURATION
-        );
-
+        openMoleculeMenu(atom || null, point.x, point.y);
+    }, LONG_PRESS_DURATION);
 }
 
-/* ============================================================
-   RESET POINTER
-============================================================ */
+/* RESET POINTER */
 
 function resetPointerState() {
-
     cancelLongPress();
 
     activePointer = null;
-
     selectedAtom = null;
-
-    selectedMolecule =
-        new Set();
+    selectedMolecule = new Set();
 
     dragStart = null;
+    originalAtomPosition = null;
+    originalMoleculePositions = new Map();
 
-    originalAtomPosition =
-        null;
+    longPressTriggered = false;
+    movementStarted = false;
+    historySavedForDrag = false;
 
-    originalMoleculePositions =
-        new Map();
+    pencilMenuTriggered = false;
+    pencilMenuPoint = null;
 
-    longPressTriggered =
-        false;
-
-    movementStarted =
-        false;
-
-    historySavedForDrag =
-        false;
-
-    pencilMenuTriggered =
-        false;
-
-    pencilMenuPoint =
-        null;
-
+    dragStartTime = 0;
+    bondBreakTriggered = false;
 }
 
-/* ============================================================
-   POINTER DOWN
-============================================================ */
+/* POINTER DOWN */
 
-canvas.addEventListener(
-    "pointerdown",
-    event => {
+canvas.addEventListener("pointerdown", event => {
+    registerPointer(event);
 
-        registerPointer(event);
+    if (shouldIgnoreTouch(event)) return;
 
-        if (
-            shouldIgnoreTouch(event)
-        ) {
+    event.preventDefault();
 
+    if (activePointer && activePointer.id !== event.pointerId) {
+        return;
+    }
+
+    const point = getCanvasPoint(event);
+    const interaction = getInteractionType(event);
+
+    activePointer = {
+        id: event.pointerId,
+        type: interaction,
+        pointerType: event.pointerType
+    };
+
+    selectedAtom = null;
+    selectedMolecule = new Set();
+
+    dragStart = null;
+    originalAtomPosition = null;
+    originalMoleculePositions = new Map();
+
+    longPressTriggered = false;
+    movementStarted = false;
+    historySavedForDrag = false;
+
+    pencilMenuTriggered = false;
+    pencilMenuPoint = null;
+
+    dragStartTime = 0;
+    bondBreakTriggered = false;
+
+    cancelLongPress();
+
+    /* ERASE */
+
+    if (manualMode === "erase" && event.pointerType !== "pen") {
+        const atom = findAtomAt(point.x, point.y);
+
+        if (atom) {
+            removeAtom(atom);
+            resetPointerState();
+            unregisterPointer(event);
             return;
-
         }
 
-        event.preventDefault();
+        const bond = findBondAt(point.x, point.y);
 
-        if (
-            activePointer &&
-            activePointer.id !==
-            event.pointerId
-        ) {
-
+        if (bond) {
+            removeBond(bond);
+            resetPointerState();
+            unregisterPointer(event);
             return;
-
         }
 
-        const point =
-            getCanvasPoint(
-                event
-            );
+        resetPointerState();
+        unregisterPointer(event);
+        return;
+    }
 
-        const interaction =
-            getInteractionType(
-                event
-            );
+    /* FINGER */
 
-        activePointer = {
+    if (interaction === "move") {
+        const atom = findAtomAt(point.x, point.y);
 
-            id:
-                event.pointerId,
+        /*
+         * FINGER + VUOTO:
+         * se esiste una molecola copiata, il tap incolla.
+         */
 
-            type:
-                interaction,
-
-            pointerType:
-                event.pointerType
-
-        };
-
-        selectedAtom = null;
-
-        selectedMolecule =
-            new Set();
-
-        dragStart = null;
-
-        originalAtomPosition = null;
-
-        originalMoleculePositions =
-            new Map();
-
-        longPressTriggered =
-            false;
-
-        movementStarted =
-            false;
-
-        historySavedForDrag =
-            false;
-
-        pencilMenuTriggered =
-            false;
-
-        pencilMenuPoint =
-            null;
-
-        cancelLongPress();
-
-        /* ================================
-           ERASE
-        ================================= */
-
-        if (
-            manualMode === "erase" &&
-            event.pointerType !== "pen"
-        ) {
-
-            const atom =
-                findAtomAt(
-                    point.x,
-                    point.y
-                );
-
-            if (atom) {
-
-                removeAtom(atom);
-                resetPointerState();
-
-                unregisterPointer(event);
-
-                return;
-
-            }
-
-            const bond =
-                findBondAt(
-                    point.x,
-                    point.y
-                );
-
-            if (bond) {
-
-                removeBond(bond);
-                resetPointerState();
-
-                unregisterPointer(event);
-
-                return;
-
+        if (!atom) {
+            if (hasMoleculeClipboard() && canPasteNow()) {
+                pasteMolecule(point.x, point.y);
             }
 
             resetPointerState();
-
             unregisterPointer(event);
-
             return;
-
         }
 
-        /* ================================
-           FINGER
-        ================================= */
-
-        if (
-            interaction === "move"
-        ) {
-
-            const atom =
-                findAtomAt(
-                    point.x,
-                    point.y
-                );
-
-            /*
-                FINGER + VUOTO:
-                se esiste una molecola copiata,
-                il tap incolla.
-            */
-
-            if (!atom) {
-
-                if (
-                    hasMoleculeClipboard() &&
-                    canPasteNow()
-                ) {
-
-                    pasteMolecule(
-                        point.x,
-                        point.y
-                    );
-
-                }
-
-                resetPointerState();
-
-                unregisterPointer(event);
-
-                return;
-
-            }
-
-            /*
-                FINGER + ATOMO:
-                prepara il drag.
-            */
-
-            selectedAtom =
-                atom;
-
-            dragStart = {
-
-                x:
-                    point.x,
-
-                y:
-                    point.y
-
-            };
-
-            originalAtomPosition = {
-
-                x:
-                    atom.x,
-
-                y:
-                    atom.y
-
-            };
-
-            prepareMoleculeDrag();
-
-            startLongPress();
-
-            return;
-
-        }
-
-        /* ================================
-           PENCIL
-        ================================= */
-
-        if (
-            interaction === "create"
-        ) {
-
-            const atom =
-                findAtomAt(
-                    point.x,
-                    point.y
-                );
-
-            if (atom) {
-
-                selectedAtom =
-                    atom;
-
-            }
-
-            dragStart = {
-
-                x:
-                    point.x,
-
-                y:
-                    point.y
-
-            };
-
-            startPencilMenuLongPress(
-                point,
-                atom
-            );
-
-            return;
-
-        }
-
-    },
-    {
-        passive:false
-    }
-);
-
-/* ============================================================
-   POINTER MOVE
-============================================================ */
-
-canvas.addEventListener(
-    "pointermove",
-    event => {
-
-        if (
-            !activePointer ||
-            activePointer.id !==
-            event.pointerId
-        ) {
-
-            return;
-
-        }
-
-        event.preventDefault();
-
-        const point =
-            getCanvasPoint(
-                event
-            );
-
-        /* ================================
-           FINGER
-        ================================= */
-
-        if (
-            activePointer.type ===
-            "move" &&
-            selectedAtom
-        ) {
-
-            const dx =
-                point.x -
-                dragStart.x;
-
-            const dy =
-                point.y -
-                dragStart.y;
-
-            const movementDistance =
-                Math.hypot(
-                    dx,
-                    dy
-                );
-
-            if (
-                !longPressTriggered &&
-                movementDistance >
-                LONG_PRESS_MOVE_THRESHOLD
-            ) {
-
-                cancelLongPress();
-
-            }
-
-            if (
-                !longPressTriggered
-            ) {
-
-                if (
-                    !historySavedForDrag &&
-                    movementDistance > 0
-                ) {
-
-                    saveHistory();
-
-                    historySavedForDrag =
-                        true;
-
-                }
-
-                selectedAtom.x =
-                    originalAtomPosition.x +
-                    dx;
-
-                selectedAtom.y =
-                    originalAtomPosition.y +
-                    dy;
-
-                movementStarted =
-                    movementDistance > 0;
-
-                updateAtomAndItsBonds(
-                    selectedAtom
-                );
-
-                return;
-
-            }
-
-            /*
-                Long press:
-                trascina l'intera molecola.
-            */
-
-            if (
-                longPressTriggered
-            ) {
-
-                if (
-                    !historySavedForDrag &&
-                    movementDistance > 0
-                ) {
-
-                    saveHistory();
-
-                    historySavedForDrag =
-                        true;
-
-                }
-
-                selectedMolecule.forEach(
-                    atomId => {
-
-                        const atom =
-                            getAtom(atomId);
-
-                        const original =
-                            originalMoleculePositions.get(
-                                atomId
-                            );
-
-                        if (
-                            !atom ||
-                            !original
-                        ) {
-
-                            return;
-
-                        }
-
-                        atom.x =
-                            original.x + dx;
-
-                        atom.y =
-                            original.y + dy;
-
-                    }
-                );
-
-                movementStarted =
-                    movementDistance > 0;
-
-                updateMoleculeAndItsBonds();
-
-                return;
-
-            }
-
-        }
-
-        /* ================================
-           PENCIL
-        ================================= */
-
-        if (
-            activePointer.type ===
-            "create"
-        ) {
-
-            /*
-                Prima del long press:
-                distinguiamo disegno da pressione prolungata.
-            */
-
-            if (
-                !pencilMenuTriggered &&
-                currentStroke.length === 0 &&
-                dragStart
-            ) {
-
-                const dx =
-                    point.x -
-                    dragStart.x;
-
-                const dy =
-                    point.y -
-                    dragStart.y;
-
-                const movementDistance =
-                    Math.hypot(
-                        dx,
-                        dy
-                    );
-
-                if (
-                    movementDistance >
-                    LONG_PRESS_MOVE_THRESHOLD
-                ) {
-
-                    cancelLongPress();
-
-                    const startPoint = {
-
-                        x:
-                            dragStart.x,
-
-                        y:
-                            dragStart.y
-
-                    };
-
-                    selectedAtom = null;
-
-                    /*
-                     * MODIFICA:
-                     * una nuova pennellata reale della Pencil
-                     * cancella la clipboard precedente.
-                     *
-                     * Non viene eseguita quando:
-                     * - sposti un atomo con il dito;
-                     * - apri il menu con una pressione lunga;
-                     * - copi una molecola;
-                     * - incolli una molecola.
-                     */
-                    moleculeClipboard = null;
-
-                    currentStroke = [
-
-                        startPoint,
-
-                        point
-
-                    ];
-
-                    dragStart = null;
-
-                    movementStarted =
-                        true;
-
-                    drawLiveStroke();
-
-                }
-
-                return;
-
-            }
-
-            if (
-                pencilMenuTriggered
-            ) {
-
-                return;
-
-            }
-
-            currentStroke.push(
-                point
-            );
-
-            drawLiveStroke();
-
-        }
-
-    },
-    {
-        passive:false
-    }
-);
-
-/* ============================================================
-   POINTER FINISH
-============================================================ */
-
-function finishPointer(event) {
-
-    const isCurrentPointer =
-        !!activePointer &&
-        activePointer.id ===
-        event.pointerId;
-
-    /*
-        Questo pointer non è quello principale.
-    */
-
-    if (
-        !isCurrentPointer
-    ) {
-
-        unregisterPointer(event);
+        selectedAtom = atom;
+
+        dragStart = {
+            x: point.x,
+            y: point.y
+        };
+
+        originalAtomPosition = {
+            x: atom.x,
+            y: atom.y
+        };
+
+        /*
+         * Registra il tempo iniziale usando performance.now().
+         * Lo stesso orologio verrà usato durante il trascinamento.
+         */
+
+        dragStartTime = performance.now();
+
+        prepareMoleculeDrag();
+        startLongPress();
 
         return;
+    }
 
+    /* PENCIL */
+
+    if (interaction === "create") {
+        const atom = findAtomAt(point.x, point.y);
+
+        if (atom) {
+            selectedAtom = atom;
+        }
+
+        dragStart = {
+            x: point.x,
+            y: point.y
+        };
+
+        startPencilMenuLongPress(point, atom);
+
+        return;
+    }
+}, {
+    passive: false
+});
+
+/* POINTER MOVE */
+
+canvas.addEventListener("pointermove", event => {
+    if (!activePointer || activePointer.id !== event.pointerId) {
+        return;
+    }
+
+    event.preventDefault();
+
+    const point = getCanvasPoint(event);
+
+    /* FINGER */
+
+    if (activePointer.type === "move" && selectedAtom) {
+        const dx = point.x - dragStart.x;
+        const dy = point.y - dragStart.y;
+
+        const movementDistance = Math.hypot(dx, dy);
+        const currentTime = performance.now();
+        const gestureElapsed = Math.max(0, currentTime - dragStartTime);
+
+        const averageFingerSpeed = gestureElapsed > 0
+            ? movementDistance / gestureElapsed
+            : 0;
+
+        if (
+            !longPressTriggered &&
+            movementDistance > LONG_PRESS_MOVE_THRESHOLD
+        ) {
+            cancelLongPress();
+        }
+
+        if (!longPressTriggered) {
+            /*
+             * Salva la posizione iniziale prima di qualsiasi modifica.
+             * Questo permette a Undo di ripristinare il legame spezzato.
+             */
+
+            if (!historySavedForDrag && movementDistance > 0) {
+                saveHistory();
+                historySavedForDrag = true;
+            }
+
+            /*
+             * DISTACCO DEL LEGAME TERMINALE
+             *
+             * Il controllo usa lo spostamento totale rispetto
+             * al punto iniziale, NON la velocità di un singolo
+             * evento pointermove.
+             *
+             * Quindi funziona anche quando il browser invia
+             * molti piccoli eventi durante un flick rapido.
+             */
+
+            const isDecisiveGesture =
+                gestureElapsed <= BOND_BREAK_MAX_TIME ||
+                averageFingerSpeed >= BOND_BREAK_MIN_AVERAGE_SPEED;
+
+            if (
+                !bondBreakTriggered &&
+                movementDistance >= BOND_BREAK_MIN_DISTANCE &&
+                isDecisiveGesture &&
+                getBondsForAtom(selectedAtom).length === 1
+            ) {
+                const didBreak = breakTerminalBond(selectedAtom);
+
+                if (didBreak) {
+                    bondBreakTriggered = true;
+                }
+            }
+
+            /*
+             * L'atomo continua a seguire il dito.
+             * Se il suo legame è stato rimosso, gli altri atomi
+             * non vengono spostati.
+             */
+
+            selectedAtom.x = originalAtomPosition.x + dx;
+            selectedAtom.y = originalAtomPosition.y + dy;
+
+            movementStarted = movementDistance > 0;
+
+            updateAtomAndItsBonds(selectedAtom);
+
+            return;
+        }
+
+        /*
+         * LONG PRESS:
+         * trascina l'intera molecola.
+         */
+
+        if (longPressTriggered) {
+            if (!historySavedForDrag && movementDistance > 0) {
+                saveHistory();
+                historySavedForDrag = true;
+            }
+
+            selectedMolecule.forEach(atomId => {
+                const atom = getAtom(atomId);
+                const original = originalMoleculePositions.get(atomId);
+
+                if (!atom || !original) return;
+
+                atom.x = original.x + dx;
+                atom.y = original.y + dy;
+            });
+
+            movementStarted = movementDistance > 0;
+
+            updateMoleculeAndItsBonds();
+
+            return;
+        }
+    }
+
+    /* PENCIL */
+
+    if (activePointer.type === "create") {
+        /*
+         * Prima del long press:
+         * distinguiamo disegno da pressione prolungata.
+         */
+
+        if (!pencilMenuTriggered && currentStroke.length === 0 && dragStart) {
+            const dx = point.x - dragStart.x;
+            const dy = point.y - dragStart.y;
+
+            const movementDistance = Math.hypot(dx, dy);
+
+            if (movementDistance > LONG_PRESS_MOVE_THRESHOLD) {
+                cancelLongPress();
+
+                const startPoint = {
+                    x: dragStart.x,
+                    y: dragStart.y
+                };
+
+                selectedAtom = null;
+
+                /*
+                 * Una nuova pennellata reale della Pencil
+                 * cancella la clipboard precedente.
+                 */
+
+                moleculeClipboard = null;
+
+                currentStroke = [
+                    startPoint,
+                    point
+                ];
+
+                dragStart = null;
+                movementStarted = true;
+
+                drawLiveStroke();
+            }
+
+            return;
+        }
+
+        if (pencilMenuTriggered) {
+            return;
+        }
+
+        currentStroke.push(point);
+
+        drawLiveStroke();
+    }
+}, {
+    passive: false
+});
+
+/* POINTER FINISH */
+
+function finishPointer(event) {
+    const isCurrentPointer =
+        !!activePointer &&
+        activePointer.id === event.pointerId;
+
+    if (!isCurrentPointer) {
+        unregisterPointer(event);
+        return;
     }
 
     event.preventDefault();
 
     cancelLongPress();
 
-    /* ================================
-       FINGER
-    ================================= */
+    /* FINGER */
 
-    if (
-        activePointer.type ===
-        "move"
-    ) {
-
+    if (activePointer.type === "move") {
         selectedAtom = null;
-
-        selectedMolecule =
-            new Set();
+        selectedMolecule = new Set();
 
         dragStart = null;
+        originalAtomPosition = null;
+        originalMoleculePositions = new Map();
 
-        originalAtomPosition =
-            null;
+        longPressTriggered = false;
+        movementStarted = false;
+        historySavedForDrag = false;
 
-        originalMoleculePositions =
-            new Map();
+        dragStartTime = 0;
+        bondBreakTriggered = false;
 
-        longPressTriggered =
-            false;
-
-        movementStarted =
-            false;
-
-        historySavedForDrag =
-            false;
-
-        status.textContent =
-            "Pencil creates · Finger moves";
-
+        status.textContent = "Pencil creates · Finger moves";
     }
 
-    /* ================================
-       PENCIL
-    ================================= */
+    /* PENCIL */
 
-    if (
-        activePointer.type ===
-        "create"
-    ) {
-
-        if (
-            pencilMenuTriggered
-        ) {
-
+    if (activePointer.type === "create") {
+        if (pencilMenuTriggered) {
             currentStroke = [];
-
             strokeLayer.innerHTML = "";
-
-        }
-        else {
-
-            if (
-                currentStroke.length
-            ) {
-
+        } else {
+            if (currentStroke.length) {
                 finalizeCreateStroke();
-
             }
-
         }
-
     }
 
-    activePointer =
-        null;
+    activePointer = null;
 
     selectedAtom = null;
-
-    selectedMolecule =
-        new Set();
+    selectedMolecule = new Set();
 
     dragStart = null;
 
-    pencilMenuTriggered =
-        false;
+    pencilMenuTriggered = false;
+    pencilMenuPoint = null;
 
-    pencilMenuPoint =
-        null;
+    movementStarted = false;
+    historySavedForDrag = false;
 
-    movementStarted =
-        false;
+    originalAtomPosition = null;
+    originalMoleculePositions = new Map();
 
-    historySavedForDrag =
-        false;
+    longPressTriggered = false;
 
-    originalAtomPosition =
-        null;
-
-    originalMoleculePositions =
-        new Map();
-
-    longPressTriggered =
-        false;
+    dragStartTime = 0;
+    bondBreakTriggered = false;
 
     cancelLongPress();
 
     unregisterPointer(event);
-
 }
 
-/* ============================================================
-   POINTER UP / CANCEL
-============================================================ */
+/* POINTER UP / CANCEL */
 
-canvas.addEventListener(
-    "pointerup",
-    finishPointer,
-    {
-        passive:false
-    }
-);
+canvas.addEventListener("pointerup", finishPointer, {
+    passive: false
+});
 
-canvas.addEventListener(
-    "pointercancel",
-    finishPointer,
-    {
-        passive:false
-    }
-);
+canvas.addEventListener("pointercancel", finishPointer, {
+    passive: false
+});
 
-/* ============================================================
-   SAFARI / iPadOS TOUCH FALLBACK
-============================================================ */
+/* SAFARI / iPadOS TOUCH FALLBACK */
 
-canvas.addEventListener(
-    "touchstart",
-    event => {
+canvas.addEventListener("touchstart", event => {
+    event.preventDefault();
+}, {
+    passive: false
+});
 
-        event.preventDefault();
+canvas.addEventListener("touchmove", event => {
+    event.preventDefault();
+}, {
+    passive: false
+});
 
-    },
-    {
-        passive:false
-    }
-);
+canvas.addEventListener("touchend", event => {
+    event.preventDefault();
+}, {
+    passive: false
+});
 
-canvas.addEventListener(
-    "touchmove",
-    event => {
+canvas.addEventListener("touchcancel", event => {
+    event.preventDefault();
+}, {
+    passive: false
+});
 
-        event.preventDefault();
-
-    },
-    {
-        passive:false
-    }
-);
-
-canvas.addEventListener(
-    "touchend",
-    event => {
-
-        event.preventDefault();
-
-    },
-    {
-        passive:false
-    }
-);
-
-canvas.addEventListener(
-    "touchcancel",
-    event => {
-
-        event.preventDefault();
-
-    },
-    {
-        passive:false
-    }
-);
-
-/* ============================================================
-   INITIAL RENDER
-============================================================ */
+/* INITIAL RENDER */
 
 render();
 
-status.textContent =
-    "Pencil creates · Finger moves";
-
+status.textContent = "Pencil creates · Finger moves";
 </script>
 
 </body>
