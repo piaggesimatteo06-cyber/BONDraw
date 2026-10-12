@@ -163,13 +163,13 @@ button.danger{color:#b04444}
 
 <script>
 /* ==========================================================
-   BONDraw 0.7.3
-   DISTACCO TERMINALE ALTAMENTE SELETTIVO
+   BONDraw 0.7.3 — OXYGEN RECOGNITION UPDATE
 
-   - Nessuna soglia minima di distanza.
-   - Velocità complessiva elevata.
-   - Componente uscente elevata.
-   - Direzione quasi allineata al legame.
+   - Riconoscimento di C, H e O.
+   - Valenza dell'ossigeno neutro: 2.
+   - Riconoscimento O migliorato per tratti piccoli e rapidi.
+   - Riconoscimento del simbolo quando si completa
+     un atomo provvisorio.
 ========================================================== */
 
 const $ = id => document.getElementById(id);
@@ -187,25 +187,17 @@ let nextAtomId = 1;
 let nextBondId = 1;
 let pendingAtom = null;
 
-const ATOM_RADIUS = {C:27,H:23};
-const VALENCE = {C:4,H:1};
+/* ATOM RADIUS AND VALENCE */
 
-/* SOGLIE DI DISTACCO */
+const ATOM_RADIUS = {C:27,H:23,O:27};
+const VALENCE = {C:4,H:1,O:2};
+
+/* BOND BREAK THRESHOLDS */
 
 const BOND_BREAK_SPEED = 1.45;
 const BOND_BREAK_OUTWARD_SPEED = 1.30;
 const BOND_BREAK_WINDOW_MS = 85;
 const BOND_BREAK_MIN_ALIGNMENT = 0.90;
-
-/*
- Tutte e tre le condizioni devono essere soddisfatte.
-
- 1. Velocità totale >= 1.45 px/ms.
- 2. Velocità uscente >= 1.30 px/ms.
- 3. Allineamento >= 0.90.
-
- Nessun limite sulla distanza totale percorsa.
-*/
 
 let moleculeClipboard = null;
 let moleculeMenuAnchor = null;
@@ -657,14 +649,108 @@ function recognizeCScore(points){
  return clamp01(score*(1-clamp01((hLike-.30)/.35)*.65));
 }
 
+/* OXYGEN RECOGNITION — IMPROVED FOR SMALL/FAST STROKES */
+
+function recognizeOScore(points){
+ // Una O veloce può avere pochi punti campionati.
+ if(points.length<6)return 0;
+
+ const box=strokeBounds(points);
+ if(!box)return 0;
+
+ const width=box.width;
+ const height=box.height;
+
+ // Consente simboli più piccoli rispetto alla versione precedente.
+ if(width<7||height<7)return 0;
+
+ const aspect=width/height;
+ if(aspect<0.50||aspect>1.75)return 0;
+
+ const first=points[0];
+ const last=points[points.length-1];
+ const diameter=Math.max(width,height);
+
+ const closureDistance=Math.hypot(
+  first.x-last.x,
+  first.y-last.y
+ );
+
+ const closureRatio=closureDistance/diameter;
+
+ // Una O non deve essere perfettamente chiusa:
+ // tolleriamo una piccola apertura nel tratto.
+ const closureScore=clamp01(
+  1-closureRatio/0.65
+ );
+
+ const cx=(box.minX+box.maxX)/2;
+ const cy=(box.minY+box.maxY)/2;
+ const expectedRadius=(width+height)/4;
+
+ let radialError=0;
+ let pathLength=0;
+
+ for(const p of points){
+  radialError+=Math.abs(
+   Math.hypot(p.x-cx,p.y-cy)-expectedRadius
+  );
+ }
+
+ radialError/=points.length;
+
+ for(let i=1;i<points.length;i++){
+  pathLength+=Math.hypot(
+   points[i].x-points[i-1].x,
+   points[i].y-points[i-1].y
+  );
+ }
+
+ const circularityScore=clamp01(
+  1-radialError/(expectedRadius*0.70)
+ );
+
+ const pathRatio=pathLength/(Math.PI*diameter);
+
+ // Una O veloce può avere una circonferenza leggermente incompleta.
+ const pathScore=clamp01(
+  1-Math.abs(pathRatio-0.88)/0.95
+ );
+
+ const aspectScore=clamp01(
+  1-Math.abs(Math.log(aspect))/.85
+ );
+
+ return clamp01(
+  closureScore*.40+
+  circularityScore*.32+
+  pathScore*.18+
+  aspectScore*.10
+ );
+}
+
 function recognizeElement(points){
- if(points.length<8)return null;
- const h=recognizeHScore(points),c=recognizeCScore(points);
- if(h<.48&&c<.48)return null;
- if(h>=.52&&h>c+.08)return "H";
- if(c>=.52&&c>h+.08)return "C";
- if(h>=.70&&h>=c)return "H";
- if(c>=.70&&c>=h)return "C";
+ // Consente anche tratti più rapidi.
+ if(points.length<6)return null;
+
+ const h=recognizeHScore(points);
+ const c=recognizeCScore(points);
+ const o=recognizeOScore(points);
+
+ /*
+  La O ha priorità quando supera la soglia di forma.
+  H e C restano valutate con le rispettive soglie.
+ */
+ if(o>=0.56)return "O";
+
+ if(h<0.48&&c<0.48)return null;
+
+ if(h>=0.52&&h>c+0.08)return "H";
+ if(c>=0.52&&c>h+0.08)return "C";
+
+ if(h>=0.70&&h>=c)return "H";
+ if(c>=0.70&&c>=h)return "C";
+
  return null;
 }
 
@@ -692,9 +778,19 @@ function createPendingAtom(x,y){
 function finalizePendingAtom(a,element){
  if(!a)return;
  if(!element){
-  a.element="?";a.pending=true;pendingAtom=a;
+  a.element="?";
+  a.pending=true;
+  pendingAtom=a;
+  status.textContent="Atom not recognized · Try again";
  }else{
-  a.element=element;a.pending=false;pendingAtom=null;
+  a.element=element;
+  a.pending=false;
+  pendingAtom=null;
+  status.textContent=element==="O"
+   ?"Oxygen recognized · Valence 2"
+   :element==="H"
+    ?"Hydrogen recognized · Valence 1"
+    :"Carbon recognized · Valence 4";
  }
  render();
 }
@@ -720,14 +816,21 @@ function finalizeCreateStroke(){
  currentStroke=[];
  strokeLayer.replaceChildren();
 
- if(isCircle(points)){
-  const box=strokeBounds(points);
-  createPendingAtom((box.minX+box.maxX)/2,(box.minY+box.maxY)/2);
+ /*
+  Se esiste un atomo provvisorio, proviamo prima
+  a riconoscere il simbolo disegnato.
+ */
+ if(pendingAtom){
+  finalizePendingAtom(pendingAtom,recognizeElement(points));
   return;
  }
 
- if(pendingAtom){
-  finalizePendingAtom(pendingAtom,recognizeElement(points));
+ if(isCircle(points)){
+  const box=strokeBounds(points);
+  createPendingAtom(
+   (box.minX+box.maxX)/2,
+   (box.minY+box.maxY)/2
+  );
   return;
  }
 
@@ -989,8 +1092,6 @@ function tryBreakTerminalBond(atom){
  if(!atom||atom.pending||bondBreakTriggered||longPressTriggered)return false;
 
  const attached=getBondsForAtom(atom);
-
- // Si staccano solo atomi terminali, con un solo legame.
  if(attached.length!==1)return false;
 
  const bond=attached[0];
@@ -1000,7 +1101,6 @@ function tryBreakTerminalBond(atom){
  const velocity=getFingerVelocity();
  if(!velocity)return false;
 
- // Vettore unitario dal vicino verso l'atomo trascinato.
  const dx=atom.x-neighbor.x;
  const dy=atom.y-neighbor.y;
  const length=Math.hypot(dx,dy);
@@ -1009,23 +1109,15 @@ function tryBreakTerminalBond(atom){
  const outwardX=dx/length;
  const outwardY=dy/length;
 
- // Proiezione della velocità sulla direzione uscente.
  const outwardSpeed=
   velocity.vx*outwardX+
   velocity.vy*outwardY;
 
- // Quanto il movimento è allineato al vettore uscente.
  const directionAlignment=
   velocity.speed>0
    ?outwardSpeed/velocity.speed
    :0;
 
- /*
-  DISTACCO SOLTANTO SE TUTTE LE CONDIZIONI SONO VERE.
-
-  Nessuna distanza minima totale.
-  Un movimento laterale o verso il vicino non stacca il legame.
- */
  if(
   velocity.speed<BOND_BREAK_SPEED ||
   outwardSpeed<BOND_BREAK_OUTWARD_SPEED ||
@@ -1034,6 +1126,11 @@ function tryBreakTerminalBond(atom){
   return false;
  }
 
+ /*
+  Salviamo la situazione prima di staccare il legame,
+  così Undo può ripristinare anche questa operazione.
+ */
+ saveHistory();
  bonds=bonds.filter(b=>b.id!==bond.id);
  bondBreakTriggered=true;
 
@@ -1149,8 +1246,6 @@ canvas.addEventListener("pointermove",e=>{
    selectedAtom.y=originalAtomPosition.y+dy;
 
    addVelocitySample(point,performance.now());
-
-   // Nessun controllo sulla distanza: conta solo il flick direzionale.
    tryBreakTerminalBond(selectedAtom);
 
    movementStarted=movementDistance>0;
