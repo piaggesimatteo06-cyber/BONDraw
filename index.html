@@ -19,7 +19,9 @@ button{border:0;outline:0;height:40px;padding:0 15px;border-radius:12px;backgrou
 #gridLayer{pointer-events:none}
 .grid-lines{fill:none;stroke:#7f8795;stroke-width:1;stroke-linecap:round;opacity:.19;vector-effect:non-scaling-stroke}
 #canvas.grid-hex .grid-lines{opacity:.30;stroke-width:1.15}
-#canvas.grid-mixed .grid-lines{opacity:.13;stroke-width:.9}
+#canvas.grid-mixed .grid-lines{opacity:.19;stroke-width:1}
+#canvas.grid-mixed{background:linear-gradient(to right,#f4f5f7 0%,#f4f5f7 50%,#fff 50%,#fff 100%)}
+.grid-divider{fill:none;stroke:#d8dbe1;stroke-width:1;vector-effect:non-scaling-stroke}
 #gridBtn{min-width:92px;padding:0 11px;font-size:13px;white-space:nowrap}
 @media(max-width:650px){#toolbar{gap:3px;padding:5px}#toolbar button{padding:0 9px;font-size:12px}#gridBtn{min-width:78px;padding:0 7px}}
 .bond{stroke:#202228;stroke-width:2.6;stroke-linecap:round;fill:none;pointer-events:none}.atom-circle{fill:rgba(255,255,255,.96);stroke:#202228;stroke-width:2.4}.atom-label{fill:#202228;font-size:17px;font-weight:700;text-anchor:middle;dominant-baseline:central;pointer-events:none}.atom.pending .atom-circle{fill:rgba(255,255,255,.72);stroke:#999da6;stroke-width:2;stroke-dasharray:5 5}.atom.pending .atom-label{fill:#999da6}.rough-stroke{fill:none;stroke:#8e929b;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.8;pointer-events:none}
@@ -62,8 +64,9 @@ function updateGridButton(){const button=$("gridBtn");button.textContent=getGrid
 function renderGrid(){
  gridLayer.replaceChildren();
  if(gridMode==="off"){updateGridButton();return}
- const width=canvas.clientWidth||1,height=canvas.clientHeight||1,side=GRID.side,stepY=side*Math.sqrt(3)/2,cx=width/2,cy=height/2;
- const iLimit=Math.ceil(width/side+height/stepY)+3,jLimit=Math.ceil(height/stepY)+3;
+ const width=canvas.clientWidth||1,height=canvas.clientHeight||1,side=GRID.side,stepY=side*Math.sqrt(3)/2;
+ const mixed=gridMode==="mixed",gridWidth=mixed?width/2:width,cx=mixed?width/4:width/2,cy=height/2;
+ const iLimit=Math.ceil(gridWidth/side+height/stepY)+5,jLimit=Math.ceil(height/stepY)+3;
  let d="";
  for(let j=-jLimit;j<=jLimit;j++){
   for(let i=-iLimit;i<=iLimit;i++){
@@ -76,10 +79,15 @@ function renderGrid(){
    d+=`M${x.toFixed(2)} ${y.toFixed(2)}L${lowerRightX.toFixed(2)} ${lowerRightY.toFixed(2)}`;
   }
  }
- const path=svgElement("path","grid-lines");path.setAttribute("d",d);gridLayer.appendChild(path);updateGridButton();
+ const path=svgElement("path","grid-lines");path.setAttribute("d",d);
+ if(mixed){
+  const clipId="mixedGridClip";let defs=svgElement("defs");let clip=svgElement("clipPath");clip.setAttribute("id",clipId);let rect=svgElement("rect");rect.setAttribute("x","0");rect.setAttribute("y","0");rect.setAttribute("width",width/2);rect.setAttribute("height",height);clip.appendChild(rect);defs.appendChild(clip);gridLayer.appendChild(defs);path.setAttribute("clip-path",`url(#${clipId})`);gridLayer.appendChild(path);
+  const divider=svgElement("path","grid-divider");divider.setAttribute("d",`M${width/2} 0V${height}`);gridLayer.appendChild(divider);
+ }else{gridLayer.appendChild(path)}
+ updateGridButton();
 }
 function nearestGridVertex(x,y){
- const width=canvas.clientWidth||1,height=canvas.clientHeight||1,side=GRID.side,stepY=side*Math.sqrt(3)/2,cx=width/2,cy=height/2;
+ const width=canvas.clientWidth||1,height=canvas.clientHeight||1,side=GRID.side,stepY=side*Math.sqrt(3)/2,cx=gridMode==="mixed"?width/4:width/2,cy=height/2;
  const relY=y-cy,jGuess=Math.round(relY/stepY),relX=x-cx;
  const iGuess=Math.round((relX-jGuess*side/2)/side);let best=null,bestDistance=Infinity;
  for(let j=jGuess-2;j<=jGuess+2;j++)for(let i=iGuess-2;i<=iGuess+2;i++){
@@ -91,10 +99,12 @@ function nearestGridVertex(x,y){
 }
 function snapPointIfClose(x,y){
  if(gridMode==="off")return {x,y,snapped:false};
+ /* In Mixed mode only the left half is guided/snapped; the right half stays free. */
+ if(gridMode==="mixed"&&x>(canvas.clientWidth||1)/2)return {x,y,snapped:false};
  const nearest=nearestGridVertex(x,y),limit=gridMode==="hex"?GRID.snapRadiusHex:GRID.snapRadiusMixed;
  return nearest&&nearest.distance<=limit?{x:nearest.x,y:nearest.y,snapped:true}:{x,y,snapped:false};
 }
-$("gridBtn").onclick=()=>{gridMode=gridMode==="off"?"mixed":gridMode==="mixed"?"hex":"off";renderGrid();status.textContent=gridMode==="off"?"Grid disabled":gridMode==="mixed"?"Grid mixed · soft snapping":"Hex grid · snapping active"};
+$("gridBtn").onclick=()=>{gridMode=gridMode==="off"?"mixed":gridMode==="mixed"?"hex":"off";renderGrid();status.textContent=gridMode==="off"?"Grid disabled":gridMode==="mixed"?"Mixed · left: grid / right: free":"Hex grid · snapping active"};
 window.addEventListener("resize",renderGrid);
 $("undoBtn").onclick=()=>{closeMoleculeMenu();if(!history.length)return;const previous=history.pop();atoms=previous.atoms;bonds=previous.bonds;pendingAtom=atoms.find(a=>a.pending===true)||null;nextAtomId=Math.max(1,...atoms.map(a=>a.id+1));nextBondId=Math.max(1,...bonds.map(b=>b.id+1));render()};
 $("clearBtn").onclick=()=>{closeMoleculeMenu();if(!atoms.length&&!bonds.length)return;saveHistory();atoms=[];bonds=[];pendingAtom=null;render()};
