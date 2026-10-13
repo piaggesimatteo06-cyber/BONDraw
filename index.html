@@ -101,7 +101,6 @@ function isAtomSketch(points){
   previousAngle=angle;
  }
  ellipseError/=points.length;
- // Rotazione totale: il cerchio preciso resta riconoscibile anche se il tratto è liscio.
  for(let i=2;i<points.length;i++){
   const p0=points[i-2],p1=points[i-1],p2=points[i];
   const ax=p1.x-p0.x,ay=p1.y-p0.y,bx=p2.x-p1.x,by=p2.y-p1.y;
@@ -110,21 +109,8 @@ function isAtomSketch(points){
  }
  const pathRatio=pathLength/diameter;
  const nearCircularAspect=aspect>=.62&&aspect<=1.62;
- // Criterio dedicato a cerchi regolari: circonferenza ~ pi * diametro,
- // chiusura buona e rotazione quasi completa.
- const smoothClosedCircle=
-  nearCircularAspect&&
-  gapRatio<.38&&
-  pathRatio>=2.0&&pathRatio<=4.8&&
-  ellipseError<.36&&
-  angularTravel>=Math.PI*1.45;
- // Criterio permissivo per gli abbozzi già riconosciuti bene: ovali, cerchi storti e aperti.
- const roughLoop=
-  pathRatio>1.12&&
-  totalTurn>1.8&&
-  ellipseError<1.02&&
-  gapRatio<1.18&&
-  angularTravel>Math.PI*1.05;
+ const smoothClosedCircle=nearCircularAspect&&gapRatio<.38&&pathRatio>=2.0&&pathRatio<=4.8&&ellipseError<.36&&angularTravel>=Math.PI*1.45;
+ const roughLoop=pathRatio>1.12&&totalTurn>1.8&&ellipseError<1.02&&gapRatio<1.18&&angularTravel>Math.PI*1.05;
  return smoothClosedCircle||roughLoop;
 }
 function isBondStroke(points,a,b){
@@ -144,16 +130,12 @@ function verticalLikeRatio(points){let total=0,vertical=0;for(let i=1;i<points.l
 function recognizeHScore(points){if(points.length<8)return 0;const box=strokeBounds(points),width=box.width,height=box.height;if(width<10||height<14)return 0;const aspectScore=rangeScore(width/height,.25,1.20,.70),cx=(box.minX+box.maxX)/2,cy=(box.minY+box.maxY)/2;let lc=0,rc=0,lmin=Infinity,lmax=-Infinity,rmin=Infinity,rmax=-Infinity;points.forEach(p=>{if(p.x<cx){lc++;lmin=Math.min(lmin,p.y);lmax=Math.max(lmax,p.y)}else{rc++;rmin=Math.min(rmin,p.y);rmax=Math.max(rmax,p.y)}});const balance=1-Math.min(1,Math.abs(lc/points.length-rc/points.length)*2.5),lcoverage=clamp01(Math.max(0,lmax-lmin)/(height*.72)),rcoverage=clamp01(Math.max(0,rmax-rmin)/(height*.72));let total=0,vl=0,vr=0,ch=0,diag=0,horizontal=0,vertical=0;for(let i=1;i<points.length;i++){const a=points[i-1],b=points[i],dx=Math.abs(b.x-a.x),dy=Math.abs(b.y-a.y),len=Math.hypot(dx,dy);if(len<.5)continue;total+=len;const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;if(dy>dx*1.55){vertical+=len;if(mx<cx-width*.18)vl+=len;if(mx>cx+width*.18)vr+=len}if(dx>dy*1.70){horizontal+=len;if(Math.abs(my-cy)<height*.27)ch+=len}if(dx>len*.30&&dy>len*.30)diag+=len}if(!total)return 0;const structure=(clamp01((vl/total)/.20)+clamp01((vr/total)/.20))/2;return clamp01(structure*.28+clamp01(ch/(width*.32))*.25+lcoverage*rcoverage*.15+balance*.08+aspectScore*.08+clamp01((vertical/total)/.38)*.07+clamp01(((vertical+horizontal)/total)/.72)*.05+clamp01(1-(diag/total)/.45)*.04)}
 function recognizeCScore(points){if(points.length<8)return 0;const box=strokeBounds(points),width=box.width,height=box.height;if(width<8||height<10)return 0;const first=points[0],last=points[points.length-1],endpointY=clamp01(Math.abs(first.y-last.y)/(height*.45)),endpointX=clamp01(1-Math.abs(first.x-last.x)/(width*.75));let pathLength=0,horizontal=0,diagonal=0;for(let i=1;i<points.length;i++){const dx=Math.abs(points[i].x-points[i-1].x),dy=Math.abs(points[i].y-points[i-1].y),len=Math.hypot(dx,dy);pathLength+=len;if(dx>dy*2.5)horizontal+=len;if(dx>len*.30&&dy>len*.30)diagonal+=len}const direct=Math.hypot(last.x-first.x,last.y-first.y),curvature=direct>0?clamp01((pathLength/direct-1.25)/1.10):0,cx=(box.minX+box.maxX)/2,cy=(box.minY+box.maxY)/2;let left=0,upper=false,lower=false;points.forEach(p=>{if(p.x<cx)left++;if(p.y<cy-height*.12)upper=true;if(p.y>cy+height*.12)lower=true});const leftRatio=left/points.length,rightRatio=1-leftRatio,hLike=verticalLikeRatio(points),asymmetry=clamp01(1-Math.abs(leftRatio-rightRatio));const score=(endpointY*.65+endpointX*.35)*.19+curvature*.25+clamp01(leftRatio/.50)*.16+(upper&&lower?1:0)*.08+clamp01(1-totalSafeRatio(horizontal,pathLength)/.60)*.10+clamp01(1-totalSafeRatio(diagonal,pathLength)/.60)*.05+clamp01(curvature*(1-hLike))*.10+(1-asymmetry)*.07;return clamp01(score*(1-clamp01((hLike-.30)/.35)*.65))}
 function recognizeOScore(points){if(points.length<6)return 0;const box=strokeBounds(points);if(!box)return 0;const width=box.width,height=box.height;if(width<7||height<7)return 0;const aspect=width/height;if(aspect<.50||aspect>1.75)return 0;const first=points[0],last=points[points.length-1],diameter=Math.max(width,height),closureDistance=Math.hypot(first.x-last.x,first.y-last.y),closureRatio=closureDistance/diameter,closureScore=clamp01(1-closureRatio/.65),cx=(box.minX+box.maxX)/2,cy=(box.minY+box.maxY)/2,expectedRadius=(width+height)/4;let radialError=0,pathLength=0;for(const p of points)radialError+=Math.abs(Math.hypot(p.x-cx,p.y-cy)-expectedRadius);radialError/=points.length;for(let i=1;i<points.length;i++)pathLength+=Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y);const circularityScore=clamp01(1-radialError/(expectedRadius*.70)),pathRatio=pathLength/(Math.PI*diameter),pathScore=clamp01(1-Math.abs(pathRatio-.88)/.95),aspectScore=clamp01(1-Math.abs(Math.log(aspect))/.85);return clamp01(closureScore*.40+circularityScore*.32+pathScore*.18+aspectScore*.10)}
-/* N: compare a resampled single stroke against both valid continuous N directions.
-   This checks the left upright, descending diagonal and right upright in order.
-   A second guard rejects near-horizontal H crossbars and nearly closed O loops. */
 function recognizeNScore(points){
  if(points.length<6)return 0;
  const box=strokeBounds(points);
  if(!box||box.width<7||box.height<8)return 0;
  const aspect=box.width/box.height;
  if(aspect<.20||aspect>1.65)return 0;
- const normalized=normalizeStroke(points);
  const sampled=resampleStroke(points,Math.max(30,Math.min(90,points.length)));
  let total=0,vertical=0,diagonal=0,horizontal=0;
  const runs=[];
@@ -164,8 +146,9 @@ function recognizeNScore(points){
   if(len<.1)continue;
   total+=len;
   let type;
-  if(ay>=ax*.82){type='V';vertical+=len}
-  else if(ax>=ay*1.48){type='H';horizontal+=len}
+  /* Soglia più netta: una diagonale inclinata non deve essere scambiata per un'asta verticale. */
+  if(ay>=ax*2.0){type='V';vertical+=len}
+  else if(ax>=ay*2.0){type='H';horizontal+=len}
   else{type='D';diagonal+=len}
   const prev=runs[runs.length-1];
   if(prev&&prev.type===type){prev.x+=b.x;prev.y+=b.y;prev.n++}
@@ -275,13 +258,37 @@ function fallbackElementFromShape(points){
  };
  return Object.keys(scores).sort((a,b)=>scores[b]-scores[a])[0]||"C";
 }
+function nDiagonalBridgeScore(points){
+ if(!points||points.length<9)return 0;
+ const box=strokeBounds(points),w=box.width,h=box.height;
+ if(w<7||h<8)return 0;
+ const path=resampleStroke(points,48);let best=0;
+ for(let i=0;i<path.length-7;i++)for(let j=i+7;j<Math.min(path.length,i+29);j++){
+  const dx=path[j].x-path[i].x,dy=path[j].y-path[i].y;
+  const nx=Math.abs(dx)/w,ny=Math.abs(dy)/h;
+  if(nx<.38||ny<.36)continue;
+  let length=0,alignment=0;
+  const direct=Math.hypot(dx,dy);
+  for(let k=i+1;k<=j;k++){
+   const sx=path[k].x-path[k-1].x,sy=path[k].y-path[k-1].y;
+   const step=Math.hypot(sx,sy);length+=step;
+   if(step>.01)alignment+=Math.max(0,(sx*dx+sy*dy)/(step*direct))*step;
+  }
+  const straight=clamp01((1.30-length/Math.max(1,direct))/.30);
+  const direction=alignment/Math.max(1,length);
+  best=Math.max(best,clamp01((nx-.32)/.38)*clamp01((ny-.30)/.40)*straight*clamp01((direction-.72)/.25));
+ }
+ return best;
+}
 function recognizeElement(points){
  if(!points||points.length<6)return fallbackElementFromShape(points);
  const hGeometry=recognizeHScore(points),c=recognizeCScore(points),o=recognizeOScore(points),nGeometry=recognizeNScore(points);
  const template=recognizeTemplateLetterScores(points);
+ const nBridge=nDiagonalBridgeScore(points);
  const n=Math.max(nGeometry*.62+template.N*.38,template.N*.84);
  const h=Math.max(hGeometry*.72+template.H*.28,template.H*.78);
  if(o>=.60)return "O";
+ if(nBridge>=.62&&template.N>=.30&&template.N>=template.H-.19&&nGeometry>=.23&&o<.53)return "N";
  if(template.N>=.68&&template.N>template.H+.12&&template.N>c+.02)return "N";
  if(template.H>=.72&&template.H>template.N+.12&&hGeometry>=.38)return "H";
  if(n>=.53&&n>h+.045&&n>c+.02)return "N";
