@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<title>BONDraw 0.8.0</title>
+<title>BONDraw 0.8.1</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f4f5f7;color:#181a1f;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",sans-serif;touch-action:none;user-select:none;-webkit-user-select:none;overscroll-behavior:none}
@@ -23,7 +23,7 @@ button{border:0;outline:0;height:40px;padding:0 15px;border-radius:12px;backgrou
 </style>
 </head>
 <body>
-<header><div class="brand"><div class="logo-dot"></div><div class="brand-name">BONDraw</div><div class="version">0.8.0</div></div><div class="status" id="status">Pencil creates · Finger moves</div></header>
+<header><div class="brand"><div class="logo-dot"></div><div class="brand-name">BONDraw</div><div class="version">0.8.1</div></div><div class="status" id="status">Pencil creates · Finger moves</div></header>
 <div id="workspace">
  <svg id="canvas" xmlns="http://www.w3.org/2000/svg"><g id="bondLayer"></g><g id="atomLayer"></g><g id="strokeLayer"></g></svg>
  <div id="emptyState"><div class="empty-title">Draw chemistry naturally.</div><div class="empty-subtitle">Use Apple Pencil to create atoms and bonds.<br>Use your finger to move atoms.</div></div>
@@ -32,7 +32,7 @@ button{border:0;outline:0;height:40px;padding:0 15px;border-radius:12px;backgrou
  <div id="toolbar"><button id="createBtn" class="active">Create</button><button id="moveBtn">Move</button><button id="eraseBtn">Erase</button><div class="divider"></div><button id="undoBtn">Undo</button><button id="clearBtn" class="danger">Clear</button></div>
 </div>
 <script>
-/* BONDraw 0.8.0 — DTW template-assisted handwritten N/H recognition. */
+/* BONDraw 0.8.1 — DTW template-assisted handwritten N/H recognition. */
 const $=id=>document.getElementById(id);
 const canvas=$("canvas"),atomLayer=$("atomLayer"),bondLayer=$("bondLayer"),strokeLayer=$("strokeLayer"),emptyState=$("emptyState"),status=$("status"),moleculeMenu=$("moleculeMenu");
 let atoms=[],bonds=[],nextAtomId=1,nextBondId=1,pendingAtom=null;
@@ -75,7 +75,68 @@ function removeBond(b){if(!b)return;saveHistory();bonds=bonds.filter(item=>item.
 function strokeBounds(points){if(!points.length)return null;let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;points.forEach(p=>{minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);minY=Math.min(minY,p.y);maxY=Math.max(maxY,p.y)});return {minX,maxX,minY,maxY,width:maxX-minX,height:maxY-minY}}
 function resampleStroke(points,count=32){if(points.length<2)return points.slice();const lengths=[0];let total=0;for(let i=1;i<points.length;i++){total+=Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y);lengths.push(total)}if(total===0)return points.slice();const result=[];for(let i=0;i<count;i++){const target=total*i/(count-1);let index=1;while(index<lengths.length&&lengths[index]<target)index++;if(index>=lengths.length){result.push(points[points.length-1]);continue}const ratio=(target-lengths[index-1])/(lengths[index]-lengths[index-1]||1),a=points[index-1],b=points[index];result.push({x:a.x+(b.x-a.x)*ratio,y:a.y+(b.y-a.y)*ratio})}return result}
 function normalizeStroke(points){const sampled=resampleStroke(points,32);if(!sampled.length)return [];const box=strokeBounds(sampled),size=Math.max(box.width,box.height,1);return sampled.map(p=>({x:(p.x-(box.minX+box.maxX)/2)/size,y:(p.y-(box.minY+box.maxY)/2)/size}))}
-function isCircle(points){if(points.length<18)return false;const box=strokeBounds(points);if(!box||box.width<28||box.height<28)return false;if(Math.min(box.width,box.height)/Math.max(box.width,box.height)<.72)return false;const first=points[0],last=points[points.length-1],diameter=Math.max(box.width,box.height);if(Math.hypot(first.x-last.x,first.y-last.y)>diameter*.28)return false;const cx=(box.minX+box.maxX)/2,cy=(box.minY+box.maxY)/2,expectedRadius=(box.width+box.height)/4;let radialError=0,pathLength=0;points.forEach(p=>{radialError+=Math.abs(Math.hypot(p.x-cx,p.y-cy)-expectedRadius)});radialError/=points.length;if(radialError>expectedRadius*.24)return false;for(let i=1;i<points.length;i++)pathLength+=Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y);const ratio=pathLength/(Math.PI*diameter);return ratio>=.65&&ratio<=1.55}
+function isAtomSketch(points){
+ /* Riconosce sia cerchi precisi e chiusi sia abbozzi ovali, veloci e aperti.
+    Il criterio dei cerchi regolari è separato da quello degli abbozzi: un tratto
+    liscio non viene penalizzato solo perché ha poca irregolarità locale. */
+ if(!points||points.length<7)return false;
+ const box=strokeBounds(points);if(!box)return false;
+ const w=box.width,h=box.height,diameter=Math.max(w,h),minor=Math.min(w,h);
+ if(minor<14||diameter<22)return false;
+ const aspect=w/Math.max(1,h);
+ if(aspect<.30||aspect>3.2)return false;
+ let pathLength=0,totalTurn=0,ellipseError=0,angularTravel=0;
+ for(let i=1;i<points.length;i++)pathLength+=Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y);
+ const first=points[0],last=points[points.length-1];
+ const endpointGap=Math.hypot(last.x-first.x,last.y-first.y);
+ const gapRatio=endpointGap/diameter;
+ const cx=(box.minX+box.maxX)/2,cy=(box.minY+box.maxY)/2;
+ const rx=Math.max(1,w/2),ry=Math.max(1,h/2);
+ let previousAngle=null;
+ for(const p of points){
+  const nx=(p.x-cx)/rx,ny=(p.y-cy)/ry;
+  ellipseError+=Math.abs(Math.sqrt(nx*nx+ny*ny)-1);
+  const angle=Math.atan2(ny,nx);
+  if(previousAngle!==null){let delta=angle-previousAngle;while(delta>Math.PI)delta-=2*Math.PI;while(delta< -Math.PI)delta+=2*Math.PI;angularTravel+=Math.abs(delta)}
+  previousAngle=angle;
+ }
+ ellipseError/=points.length;
+ // Rotazione totale: il cerchio preciso resta riconoscibile anche se il tratto è liscio.
+ for(let i=2;i<points.length;i++){
+  const p0=points[i-2],p1=points[i-1],p2=points[i];
+  const ax=p1.x-p0.x,ay=p1.y-p0.y,bx=p2.x-p1.x,by=p2.y-p1.y;
+  if(Math.hypot(ax,ay)<1||Math.hypot(bx,by)<1)continue;
+  totalTurn+=Math.abs(Math.atan2(ax*by-ay*bx,ax*bx+ay*by));
+ }
+ const pathRatio=pathLength/diameter;
+ const nearCircularAspect=aspect>=.62&&aspect<=1.62;
+ // Criterio dedicato a cerchi regolari: circonferenza ~ pi * diametro,
+ // chiusura buona e rotazione quasi completa.
+ const smoothClosedCircle=
+  nearCircularAspect&&
+  gapRatio<.38&&
+  pathRatio>=2.0&&pathRatio<=4.8&&
+  ellipseError<.36&&
+  angularTravel>=Math.PI*1.45;
+ // Criterio permissivo per gli abbozzi già riconosciuti bene: ovali, cerchi storti e aperti.
+ const roughLoop=
+  pathRatio>1.12&&
+  totalTurn>1.8&&
+  ellipseError<1.02&&
+  gapRatio<1.18&&
+  angularTravel>Math.PI*1.05;
+ return smoothClosedCircle||roughLoop;
+}
+function isBondStroke(points,a,b){
+ if(!a||!b||a.id===b.id||points.length<2)return false;
+ const first=points[0],last=points[points.length-1];
+ const direct=Math.hypot(last.x-first.x,last.y-first.y);if(direct<12)return false;
+ let pathLength=0,maxDeviation=0;
+ for(let i=1;i<points.length;i++)pathLength+=Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y);
+ if(pathLength/direct>1.20)return false;
+ for(const p of points)maxDeviation=Math.max(maxDeviation,pointToSegmentDistance(p.x,p.y,first.x,first.y,last.x,last.y));
+ return maxDeviation<Math.max(10,direct*.14);
+}
 function clamp01(v){return Math.max(0,Math.min(1,v))}
 function rangeScore(v,min,max,tolerance){if(v>=min&&v<=max)return 1;return v<min?clamp01(1-(min-v)/tolerance):clamp01(1-(v-max)/tolerance)}
 function totalSafeRatio(v,total){return total>0?v/total:0}
@@ -238,7 +299,20 @@ function createPendingAtom(x,y){if(atoms.some(a=>!a.pending&&Math.hypot(a.x-x,a.
 function finalizePendingAtom(a,element){if(!a)return;const chosen=element||fallbackElementFromShape(currentStroke);a.element=chosen;a.pending=false;pendingAtom=null;const names={C:"Carbon",H:"Hydrogen",O:"Oxygen",N:"Nitrogen"};status.textContent=`${names[chosen]||chosen} selected · Valence ${VALENCE[chosen]||4}`;render()}
 let currentStroke=[];
 function drawLiveStroke(){strokeLayer.replaceChildren();if(currentStroke.length<2)return;const path=svgElement("path","rough-stroke");let d=`M ${currentStroke[0].x} ${currentStroke[0].y}`;for(let i=1;i<currentStroke.length;i++)d+=` L ${currentStroke[i].x} ${currentStroke[i].y}`;path.setAttribute("d",d);strokeLayer.appendChild(path)}
-function finalizeCreateStroke(){if(!currentStroke.length)return;const points=currentStroke.slice();currentStroke=[];strokeLayer.replaceChildren();if(pendingAtom){finalizePendingAtom(pendingAtom,recognizeElement(points));return}if(isCircle(points)){const box=strokeBounds(points);createPendingAtom((box.minX+box.maxX)/2,(box.minY+box.maxY)/2);return}const first=points[0],last=points[points.length-1],a=findAtomAt(first.x,first.y),b=findAtomAt(last.x,last.y);if(a&&b&&a.id!==b.id)connectAtoms(a,b)}
+function finalizeCreateStroke(){
+ if(!currentStroke.length)return;
+ const points=currentStroke.slice();currentStroke=[];strokeLayer.replaceChildren();
+ if(pendingAtom){finalizePendingAtom(pendingAtom,recognizeElement(points));return}
+ const first=points[0],last=points[points.length-1];
+ const a=findAtomAt(first.x,first.y),b=findAtomAt(last.x,last.y);
+ if(isBondStroke(points,a,b)){connectAtoms(a,b);return}
+ if(isAtomSketch(points)){
+  const box=strokeBounds(points);
+  const x=(box.minX+box.maxX)/2,y=(box.minY+box.maxY)/2;
+  if(!atoms.some(atom=>!atom.pending&&Math.hypot(atom.x-x,atom.y-y)<getRadius(atom)*.8))createPendingAtom(x,y);
+  return;
+ }
+}
 function getConnectedMolecule(start){const connected=new Set();if(!start)return connected;const queue=[start.id];connected.add(start.id);while(queue.length){const id=queue.shift();bonds.forEach(b=>{const next=b.a===id?b.b:b.b===id?b.a:null;if(next!==null&&!connected.has(next)){connected.add(next);queue.push(next)}})}return connected}
 let selectedMolecule=new Set(),originalMoleculePositions=new Map(),selectedAtom=null;
 function prepareMoleculeDrag(){selectedMolecule=getConnectedMolecule(selectedAtom);originalMoleculePositions=new Map();selectedMolecule.forEach(id=>{const a=getAtom(id);if(a)originalMoleculePositions.set(id,{x:a.x,y:a.y})})}
