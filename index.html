@@ -109,6 +109,7 @@ function ensureSmartChargeData(a){
  if(!Number.isInteger(a.radicalElectrons)||a.radicalElectrons<0)a.radicalElectrons=0;
  if(typeof a.chargeConfirmed!=="boolean")a.chargeConfirmed=false;
  if(typeof a.chargeSuggested!=="boolean")a.chargeSuggested=false;
+ if(typeof a.chargeUncertain!=="boolean")a.chargeUncertain=false;
 }
 function cancelSmartChargeReview(){if(smartChargeTimer!==null){clearTimeout(smartChargeTimer);smartChargeTimer=null}}
 function closeChargePrompt(){chargePrompt.classList.remove("visible");chargePrompt.replaceChildren();activeChargePrompt=null}
@@ -129,79 +130,88 @@ function reviewSmartChargeCandidates(){
   const a=getAtom(id);if(!a||a.pending)continue;ensureSmartChargeData(a);
   if(a.chargeConfirmed)continue;
   const valence=getValence(a),max=VALENCE[a.element];
-  a.chargeUncertain=!Number.isFinite(max)||valence!==max||a.chargeSuggested===true;
+  if(!a.chargeUncertain&&a.chargeSuggested)continue;
+  a.chargeUncertain=a.chargeUncertain||!Number.isFinite(max)||(valence!==max&&a.formalCharge===0&&a.radicalElectrons===0);
   updateAtomElement(a);
  }
 }
+// Electron bookkeeping for explicitly drawn H/C/N/O only.
+// Formal charge = valence electrons - nonbonding electrons - bond order sum.
+// Candidate configurations are deliberately conservative; unknown is always available.
+const SMART_ELECTRONS={H:1,C:4,N:5,O:6};
+const SMART_SHELL={H:2,C:8,N:8,O:8};
+function chargeConfigurations(a){
+ ensureSmartChargeData(a);
+ const v=SMART_ELECTRONS[a.element],shell=SMART_SHELL[a.element],bo=getValence(a);
+ if(v===undefined||bo>shell/2)return [];
+ const result=[];
+ for(let q=-3;q<=3;q++)for(let radical=0;radical<=1;radical++){
+  const nonbond=v-bo-q;
+  if(nonbond<0||nonbond>shell-2*bo||nonbond%2!==radical)continue;
+  const occupied=nonbond+2*bo;
+  // Keep common octet/duet, electron-deficient cations and ordinary radicals.
+  // Avoid highly exotic multiple charges in this introductory editor.
+  const ordinary=(occupied===shell)||(radical===1&&occupied===shell-1)||
+   (q>0&&radical===0&&occupied>=Math.min(4,shell-2)&&occupied<shell);
+  if(!ordinary)continue;
+  if(a.element==="H"&&!(bo===1&&q===0&&radical===0)&&!(bo===0&&((q===1&&radical===0)||(q===0&&radical===1)||(q===-1&&radical===0))))continue;
+  if(Math.abs(q)>2)continue;
+  result.push({charge:q,radical,nonbond,occupied});
+ }
+ return result;
+}
+function chargeLabel(q,r){return r?`${q>0?"+":""}${q||""} •`:(q===0?"Neutro":q>0?`+${q}`:`−${-q}`)}
 function showAtomChargePrompt(a,message){
+ ensureSmartChargeData(a);
+ const options=chargeConfigurations(a);
  activeChargePrompt={type:"atom",atomId:a.id};
- chargePrompt.innerHTML=`<div class="charge-title">Smart Charges · Atomo ${escapeHTML(a.element)} #${a.id}</div><p class="charge-copy">${escapeHTML(message)}</p><div class="charge-actions"><button data-charge="1">+1</button><button data-charge="-1">−1</button><button data-charge="0" class="primary">Neutro</button><button data-charge="radical">Radicale</button><button data-charge="unknown">Lascia incerto</button><button data-charge="dismiss">Dopo</button></div>`;
- chargePrompt.querySelectorAll("[data-charge]").forEach(b=>b.onclick=()=>{
-  const action=b.dataset.charge,atom=getAtom(a.id);if(!atom){closeChargePrompt();return}
+ const buttons=options.map((o,i)=>`<button data-config="${i}">${chargeLabel(o.charge,o.radical)}</button>`).join("");
+ chargePrompt.innerHTML=`<div class="charge-title">Smart Charges · ${escapeHTML(a.element)} #${a.id}</div><p class="charge-copy">${escapeHTML(message)} Legami (ordine totale): ${getValence(a)}. Opzioni filtrate per elettroni di valenza e duet/octet; nessun H implicito. Le possibilità non dimostrano la stabilità reale.</p><div class="charge-actions">${buttons}<button data-config="unknown">Incerto ?</button><button data-config="dismiss">Chiudi</button></div>`;
+ chargePrompt.querySelectorAll("[data-config]").forEach(b=>b.onclick=()=>{
+  const atom=getAtom(a.id),action=b.dataset.config;if(!atom){closeChargePrompt();return}
   if(action==="dismiss"){closeChargePrompt();return}
-  if(action==="unknown"){ensureSmartChargeData(atom);atom.chargeConfirmed=false;atom.chargeSuggested=false;atom.chargeUncertain=true;updateAtomElement(atom)}
-  else if(action==="radical")setChargeState(atom,0,1,true);
-  else setChargeState(atom,Number(action),0,true);
+  saveHistory();
+  if(action==="unknown"){atom.chargeConfirmed=false;atom.chargeSuggested=false;atom.chargeUncertain=true;updateAtomElement(atom)}
+  else {const o=options[Number(action)];if(o)setChargeState(atom,o.charge,o.radical,true)}
   closeChargePrompt();render();
-  if(smartChargeCandidates.size)queueSmartChargeReview();
  });
  chargePrompt.classList.add("visible");
 }
-function showBondBreakPrompt(atom,neighbor,bond){
+function applySmartBondCleavage(atom,neighbor,bond){
+ ensureSmartChargeData(atom);ensureSmartChargeData(neighbor);
  const ea=SMART_EN[atom.element],en=SMART_EN[neighbor.element];
- const valid=bond.order===1&&Number.isFinite(ea)&&Number.isFinite(en)&&atom.formalCharge===0&&neighbor.formalCharge===0&&!atom.chargeConfirmed&&!neighbor.chargeConfirmed;
- const equal=valid&&Math.abs(ea-en)<0.05;
- activeChargePrompt={type:"bond",atomId:atom.id,neighborId:neighbor.id,bondOrder:bond.order};
- let message=valid&&!equal
-  ?`Legame singolo rotto. In base all’elettronegatività, gli elettroni del legame sarebbero attribuiti a ${ea>en?atom.element:neighbor.element}. È un suggerimento semplificato, non una previsione universale del meccanismo.`
-  :"La rottura non è interpretabile con sicurezza con le regole attuali. Scegli come rappresentarla.";
- const actions=valid&&!equal
-  ?'<button data-break="hetero" class="primary">Suggerisci eterolisi</button><button data-break="homo">Omolisi · radicali</button><button data-break="neutral">Solo rottura neutra</button><button data-break="unknown">Lascia incerto</button>'
-  :'<button data-break="homo">Omolisi · radicali</button><button data-break="neutral" class="primary">Solo rottura neutra</button><button data-break="unknown">Lascia incerto</button>';
- chargePrompt.innerHTML=`<div class="charge-title">Smart Charges · Legame rotto</div><p class="charge-copy">${escapeHTML(message)}</p><div class="charge-actions">${actions}</div>`;
- chargePrompt.querySelectorAll("[data-break]").forEach(b=>b.onclick=()=>{
-  const action=b.dataset.break,a=getAtom(atom.id),n=getAtom(neighbor.id);
-  if(a&&n){
-   ensureSmartChargeData(a);ensureSmartChargeData(n);
-   if(action==="hetero"&&valid&&!equal){
-    const atomGets=ea>en?-1:1,neighborGets=-atomGets;
-    setChargeState(a,atomGets,0,false);setChargeState(n,neighborGets,0,false);
-    a.chargeSuggested=true;n.chargeSuggested=true;
-    render();showSuggestedBondCharges(a,n);return;
-   }else if(action==="homo"){setChargeState(a,0,1,true);setChargeState(n,0,1,true)}
-   else if(action==="neutral"){setChargeState(a,0,0,true);setChargeState(n,0,0,true)}
-   else {a.chargeUncertain=true;n.chargeUncertain=true;a.chargeConfirmed=false;n.chargeConfirmed=false}
+ const valid=bond.order===1&&Number.isFinite(ea)&&Number.isFinite(en)&&
+ atom.radicalElectrons===0&&neighbor.radicalElectrons===0;
+ if(valid&&Math.abs(ea-en)>=0.35){
+  const acceptor=ea>en?atom:neighbor,donor=acceptor===atom?neighbor:atom;
+  // Heterolysis: both bonding electrons go to the acceptor; charges are additive.
+  acceptor.formalCharge-=1;donor.formalCharge+=1;
+  for(const a of [atom,neighbor]){
+   a.chargeConfirmed=false;a.chargeSuggested=true;a.chargeUncertain=true;
+   // If electron bookkeeping cannot represent the result, do not present it as settled.
+   if(!chargeConfigurations(a).some(o=>o.charge===a.formalCharge&&o.radical===a.radicalElectrons)){
+    a.chargeSuggested=false;
+   }
   }
-  closeChargePrompt();render();
- });
- chargePrompt.classList.add("visible");
+  status.textContent="Smart Charges · Eterolisi suggerita (tocca ? per verificare)";
+ }else{
+  for(const a of [atom,neighbor]){a.chargeUncertain=true;a.chargeSuggested=false;a.chargeConfirmed=false}
+  status.textContent="Smart Charges · Rottura da verificare: tocca ?";
+ }
 }
-function showSuggestedBondCharges(a,n){
- activeChargePrompt={type:"suggested-bond",atomId:a.id,neighborId:n.id};
- chargePrompt.innerHTML=`<div class="charge-title">Suggerimento non confermato</div><p class="charge-copy">Le cariche mostrate in grigio sono una proposta basata sull’elettronegatività, non una conclusione certa. Confermale solo se coerenti con il contesto chimico.</p><div class="charge-actions"><button data-suggestion="confirm" class="primary">Conferma cariche</button><button data-suggestion="neutral">Neutri</button><button data-suggestion="radical">Radicali</button><button data-suggestion="unknown">Lascia incerto</button></div>`;
- chargePrompt.querySelectorAll("[data-suggestion]").forEach(b=>b.onclick=()=>{
-  const action=b.dataset.suggestion,aa=getAtom(a.id),nn=getAtom(n.id);
-  if(aa&&nn){
-   if(action==="confirm"){aa.chargeConfirmed=true;nn.chargeConfirmed=true;aa.chargeSuggested=false;nn.chargeSuggested=false;aa.chargeUncertain=false;nn.chargeUncertain=false}
-   else if(action==="neutral"){setChargeState(aa,0,0,true);setChargeState(nn,0,0,true)}
-   else if(action==="radical"){setChargeState(aa,0,1,true);setChargeState(nn,0,1,true)}
-   else {aa.chargeConfirmed=false;nn.chargeConfirmed=false;aa.chargeSuggested=false;nn.chargeSuggested=false;aa.chargeUncertain=true;nn.chargeUncertain=true}
-  }
-  closeChargePrompt();render();
- });
- chargePrompt.classList.add("visible");
-}
-function createAtomElement(a){const g=svgElement("g","atom");g.dataset.atomId=a.id;g.append(svgElement("circle","atom-circle"),svgElement("text","atom-label"),svgElement("text","atom-charge"),svgElement("circle","atom-radical"),svgElement("circle","atom-question"),svgElement("text","atom-question-mark"),svgElement("circle","atom-question-hit"));const hit=g.querySelector(".atom-question-hit");hit.addEventListener("pointerdown",e=>{e.preventDefault();e.stopPropagation()});hit.addEventListener("pointerup",e=>{e.preventDefault();e.stopPropagation();const atom=getAtom(Number(g.dataset.atomId));if(atom){cancelSmartChargeReview();showAtomChargePrompt(atom,"Scegli lo stato formale dell’atomo. Nessun idrogeno implicito viene aggiunto.")}});atomLayer.append(g);atomElements.set(a.id,g);return g}
+// Electronegativity alone never makes homolysis impossible: bond environment,
+// irradiation, solvents and mechanism matter. No automatic mechanism dialog.
+function createAtomElement(a){const g=svgElement("g","atom");g.dataset.atomId=a.id;g.append(svgElement("circle","atom-circle"),svgElement("text","atom-label"),svgElement("text","atom-charge"),svgElement("circle","atom-radical"),svgElement("circle","atom-question"),svgElement("text","atom-question-mark"),svgElement("circle","atom-question-hit"));const hit=g.querySelector(".atom-question-hit");hit.addEventListener("pointerdown",e=>{e.preventDefault();e.stopPropagation()});hit.addEventListener("pointerup",e=>{e.preventDefault();e.stopPropagation();const atom=getAtom(Number(g.dataset.atomId));if(atom){cancelSmartChargeReview();showAtomChargePrompt(atom,"Scegli una configurazione elettronica compatibile, oppure lascia incerto.")}});atomLayer.append(g);atomElements.set(a.id,g);return g}
 function updateAtomElement(a){let g=atomElements.get(a.id);if(!g)g=createAtomElement(a);ensureSmartChargeData(a);g.setAttribute("transform",`translate(${a.x} ${a.y})`);g.querySelector(".atom-circle").setAttribute("r",getRadius(a));g.querySelector(".atom-label").textContent=a.element||"?";
- const r=getRadius(a),charge=g.querySelector(".atom-charge");charge.textContent=a.formalCharge===0?"":Math.abs(a.formalCharge)===1?(a.formalCharge>0?"+":"−"):(a.formalCharge>0?"+":"−")+Math.abs(a.formalCharge);charge.setAttribute("x",r+12);charge.setAttribute("y",-r-9);charge.classList.toggle("suggested",a.chargeSuggested===true);
- const radical=g.querySelector(".atom-radical");radical.setAttribute("cx",r+12);radical.setAttribute("cy",a.formalCharge!==0?-r+7:-r-9);radical.setAttribute("r",a.radicalElectrons>0?4.2:0);
- const showQuestion=a.chargeUncertain===true&&!a.chargeConfirmed;const qx=-r-10,qy=-r-10;const q=g.querySelector(".atom-question"),mark=g.querySelector(".atom-question-mark"),hit=g.querySelector(".atom-question-hit");q.setAttribute("cx",qx);q.setAttribute("cy",qy);q.setAttribute("r",showQuestion?10:0);mark.setAttribute("x",qx);mark.setAttribute("y",qy+0.5);mark.textContent=showQuestion?"?":"";hit.setAttribute("cx",qx);hit.setAttribute("cy",qy);hit.setAttribute("r",showQuestion?17:0);g.classList.toggle("pending",a.pending===true)}
+ const r=getRadius(a),charge=g.querySelector(".atom-charge");charge.textContent=a.formalCharge===0?"":Math.abs(a.formalCharge)===1?(a.formalCharge>0?"+":"−"):(a.formalCharge>0?"+":"−")+Math.abs(a.formalCharge);charge.setAttribute("x",r+12);charge.setAttribute("y",-r-9);charge.setAttribute("visibility",a.chargeUncertain&&!a.chargeSuggested?"hidden":"visible");charge.classList.toggle("suggested",a.chargeSuggested===true);
+ const radical=g.querySelector(".atom-radical");radical.setAttribute("cx",r+12);radical.setAttribute("cy",a.formalCharge!==0?-r+7:-r-9);radical.setAttribute("r",a.radicalElectrons>0&&!a.chargeUncertain?4.2:0);
+ const showQuestion=a.chargeUncertain===true&&!a.chargeConfirmed;const qx=a.chargeSuggested&&a.formalCharge!==0?r+37:r+12,qy=-r-9;const q=g.querySelector(".atom-question"),mark=g.querySelector(".atom-question-mark"),hit=g.querySelector(".atom-question-hit");q.setAttribute("cx",qx);q.setAttribute("cy",qy);q.setAttribute("r",showQuestion?10:0);mark.setAttribute("x",qx);mark.setAttribute("y",qy+0.5);mark.textContent=showQuestion?"?":"";hit.setAttribute("cx",qx);hit.setAttribute("cy",qy);hit.setAttribute("r",showQuestion?17:0);g.classList.toggle("pending",a.pending===true)}
 function createBondElement(b){const g=svgElement("g");g.dataset.bondId=b.id;bondLayer.append(g);bondElements.set(b.id,g);return g}
 function updateBondElement(b,g){const a=getAtom(b.a),c=getAtom(b.b);if(!a||!c)return;g.replaceChildren();const dx=c.x-a.x,dy=c.y-a.y,length=Math.hypot(dx,dy);if(!length)return;const ux=dx/length,uy=dy/length,nx=-uy,ny=ux,x1=a.x+ux*getRadius(a),y1=a.y+uy*getRadius(a),x2=c.x-ux*getRadius(c),y2=c.y-uy*getRadius(c);(b.order===1?[0]:b.order===2?[-3,3]:[-6,0,6]).forEach(offset=>{const line=svgElement("line","bond");[["x1",x1+nx*offset],["y1",y1+ny*offset],["x2",x2+nx*offset],["y2",y2+ny*offset]].forEach(([k,v])=>line.setAttribute(k,v));g.append(line)})}
 function render(){atomElements.forEach(el=>el.remove());bondElements.forEach(el=>el.remove());atomElements.clear();bondElements.clear();bonds.forEach(b=>updateBondElement(b,createBondElement(b)));atoms.forEach(updateAtomElement);emptyState.classList.toggle("hidden",atoms.length>0)}
 function updateAtomAndItsBonds(a){updateAtomElement(a);getBondsForAtom(a).forEach(b=>{const g=bondElements.get(b.id);if(g)updateBondElement(b,g)})}
 function findBondBetween(a,b){return bonds.find(v=>(v.a===a.id&&v.b===b.id)||(v.a===b.id&&v.b===a.id))}
-function connectAtoms(a,b){if(!a||!b||a.id===b.id||a.pending||b.pending)return;const existing=findBondBetween(a,b);saveHistory();if(!existing){if(!canAddBond(a,b,1)){history.pop();return}bonds.push({id:nextBondId++,a:a.id,b:b.id,order:1})}else{const order=existing.order===3?1:existing.order+1;if(getValence(a)-existing.order+order>VALENCE[a.element]||getValence(b)-existing.order+order>VALENCE[b.element]){history.pop();return}existing.order=order}render();queueSmartChargeReview([a.id,b.id])}
+function connectAtoms(a,b){if(!a||!b||a.id===b.id||a.pending||b.pending)return;const existing=findBondBetween(a,b);saveHistory();if(!existing){if(!canAddBond(a,b,1)){history.pop();return}bonds.push({id:nextBondId++,a:a.id,b:b.id,order:1})}else{const order=existing.order===3?1:existing.order+1;if(getValence(a)-existing.order+order>VALENCE[a.element]||getValence(b)-existing.order+order>VALENCE[b.element]){history.pop();return}existing.order=order}for(const endpoint of [a,b]){ensureSmartChargeData(endpoint);if(endpoint.chargeSuggested){endpoint.chargeSuggested=false;endpoint.chargeUncertain=true}}render();queueSmartChargeReview([a.id,b.id])}
 function strokeBounds(points){if(!points.length)return null;let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;points.forEach(p=>{minX=Math.min(minX,p.x);minY=Math.min(minY,p.y);maxX=Math.max(maxX,p.x);maxY=Math.max(maxY,p.y)});return {minX,minY,maxX,maxY,width:maxX-minX,height:maxY-minY}}
 function resampleStroke(points,count=32){if(points.length<2)return points.slice();const lengths=[0];let total=0;for(let i=1;i<points.length;i++){total+=Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y);lengths.push(total)}if(!total)return points.slice();const result=[];for(let i=0;i<count;i++){const target=total*i/(count-1);let j=1;while(j<lengths.length&&lengths[j]<target)j++;if(j>=lengths.length){result.push(points.at(-1));continue}const t=(target-lengths[j-1])/(lengths[j]-lengths[j-1]||1),a=points[j-1],b=points[j];result.push({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t})}return result}
 function isAtomSketch(points){if(points.length<7)return false;const b=strokeBounds(points),w=b.width,h=b.height,d=Math.max(w,h),minor=Math.min(w,h);if(minor<14||d<22||w/Math.max(h,1)<.30||w/Math.max(h,1)>3.2)return false;let path=0,turn=0,error=0,travel=0,previous=null;for(let i=1;i<points.length;i++)path+=Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y);const gap=Math.hypot(points.at(-1).x-points[0].x,points.at(-1).y-points[0].y)/d,cx=(b.minX+b.maxX)/2,cy=(b.minY+b.maxY)/2,rx=w/2,ry=h/2;for(const p of points){const nx=(p.x-cx)/rx,ny=(p.y-cy)/ry;error+=Math.abs(Math.hypot(nx,ny)-1);const angle=Math.atan2(ny,nx);if(previous!==null){let delta=angle-previous;while(delta>Math.PI)delta-=2*Math.PI;while(delta< -Math.PI)delta+=2*Math.PI;travel+=Math.abs(delta)}previous=angle}error/=points.length;for(let i=2;i<points.length;i++){const a=points[i-2],m=points[i-1],z=points[i],ax=m.x-a.x,ay=m.y-a.y,bx=z.x-m.x,by=z.y-m.y;if(Math.hypot(ax,ay)<1||Math.hypot(bx,by)<1)continue;turn+=Math.abs(Math.atan2(ax*by-ay*bx,ax*bx+ay*by))}const ratio=path/d,aspect=w/h;return (aspect>=.62&&aspect<=1.62&&gap<.38&&ratio>=2&&ratio<=4.8&&error<.36&&travel>=Math.PI*1.45)||(ratio>1.12&&turn>1.8&&error<1.02&&gap<1.18&&travel>Math.PI*1.05)}
@@ -253,7 +263,7 @@ function startPencilMenuLongPress(point,atom){cancelLongPress();longPressTimer=s
 function resetVelocity(p,t){velocitySamples=[{x:p.x,y:p.y,t}]}
 function addVelocitySample(p,t){const last=velocitySamples.at(-1);if(last&&t<=last.t)return;velocitySamples.push({x:p.x,y:p.y,t});while(velocitySamples.length>2&&t-velocitySamples[1].t>BOND_BREAK_WINDOW_MS)velocitySamples.shift();if(velocitySamples.length>30)velocitySamples.shift()}
 function getFingerVelocity(){if(velocitySamples.length<2)return null;const a=velocitySamples[0],b=velocitySamples.at(-1),elapsed=b.t-a.t;if(elapsed<=0)return null;const vx=(b.x-a.x)/elapsed,vy=(b.y-a.y)/elapsed;return {vx,vy,speed:Math.hypot(vx,vy)}}
-function tryBreakTerminalBond(atom){if(!atom||atom.pending||bondBreakTriggered||longPressTriggered)return false;const attached=getBondsForAtom(atom);if(attached.length!==1)return false;const bond=attached[0],neighbor=getAtom(bond.a===atom.id?bond.b:bond.a);if(!neighbor)return false;const v=getFingerVelocity();if(!v)return false;const dx=atom.x-neighbor.x,dy=atom.y-neighbor.y,len=Math.hypot(dx,dy);if(len<1)return false;const outward=(v.vx*dx+v.vy*dy)/len,alignment=v.speed>0?outward/v.speed:0;if(v.speed<BOND_BREAK_SPEED||outward<BOND_BREAK_OUTWARD_SPEED||alignment<BOND_BREAK_MIN_ALIGNMENT)return false;saveHistory();bonds=bonds.filter(b=>b.id!==bond.id);bondBreakTriggered=true;cancelSmartChargeReview();smartChargeCandidates.clear();render();status.textContent="Bond broken · Smart Charges";queueSmartChargeReview([atom.id,neighbor.id]);return true}
+function tryBreakTerminalBond(atom){if(!atom||atom.pending||bondBreakTriggered||longPressTriggered)return false;const attached=getBondsForAtom(atom);if(attached.length!==1)return false;const bond=attached[0],neighbor=getAtom(bond.a===atom.id?bond.b:bond.a);if(!neighbor)return false;const v=getFingerVelocity();if(!v)return false;const dx=atom.x-neighbor.x,dy=atom.y-neighbor.y,len=Math.hypot(dx,dy);if(len<1)return false;const outward=(v.vx*dx+v.vy*dy)/len,alignment=v.speed>0?outward/v.speed:0;if(v.speed<BOND_BREAK_SPEED||outward<BOND_BREAK_OUTWARD_SPEED||alignment<BOND_BREAK_MIN_ALIGNMENT)return false;saveHistory();bonds=bonds.filter(b=>b.id!==bond.id);bondBreakTriggered=true;cancelSmartChargeReview();smartChargeCandidates.clear();applySmartBondCleavage(atom,neighbor,bond);render();return true}
 function resetPointerState(){cancelLongPress();activePointer=null;selectedAtom=null;selectedMolecule=new Set();dragStart=null;originalAtomPosition=null;originalMoleculePositions=new Map();longPressTriggered=false;movementStarted=false;historySavedForDrag=false;pencilMenuTriggered=false;bondBreakTriggered=false;velocitySamples=[];eraseGestureSaved=false;eraseLastPoint=null}
 canvas.addEventListener("pointerdown",e=>{registerPointer(e);if(shouldIgnoreTouch(e))return;e.preventDefault();if(activePointer&&activePointer.id!==e.pointerId)return;const point=getCanvasPoint(e),interaction=getInteractionType(e);cancelSmartChargeReview();resetPointerState();activePointer={id:e.pointerId,type:interaction,pointerType:e.pointerType};try{canvas.setPointerCapture(e.pointerId)}catch(_){}if(manualMode==="erase"){activePointer.type="erase";eraseLastPoint={...point};eraseAlongSegment(point,point);return}if(interaction==="move"){const atom=findAtomAt(point.x,point.y);if(!atom){if(hasMoleculeClipboard()&&canPasteNow())pasteMolecule(point.x,point.y);resetPointerState();unregisterPointer(e);return}selectedAtom=atom;dragStart={...point};originalAtomPosition={x:atom.x,y:atom.y};resetVelocity(point,performance.now());prepareMoleculeDrag();startLongPress();return}if(interaction==="create"){selectedAtom=findAtomAt(point.x,point.y);dragStart={...point};startPencilMenuLongPress(point,selectedAtom)}},{passive:false});
 canvas.addEventListener("pointermove",e=>{if(!activePointer||activePointer.id!==e.pointerId)return;e.preventDefault();const point=getCanvasPoint(e);if(activePointer.type==="erase"){if(eraseLastPoint)eraseAlongSegment(eraseLastPoint,point);eraseLastPoint={...point};return}if(activePointer.type==="move"&&selectedAtom){const dx=point.x-dragStart.x,dy=point.y-dragStart.y,distance=Math.hypot(dx,dy);if(!longPressTriggered&&distance>LONG_PRESS_MOVE_THRESHOLD)cancelLongPress();if(!longPressTriggered){if(!historySavedForDrag&&distance>0){saveHistory();historySavedForDrag=true}selectedAtom.x=originalAtomPosition.x+dx;selectedAtom.y=originalAtomPosition.y+dy;addVelocitySample(point,performance.now());tryBreakTerminalBond(selectedAtom);movementStarted=distance>0;updateAtomAndItsBonds(selectedAtom);return}if(!historySavedForDrag&&distance>0){saveHistory();historySavedForDrag=true}selectedMolecule.forEach(id=>{const a=getAtom(id),p=originalMoleculePositions.get(id);if(a&&p){a.x=p.x+dx;a.y=p.y+dy}});movementStarted=distance>0;updateMoleculeAndItsBonds();return}if(activePointer.type==="create"){if(!pencilMenuTriggered&&currentStroke.length===0&&dragStart){const dx=point.x-dragStart.x,dy=point.y-dragStart.y;if(Math.hypot(dx,dy)>LONG_PRESS_MOVE_THRESHOLD){cancelLongPress();const start={...dragStart};selectedAtom=null;moleculeClipboard=null;/* Intentional: starting a new stroke clears clipboard to prevent accidental pastes. */currentStroke=[start,point];dragStart=null;movementStarted=true;drawLiveStroke()}return}if(pencilMenuTriggered)return;currentStroke.push(point);drawLiveStroke()}},{passive:false});
